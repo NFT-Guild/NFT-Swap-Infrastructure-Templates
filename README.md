@@ -6,11 +6,11 @@ Easily adaptable and implementable by any NFT project in the Cardano space.
 !!Repository is work in progress!!
 The smart contract provided are at this point not a full implementation. Feel free to use as inspiration for your own contracts, but do not useon Cardano mainnet at this time.
 
-README          - This file
-LICENSE         - License information
-doc             - Documentation about how to build and configure the NFT Swap Infrastructure
-smart-contracts - All code related to the smart contracts to guard your swap pool contents
-web             - Example web site you can use for 
+* README          - This file
+* LICENSE         - License information
+* doc             - Documentation about how to build and configure the NFT Swap Infrastructure
+* smart-contracts - All code related to the smart contracts to guard your swap pool contents
+* web             - Example web site you can use for 
 
 # Prerequesites
 We have made effort to keep this repoisitory easy to use. Code has comments to give insight into what is going on.
