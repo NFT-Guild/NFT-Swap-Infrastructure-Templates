@@ -18,5 +18,14 @@ Documentation has also been added to aid understanding of functionality, to insp
 All this, will not take away the fact that to make changes or customizations to the code, you should consult a developer.
 Non-developers should follow the instructions to configure the platform for use with standard settings.
 
-# Build instructions
-TODO
+## Getting started
+The supplied code can be used in your existing development setup if you already have one.
+If you do not have a running environment you can use the following instructions to set it up
+- [Install Plutus](doc/installing-plutus.md)
+- [Building the smart contracts](doc/building-the-smart-contracts.md)
+
+## The contracts
+| Contract | Deployment instructions |
+| --- | --- |
+| [Specific Swap](smart-contracts/src/SpecificSwap.hs) | [Instructions](doc/deploy-specific-swap.md) |
+
