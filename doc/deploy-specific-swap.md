@@ -43,7 +43,7 @@ All wallets have their own unique key hash
 
 ## Serialize the plutus script
 Time has come to build your unique swap pool contract. This is accomplished with the following command.
-This works in the way that the `specific-swap` executable compiles your minting policy using two parameters (following --)
+This works in the way that the `specific-swap` executable compiles your contract using three parameters (following --)
 | Parameter | Description | Example |
 | --- | --- | --- |
 | 1 | filename to save your plutus script as | `plutus-scripts/specificswap-0-6.plutus` |
@@ -64,7 +64,7 @@ _______________________________________________
 
 [nix-shell:~/basic-smart-contracts]$ 
 ```
-The contents of your minting policy plutus script file should now look similar to
+The contents of your contract plutus script file should now look similar to
 ```
 {
     "type": "PlutusScriptV1",
