@@ -38,7 +38,7 @@ One wallet owns the swap pool. The owner is the only wallet allowed to perform c
 ~/wallets  : cardano-cli address key-hash --payment-verification-key-file owner-wallet.vkey --out-file owner-wallet.pkh
 ```
 
-The contents of your owner-wallet.pkh should now be a 64 byte hex, similar to but not identical to `c6575a86d6864038828bd3be29afc435247cb81af2e4ee2d5d8e861a`. 
+The contents of your owner-wallet.pkh should now be a 56 byte hex, similar to but not identical to `c6575a86d6864038828bd3be29afc435247cb81af2e4ee2d5d8e861a`. 
 All wallets have their own unique key hash
 
 ## Serialize the plutus script
