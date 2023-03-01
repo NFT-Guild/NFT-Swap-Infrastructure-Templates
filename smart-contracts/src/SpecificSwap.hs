@@ -19,13 +19,10 @@ import           PlutusTx.Prelude     hiding (Semigroup(..), unless)
 import           Ledger               hiding (singleton)
 import qualified Ledger.Typed.Scripts as Scripts
 import           Ledger.Value         as Value
-import           Prelude              (Show)
+import           Ledger.Ada
+import           Prelude              (Show, (<>))
 
 {-# OPTIONS_GHC -fno-warn-unused-imports #-}
-
--------------------
--- ON CHAIN CODE --
--------------------
 
 -- Contract parameter object to save state about contract owner
 data ContractParam = ContractParam
@@ -40,30 +37,70 @@ PlutusTx.makeLift ''ContractParam
 --                    Parameter to script   Datum          Redeemer               ScriptContext     Result
 mkNFTSwapValidator :: ContractParam      -> ()          -> Integer             -> ScriptContext  -> Bool
 mkNFTSwapValidator scriptParams _ action ctx
-    | action == 0 = traceIfFalse "SWAP FAILED: No desired token sent to pool OR no desired token requested from pool" (anyDesiredTokenRequested && anyDesiredTokenReceived)
+    | action == 0 = traceIfFalse "SWAP FAILED: Number of tokens requested not equal to number of tokens sent" $ numDesiredTokensRequested == numDesiredTokensReceived
     | action == 1 = traceIfFalse "CLEANUP FAILED: Operation can only be performed by contract owner " performedByContractOwner
-    | otherwise   = traceError   "UNSUPPORTED ACTION"
+    | otherwise    = traceError   "UNSUPPORTED ACTION"
     where
         info :: TxInfo
         info = scriptContextTxInfo ctx
 
-        anyDesiredTokenRequested :: Bool
-        anyDesiredTokenRequested = (desiredPolicyID scriptParams) `elem` symbols (valueSpent info)  
+        -- return all values that are only in first value and not in the second (opposite of intersect)
+        exceptValues :: [(CurrencySymbol, TokenName, Integer)] -> Value -> Value
+        exceptValues [] _  = lovelaceValueOf 0
+        exceptValues ((c,t,i) : v1s) v2 = if Value.isZero v2
+                                          then lovelaceValueOf 0
+                                          else
+                                            if valueOf v2 c t >= 1
+                                            then exceptValues v1s v2
+                                            else (singleton c t i) <> exceptValues v1s v2
+
+        -- return the number of desired tokens requested from the smart contract
+        numDesiredTokensRequested :: Integer
+        numDesiredTokensRequested = let desiredCS             = (desiredPolicyID scriptParams)
+                                        allTxTokens           = flattenValue (valueSpent info)
+                                        scriptTxOuts          = (scriptOutputsAt (ownHash ctx) info)
+                                        sentToScTxTokens      = getTxOutValueOnly scriptTxOuts
+                                        valuesRequestedFromSc = exceptValues allTxTokens sentToScTxTokens
+                                    in  numOfTokensFromPolicy (flattenValue valuesRequestedFromSc) desiredCS
+
+        -- return the number of desired tokens sent to the smart contract
+        numDesiredTokensReceived :: Integer
+        numDesiredTokensReceived = let desiredCS    = (desiredPolicyID scriptParams)
+                                       scriptTxOuts = (scriptOutputsAt (ownHash ctx) info)
+                                       txOutValues  = getTxOutValueOnly scriptTxOuts 
+                                   in  numOfTokensFromPolicy (flattenValue txOutValues) desiredCS
 
         -- check if the transaction was signed by the contract owner
         performedByContractOwner :: Bool
         performedByContractOwner = txSignedBy info $ unPaymentPubKeyHash $ contractOwner scriptParams
 
-        policyIDInValue :: CurrencySymbol -> Value -> Bool
-        policyIDInValue c v = c `elem` symbols v
+        -- create Value from TxOut
+        getTxOutValueOnly :: [(DatumHash, Value)] -> Value
+        getTxOutValueOnly []             = lovelaceValueOf 0
+        getTxOutValueOnly ((_, v) : tos) = v <> (getTxOutValueOnly tos) 
 
-        -- check all received output tupple pairs to see if the currencysymbol is found
-        desiredReceived :: CurrencySymbol -> [(DatumHash, Value)] -> Bool
-        desiredReceived _ []        = False
-        desiredReceived cs (o : os) = (policyIDInValue cs (snd o)) || desiredReceived cs os  
+        -- count number of tokens in flatten value that have a specific CurrencySymbol
+        numOfTokensFromPolicy :: [(CurrencySymbol, TokenName, Integer)] -> CurrencySymbol -> Integer
+        numOfTokensFromPolicy [] _ = 0
+        numOfTokensFromPolicy ((vc, _, vi) : vs) cs = if vc == cs
+                                                      then vi + (numOfTokensFromPolicy vs cs)
+                                                      else 0  + (numOfTokensFromPolicy vs cs)
 
-        anyDesiredTokenReceived :: Bool
-        anyDesiredTokenReceived = desiredReceived (desiredPolicyID scriptParams) (scriptOutputsAt (ownHash ctx) info)
+{-
+        -- Remove all elements member of list 1 from list 2
+        removeElementsFromList :: [CurrencySymbol] -> [CurrencySymbol] -> [CurrencySymbol]
+        removeElementsFromList [] cs = cs
+        removeElementsFromList _  [] = []
+        removeElementsFromList elemsToRemove (c : cs) = if c `elem` elemsToRemove
+                                                        then removeElementsFromList elemsToRemove cs
+                                                        else c : removeElementsFromList elemsToRemove cs
+
+        -- check if any unlisted tokens are withdrawn from the contract. Unlisted tokens can only be withdrawn by the owner
+        anyUnlistedTokensRequested :: Bool
+        anyUnlistedTokensRequested = let valuedCSs = [(desiredPolicyID scriptParams), adaSymbol]
+                                         producedCSs = symbols (valueProduced info)
+                                     in  length (removeElementsFromList valuedCSs producedCSs) > 0
+-}
 
 -- tell compiler the types of Datum and Redeemer
 data SwapData
