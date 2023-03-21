@@ -22,6 +22,7 @@ import           Ledger.Value         as Value
 import           Ledger.Ada
 import           Prelude              (Show, (<>))
 
+
 {-# OPTIONS_GHC -fno-warn-unused-imports #-}
 
 -- Contract parameter object to save state about contract owner
@@ -39,7 +40,7 @@ mkNFTSwapValidator :: ContractParam      -> ()          -> Integer             -
 mkNFTSwapValidator scriptParams _ action ctx
     | action == 0 = traceIfFalse "SWAP FAILED: Number of tokens requested not equal to number of tokens sent" $ numDesiredTokensRequested == numDesiredTokensReceived
     | action == 1 = traceIfFalse "CLEANUP FAILED: Operation can only be performed by contract owner " performedByContractOwner
-    | otherwise    = traceError   "UNSUPPORTED ACTION"
+    | otherwise   = traceError   "UNSUPPORTED ACTION"
     where
         info :: TxInfo
         info = scriptContextTxInfo ctx
@@ -54,14 +55,20 @@ mkNFTSwapValidator scriptParams _ action ctx
                                             then exceptValues v1s v2
                                             else (singleton c t i) <> exceptValues v1s v2
 
+        -- return the inputs that originate from the script
+        utxosSpentFromSc :: [TxInInfo]
+        utxosSpentFromSc = filter (\u -> (txOutAddress (txInInfoResolved u)) == scriptHashAddress (ownHash ctx)) $ txInfoInputs info
+
+        -- return the Value contained in the tx inputs list
+        getTxInValueOnly :: [TxInInfo] -> Value
+        getTxInValueOnly []             = lovelaceValueOf 0
+        getTxInValueOnly (i : is)       = txOutValue (txInInfoResolved i) <> (getTxInValueOnly is)
+
         -- return the number of desired tokens requested from the smart contract
         numDesiredTokensRequested :: Integer
-        numDesiredTokensRequested = let desiredCS             = (desiredPolicyID scriptParams)
-                                        allTxTokens           = flattenValue (valueSpent info)
-                                        scriptTxOuts          = (scriptOutputsAt (ownHash ctx) info)
-                                        sentToScTxTokens      = getTxOutValueOnly scriptTxOuts
-                                        valuesRequestedFromSc = exceptValues allTxTokens sentToScTxTokens
-                                    in  numOfTokensFromPolicy (flattenValue valuesRequestedFromSc) desiredCS
+        numDesiredTokensRequested = let desiredCS        = desiredPolicyID scriptParams
+                                        valueSpentFromSc = getTxInValueOnly utxosSpentFromSc 
+                                    in  numOfTokensFromPolicy (flattenValue valueSpentFromSc) desiredCS
 
         -- return the number of desired tokens sent to the smart contract
         numDesiredTokensReceived :: Integer
@@ -86,21 +93,6 @@ mkNFTSwapValidator scriptParams _ action ctx
                                                       then vi + (numOfTokensFromPolicy vs cs)
                                                       else 0  + (numOfTokensFromPolicy vs cs)
 
-{-
-        -- Remove all elements member of list 1 from list 2
-        removeElementsFromList :: [CurrencySymbol] -> [CurrencySymbol] -> [CurrencySymbol]
-        removeElementsFromList [] cs = cs
-        removeElementsFromList _  [] = []
-        removeElementsFromList elemsToRemove (c : cs) = if c `elem` elemsToRemove
-                                                        then removeElementsFromList elemsToRemove cs
-                                                        else c : removeElementsFromList elemsToRemove cs
-
-        -- check if any unlisted tokens are withdrawn from the contract. Unlisted tokens can only be withdrawn by the owner
-        anyUnlistedTokensRequested :: Bool
-        anyUnlistedTokensRequested = let valuedCSs = [(desiredPolicyID scriptParams), adaSymbol]
-                                         producedCSs = symbols (valueProduced info)
-                                     in  length (removeElementsFromList valuedCSs producedCSs) > 0
--}
 
 -- tell compiler the types of Datum and Redeemer
 data SwapData
