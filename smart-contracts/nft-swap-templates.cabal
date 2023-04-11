@@ -12,6 +12,7 @@ library
   hs-source-dirs:      src
   exposed-modules:     Utils
                      , SpecificSwap
+                     , SpecificSwapFiltered
   build-depends:       aeson
                      , base ^>=4.14.1.0
                      , containers
@@ -45,3 +46,16 @@ executable specific-swap
                      , plutus-ledger-api
                      , plutus-tx
                      , cardano-api
+
+executable specific-swap-filtered
+  main-is: specific-swap-filtered.hs
+  hs-source-dirs:      app
+  ghc-options:         -Wall
+  build-depends:       base ^>= 4.14.1.0
+                     , nft-swap-templates
+                     , plutus-ledger
+                     , aeson
+                     , plutus-ledger-api
+                     , plutus-tx
+                     , cardano-api
+

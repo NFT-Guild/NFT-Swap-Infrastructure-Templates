@@ -1,5 +1,6 @@
-{-# LANGUAGE GADTs            #-}
-{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE GADTs               #-}
+{-# LANGUAGE TypeApplications    #-}
+{-# LANGUAGE ImportQualifiedPost #-}
 
 {-
   Slightly modified version of Utils.hs from IOG Github repository
@@ -17,7 +18,8 @@ module Utils
     , getCredentials, unsafePaymentPubKeyHash, unsafeStakePubKeyHash
     , cidToString
     , writeMintingPolicy, writeValidator
-    , unsafeTokenNameToHex
+    , unsafeTokenNameToHex, splitStringByDelim
+    , bytesFromHex, stringToByteString
     ) where
 
 import           Cardano.Api                 as API
@@ -35,16 +37,22 @@ import qualified Data.ByteString.Short       as SBS
 import           Data.Maybe                  (fromJust, fromMaybe)
 import           Data.String                 (IsString (..))
 import           Data.Text                   (pack)
+import           Plutus.V1.Ledger.Api        as PlutusV1
 import           Plutus.V1.Ledger.Credential as Plutus
 import           Plutus.V1.Ledger.Crypto     as Plutus
-import           Plutus.V1.Ledger.Value      (TokenName (..))
-import           PlutusTx                    (Data (..))
+import           Plutus.V1.Ledger.Value()
+import           PlutusTx()
 import qualified PlutusTx
-import           PlutusTx.Builtins           (toBuiltin)
+import           PlutusTx.Builtins()
 import           PlutusTx.Builtins.Internal  (BuiltinByteString (..))
 import qualified Ledger                      as Plutus
-import           Wallet.Emulator.Wallet      (WalletId (..), Wallet (..))
+import           Wallet.Emulator.Wallet      (WalletId (..))
 import           Wallet.Types                (ContractInstanceId (..))
+import           Prelude
+import           Data.ByteString qualified as BS (ByteString)
+import           Plutus.V1.Ledger.Bytes qualified as P (bytes, fromHex)
+
+
 
 dataToScriptData :: Data -> ScriptData
 dataToScriptData (Constr n xs) = ScriptDataConstructor n $ dataToScriptData <$> xs
@@ -139,3 +147,17 @@ unsafeTokenNameToHex :: TokenName -> String
 unsafeTokenNameToHex = BS8.unpack . serialiseToRawBytesHex . fromJust . deserialiseFromRawBytes AsAssetName . getByteString . unTokenName
   where
     getByteString (BuiltinByteString bs) = bs
+
+splitStringByDelim :: Char -> String -> [String]
+splitStringByDelim c xs = case break (==c) xs of 
+  (ls, "") -> [ls]
+  (ls, _:rs) -> ls : splitStringByDelim c rs
+
+bytesFromHex :: BS.ByteString -> BS.ByteString
+bytesFromHex = P.bytes . fromEither . P.fromHex
+  where
+    fromEither (Left e)  = error $ show e
+    fromEither (Right b) = b
+
+stringToByteString :: String -> BS8.ByteString
+stringToByteString = BS8.pack

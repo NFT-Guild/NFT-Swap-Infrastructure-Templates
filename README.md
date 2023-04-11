@@ -10,7 +10,7 @@ The smart contract provided are at this point not a full implementation. Feel fr
 * LICENSE         - License information
 * doc             - Documentation about how to build and configure the NFT Swap Infrastructure
 * smart-contracts - All code related to the smart contracts to guard your swap pool contents
-* web             - Example web site you can use for 
+* web             - Example web site you can customize to allow users to interact with your swap pool
 
 # Prerequesites
 We have made effort to keep this repoisitory easy to use. Code has comments to give insight into what is going on.
@@ -28,4 +28,4 @@ If you do not have a running environment you can use the following instructions 
 | Contract | Deployment instructions |
 | --- | --- |
 | [Specific Swap](smart-contracts/src/SpecificSwap.hs) | [Instructions](doc/deploy-specific-swap.md) |
-
+| [Filtered Specific Swap](smart-contracts/src/SpecificSwapFiltered.hs) | [Instructions](doc/deploy-specific-swap-filtered.md) |
