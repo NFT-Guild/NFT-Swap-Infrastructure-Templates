@@ -46,7 +46,7 @@ mkNFTSwapValidator scriptParams _ action ctx
         info = scriptContextTxInfo ctx
 
         -- return all values that are only in first value and not in the second (opposite of intersect)
-        exceptValues :: [(CurrencySymbol, TokenName, Integer)] -> Value -> Value
+{-        exceptValues :: [(CurrencySymbol, TokenName, Integer)] -> Value -> Value
         exceptValues [] _  = lovelaceValueOf 0
         exceptValues ((c,t,i) : v1s) v2 = if Value.isZero v2
                                           then lovelaceValueOf 0
@@ -54,6 +54,7 @@ mkNFTSwapValidator scriptParams _ action ctx
                                             if valueOf v2 c t >= 1
                                             then exceptValues v1s v2
                                             else (singleton c t i) <> exceptValues v1s v2
+-}
 
         -- return the inputs that originate from the script
         utxosSpentFromSc :: [TxInInfo]
