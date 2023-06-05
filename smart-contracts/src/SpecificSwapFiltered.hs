@@ -42,15 +42,16 @@ mkNFTSwapValidator scriptParams _ action ctx
     | action == 0 = let tokensRequested'          = tokensRequested
                         tokensReceived'           = tokensReceived
                         numRequested              = numDesiredTokensRequested tokensRequested'
-                        numReceived               = numDesiredTokensReceived tokensReceived
+                        numReceived               = numDesiredTokensReceived tokensReceived'
                         requestedAndReceivedEqual = traceIfFalse "Number of tokens requested not equal to number of tokens received" $ numRequested == numReceived
-                        atLeastOneTokenSwapped    = traceIfFalse "At least one token is required for swap operation to be performed" $ numReceived > 0
+                        -- atLeastOneTokenSwapped    = traceIfFalse "At least one token is required for swap operation to be performed" $ numReceived > 0
                         noUnlistedTokensWithdrawn = traceIfFalse "Unlisted tokens can only be withdrawn by the contract owner"       $ (numUnlistedTokensRequested tokensRequested') == 0
-                        lovelaceNotDrained        = traceIfFalse "Amount of lovelace withdrawn from swap pool is too high"           $ totalLovelaceWithdrawn tokensRequested' tokensReceived' <= (numRequested * 1500000) 
+                        -- lovelaceNotDrained        = traceIfFalse "Amount of lovelace withdrawn from swap pool is too high"           $ totalLovelaceWithdrawn tokensRequested' tokensReceived' <= (numRequested * 1500000) 
                     in                              traceIfFalse "SWAP FAILED"                                                       $ all (==True) [ requestedAndReceivedEqual
-                                                                                                                                                    , atLeastOneTokenSwapped
+                                                                                                                                                    -- , atLeastOneTokenSwapped
                                                                                                                                                     , noUnlistedTokensWithdrawn
-                                                                                                                                                    , lovelaceNotDrained]  
+                                                                                                                                                    -- , lovelaceNotDrained
+                                                                                                                                                    ]  
     | action == 1 = traceIfFalse "CLEANUP FAILED: Operation can only be performed by contract owner " performedByContractOwner
     | otherwise   = traceError   "UNSUPPORTED ACTION"
     where
@@ -81,8 +82,8 @@ mkNFTSwapValidator scriptParams _ action ctx
                                                      in  length (removeCurrencySymbolsFromList valuedCSs producedCSs)
 
         -- the amount of lovelace withdrawn from the contract by this transaction (requested minus received)
-        totalLovelaceWithdrawn :: Value -> Value -> Integer
-        totalLovelaceWithdrawn requested received = (valueOf requested adaSymbol adaToken) - (valueOf received adaSymbol adaToken)
+        -- totalLovelaceWithdrawn :: Value -> Value -> Integer
+        -- totalLovelaceWithdrawn requested received = (valueOf requested adaSymbol adaToken) - (valueOf received adaSymbol adaToken)
 
         -- remove all CurrencySymbols of list 1 from list 2
         removeCurrencySymbolsFromList :: [CurrencySymbol] -> [CurrencySymbol] -> [CurrencySymbol]

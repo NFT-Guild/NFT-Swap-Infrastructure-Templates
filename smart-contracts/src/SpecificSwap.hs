@@ -38,23 +38,23 @@ PlutusTx.makeLift ''ContractParam
 --                    Parameter to script   Datum          Redeemer               ScriptContext     Result
 mkNFTSwapValidator :: ContractParam      -> ()          -> Integer             -> ScriptContext  -> Bool
 mkNFTSwapValidator scriptParams _ action ctx
-    | action == 0 = traceIfFalse "SWAP FAILED: Number of tokens requested not equal to number of tokens sent" $ numDesiredTokensRequested == numDesiredTokensReceived
+    | action == 0 = let numRequested          = numDesiredTokensRequested
+                        numReceived           = numDesiredTokensReceived
+                        requestedAndReceivedEqual = traceIfFalse "Number of tokens requested not equal to number of tokens received" $ numRequested == numReceived
+                        atLeastOneTokenSwapped    = traceIfFalse "At least one token is required for swap operation to be performed" $ numReceived > 0
+                        noUnlistedTokensWithdrawn = traceIfFalse "Unlisted tokens can only be withdrawn by the contract owner"       $ numUnlistedTokensRequested == 0
+                        -- lovelaceNotDrained        = traceIfFalse "Amount of lovelace withdrawn from swap pool is too high"           $ totalLovelaceWithdrawn tokensRequested' tokensReceived' <= (numRequested * 1500000) 
+                    in                              traceIfFalse "SWAP FAILED"                                                       $ all (==True) [ requestedAndReceivedEqual
+                                                                                                                                                    , atLeastOneTokenSwapped
+                                                                                                                                                    , noUnlistedTokensWithdrawn
+                                                                                                                                                    -- , lovelaceNotDrained
+                                                                                                                                                    ]  
+--    | action == 0 = traceIfFalse "SWAP FAILED: Number of tokens requested not equal to number of tokens sent" $ numDesiredTokensRequested == numDesiredTokensReceived
     | action == 1 = traceIfFalse "CLEANUP FAILED: Operation can only be performed by contract owner " performedByContractOwner
     | otherwise   = traceError   "UNSUPPORTED ACTION"
     where
         info :: TxInfo
         info = scriptContextTxInfo ctx
-
-        -- return all values that are only in first value and not in the second (opposite of intersect)
-{-        exceptValues :: [(CurrencySymbol, TokenName, Integer)] -> Value -> Value
-        exceptValues [] _  = lovelaceValueOf 0
-        exceptValues ((c,t,i) : v1s) v2 = if Value.isZero v2
-                                          then lovelaceValueOf 0
-                                          else
-                                            if valueOf v2 c t >= 1
-                                            then exceptValues v1s v2
-                                            else (singleton c t i) <> exceptValues v1s v2
--}
 
         -- return the inputs that originate from the script
         utxosSpentFromSc :: [TxInInfo]
@@ -68,8 +68,25 @@ mkNFTSwapValidator scriptParams _ action ctx
         -- return the number of desired tokens requested from the smart contract
         numDesiredTokensRequested :: Integer
         numDesiredTokensRequested = let desiredCS        = desiredPolicyID scriptParams
-                                        valueSpentFromSc = getTxInValueOnly utxosSpentFromSc 
+                                        valueSpentFromSc = tokensRequested 
                                     in  numOfTokensFromPolicy (flattenValue valueSpentFromSc) desiredCS
+
+        tokensRequested :: Value
+        tokensRequested = getTxInValueOnly utxosSpentFromSc
+
+                -- remove all CurrencySymbols of list 1 from list 2
+        removeCurrencySymbolsFromList :: [CurrencySymbol] -> [CurrencySymbol] -> [CurrencySymbol]
+        removeCurrencySymbolsFromList [] cs = cs
+        removeCurrencySymbolsFromList _  [] = []
+        removeCurrencySymbolsFromList csToRemove (c : cs) = if c `elem` csToRemove
+                                                            then removeCurrencySymbolsFromList csToRemove cs
+                                                            else c : removeCurrencySymbolsFromList csToRemove cs
+
+        -- number of tokens requested that are not from the desired policy id(s)
+        numUnlistedTokensRequested :: Integer
+        numUnlistedTokensRequested = let valuedCSs = [(desiredPolicyID scriptParams), adaSymbol]
+                                         producedCSs = symbols tokensRequested
+                                     in  length (removeCurrencySymbolsFromList valuedCSs producedCSs)
 
         -- return the number of desired tokens sent to the smart contract
         numDesiredTokensReceived :: Integer
