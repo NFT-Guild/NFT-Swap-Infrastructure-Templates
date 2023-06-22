@@ -11,6 +11,8 @@ import {
 // BLOCKFROST MAINNET / PREPROD SETTING - CHANGE TO YOUR DESIRED ENVIRONMENT
 //cost blockfrost_api_url = 'https://cardano-mainnet.blockfrost.io/api/v0'; // mainnet
 const blockfrost_api_url = 'https://cardano-preprod.blockfrost.io/api/v0'; // preprod
+
+// consider to reengineer so blockfrost_api_key is invisible, if you experience miss-use
 const blockfrost_api_key = 'preprodEjFneFL6OYHnNmdWLCSKYvlm73cGm90a'; // Example only: register with blockfrost and create your own project id
 //const blockfrost_api_env = 'Mainnet'; // mainnet
 const blockfrost_api_env = 'Preprod'; // preprod
