@@ -5,7 +5,6 @@ Easily adaptable and implementable by any NFT project in the Cardano space.
 # Overview of the repository
 * README          - This file
 * LICENSE         - License information
-* doc             - Documentation about how to build and configure the NFT Swap Infrastructure
 * smart-contracts - Swap pool smart contracts that validates that swaps are done according to the rules
 * dapp             - Example web site you can customize to allow users to interact with your swap pool
 
