@@ -47,7 +47,6 @@ body.no-background-images.dark-mode, .modal-body.dark-mode, .modal-header.dark-m
     background: inherit;
     font-family: "Outfit", sans-serif;
     font-weight: 100;
-    /*font-size: xx-small;*/
     color: rgb(75,174,167);
     border-top-right-radius: var(--bs-modal-border-radius);
     border-top-left-radius: var(--bs-modal-border-radius);
@@ -81,17 +80,8 @@ body.no-background-images.dark-mode, .modal-body.dark-mode, .modal-header.dark-m
 }
 
 .modal-dialog, .modal-content {
-    /*overflow-y: auto;
-    overflow-x: auto;*/
-    /*max-height: none;*/
     max-width: fit-content;
-    /*padding: 15px;*/
 }
-
-/*
-.description-text {
-    font-weight: 100;
-}*/
 
 .light {
     font-weight: 100; /*light weight*/
@@ -145,12 +135,6 @@ input.textfield.dark-mode:focus {
     vertical-align: middle;
 }
 
-/*.dark-mode {
-    background-color: rgb(185,208,201);
-    color: rgb(55,64,74);
-    border-style: none;
-}*/
-
 input.searchfield {
     background-color: rgb(240,231,163);
     font-weight: 500;
@@ -182,20 +166,8 @@ div.nft-list {
     font-size: medium;
     font-weight: lighter;
     text-align: center;
-    /*margin: auto;
-    width: 70%;*/
-    /*padding-top: 20%;*/
 }
 
-/*
-.not-selected {
-    border: transparent rgb(236,215,47);
-    border-left-style: none;
-    border-top-style: none;
-    background-color: rgb(236,215,47);
-    background: rgb(236,215,47);
-    transition-delay:  100ms;
-}*/
 .not-selected {
     border: transparent inherit;
     border-left-style: none;
@@ -203,7 +175,6 @@ div.nft-list {
     background-color: transparent;
     background: transparent;
     transition-delay:  100ms;
-    /*transition-property: background-color, border; */
 }
 
 .not-selecteddark-mode {
@@ -213,38 +184,26 @@ div.nft-list {
     background-color: transparent;
     background: transparent;
     transition-delay:  100ms;
-    /*transition-property: background-color, border; */
 }
 
 .selected {
     border: transparent rgb(250,125,35);
-    /*border-bottom-style: none;*/
     border-left-style: none;
     border-top-style: none;
     background-color: linear-gradient(to bottom right, rgb(236,215,47), rgb(250,125,35));
     background: linear-gradient(to bottom right, rgb(236,215,47), rgb(250,125,35));
     transition-delay:  100ms;
-    /*transition-property: background-color, border;  */
 }
 
 .selecteddark-mode {
     border: transparent rgb(52,58,65);
-    /*border-bottom-style: none;*/
     border-left-style: none;
     border-top-style: none;
     background-color: linear-gradient(to bottom right, rgb(52,58,65), rgb(185,208,201));
     background: linear-gradient(to bottom right, rgb(52,58,65), rgb(185,208,201));
     transition-delay:  100ms;
     color: rgb(52,58,65);
-    /*transition-property: background-color, border;  */
 }
-
-/*
-.selected-no-border {
-    background-color: linear-gradient(rgb(236,215,47), rgb(250,125,35));
-    background: linear-gradient(rgb(236,215,47), rgb(250,125,35));
-    transition-delay:  100ms;
-}*/
 
 button.themed-color {
     background-color: rgb(250,125,35);
@@ -262,9 +221,7 @@ button.themed-colordark-mode {
 
 .button-colordark-mode {
     color: rgb(75,174,167);
-    /*background-color: rgb(75,174,167);*/
 }
-
 
 button.connect-wallet {
     background-color: rgb(250,125,35);
@@ -285,13 +242,11 @@ button.connect-walletdark-mode {
 }
 
 button.connect-wallet:hover, button.themed-color:hover{
-    /*background-image: none;*/
     color: rgb(250,125,35);
     background-color: rgb(255,240,134);
 }
 
 button.connect-walletdark-mode:hover, button.themed-colordark-mode:hover{
-    /*background-image: none;*/
     background-color: rgb(185,208,201);
     color: rgb(55,64,74);
 }
@@ -301,18 +256,11 @@ ul.dropdown-menu.show {
     color: rgb(255,240,134);
 }
 
-/*a.dropdown-item, div.dropdown-item {
-    background-color: rgb(250,125,35);
-    color: rgb(255,240,134);
-}*/
-
 .dropdown-item {
-    /*background-color: rgb(250,125,35);*/
     color: rgb(255,240,134);
 }
 
 .dropdown-itemdark-mode {
-    /*background-color: rgb(250,125,35);*/
     color: rgb(185,208,201);
 }
 
@@ -330,11 +278,6 @@ ul.dropdown-menu.show {
     --bs-dropdown-color: rgb(255,240,134);
     --bs-dropdown-bg: rgb(250,125,35);
 }
-
-/*.dropdown-menudark-mode {
-    --bs-dropdown-color: rgb(185,208,201);
-    --bs-dropdown-bg: rgb(75,174,167);
-}*/
 
 .modal-title {
     font-weight: bold;
@@ -430,11 +373,3 @@ a.connect-buttondark-mode {
     color: inherit;
     text-decoration: none;
 }
-
-/*a.connect-buttondark-mode:hover {
-    background-color: rgb(185,208,201);
-    color: rgb(52,58,65);
-    text-decoration: none;
-}*/
-
-
