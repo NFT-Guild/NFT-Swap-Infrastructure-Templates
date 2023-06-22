@@ -1,0 +1,20 @@
+{
+  "name": "swap-pool-template",
+  "version": "0.0.1",
+  "description": "Template web front-end application for Cardano NFT Swap pool",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon app.js"
+  },
+  "author": "CENT",
+  "license": "ISC",
+  "dependencies": {
+    "@stricahq/typhonjs": "^1.2.8",
+    "express": "^4.18.1",
+    "node-fetch": "^2.6.1",
+    "nodejs": "^0.0.0",
+    "nodemon": "^2.0.20",
+    "pug": "^3.0.2"
+  }
+}

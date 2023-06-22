@@ -1,0 +1,440 @@
+body {
+    background: rgb(236,215,47);
+    font-family: "Outfit", sans-serif;
+    font-weight: lighter;
+    font-size: medium;
+    background-image: url("../images/shape-left.png"), url("../images/shape-right.png");
+    background-position: left bottom, right 70px;
+    background-repeat: no-repeat;
+    background-size: 15%;
+}
+
+body.dark-mode {
+    background: rgb(55,64,74);
+    background-image: url("../images/shape-left-dark-mode.png"), url("../images/shape-right-dark-mode.png");
+    background-position: left bottom, right 70px;
+    background-repeat: no-repeat;
+    background-size: 15%;
+    color: rgb(75,174,167)
+}
+
+body.no-background-images, .modal-body, .modal-header {
+    background: rgb(236,215,47);
+    font-family: "Outfit", sans-serif;
+    font-weight: 100;
+    font-size: xx-small;
+}
+
+body.no-background-images.dark-mode, .modal-body.dark-mode, .modal-header.dark-mode {
+    background: rgb(55,64,74);
+    font-family: "Outfit", sans-serif;
+    font-weight: 100;
+    font-size: xx-small;
+}
+
+.message-box {
+    background: rgb(55,64,74);
+    font-family: "Outfit", sans-serif;
+    font-weight: 100;
+    /*font-size: xx-small;*/
+    color: rgb(251,246,213);
+    border-top-right-radius: var(--bs-modal-border-radius);
+    border-top-left-radius: var(--bs-modal-border-radius);
+    --bs-backdrop-opacity: 0;
+}
+
+.message-boxdark-mode {
+    background: inherit;
+    font-family: "Outfit", sans-serif;
+    font-weight: 100;
+    /*font-size: xx-small;*/
+    color: rgb(75,174,167);
+    border-top-right-radius: var(--bs-modal-border-radius);
+    border-top-left-radius: var(--bs-modal-border-radius);
+    --bs-backdrop-opacity: 0;
+}
+
+.message-box-header {
+    /* want the header row of message box modal to be transparent */
+    background: transparent;
+}
+
+.modal-footer {
+    /* want the button row of modal to be transparent */
+    background: transparent;
+}
+
+.modal-body {
+    /* making sure the modal has a nice rounded bottom */
+    border-bottom-right-radius: var(--bs-modal-border-radius);
+    border-bottom-left-radius: var(--bs-modal-border-radius);
+}
+
+.modal {
+    /* make sure the modal itself has transparent background */
+    --bs-modal-bg: transparent;
+}
+
+.modal-content, .modal-body, .modal-header, .modal-footer {
+    /* remove all dividing borders between the different parts of the modal */
+    border: none;
+}
+
+.modal-dialog, .modal-content {
+    /*overflow-y: auto;
+    overflow-x: auto;*/
+    /*max-height: none;*/
+    max-width: fit-content;
+    /*padding: 15px;*/
+}
+
+/*
+.description-text {
+    font-weight: 100;
+}*/
+
+.light {
+    font-weight: 100; /*light weight*/
+}
+
+#medium {
+    font-weight: 500;
+}
+
+textarea.textfield {
+    background-color: rgb(240,231,163);
+    font-weight: 500;
+    border-style: none;
+}
+
+textarea.dark-mode {
+    background-color: rgb(185,208,201);
+    font-weight: 500;
+    border-style: none;
+}
+
+input.textfield {
+    background-color: rgb(240,231,163);
+    font-weight: 500;
+    border-style: none;
+}
+
+input.textfield.dark-mode {
+    background-color: rgb(185,208,201);
+    font-weight: 500;
+    border-style: none;
+}
+
+input.textfield:focus {
+    background-color: rgb(240,231,163);
+}
+
+input.textfield.dark-mode:focus {
+    background-color: rgb(185,208,201);
+}
+
+.input-group-text {
+    background-color: rgb(240,231,163);
+    border-style: none;
+}
+
+.input-group-textdark-mode {
+    background-color: rgb(185,208,201);
+    color: rgb(55,64,74);
+    border-style: none;
+    vertical-align: middle;
+}
+
+/*.dark-mode {
+    background-color: rgb(185,208,201);
+    color: rgb(55,64,74);
+    border-style: none;
+}*/
+
+input.searchfield {
+    background-color: rgb(240,231,163);
+    font-weight: 500;
+    border-style: none;
+}
+
+input.searchfielddark-mode {
+    background-color: rgb(185,208,201);
+    color: rgb(55,64,74);
+    font-weight: 500;
+    border-style: none;
+}
+
+input.searchfield:focus {
+    background-color: rgb(240,231,163);
+}
+
+input.searchfielddark-mode:focus {
+    background-color: rgb(185,208,201);
+    color: rgb(55,64,74);
+}
+
+h1 {
+    font-family: "Poiret One", sans-serif;
+}
+
+div.nft-list {
+    font-family: "Outfit", sans-serif;
+    font-size: medium;
+    font-weight: lighter;
+    text-align: center;
+    /*margin: auto;
+    width: 70%;*/
+    /*padding-top: 20%;*/
+}
+
+/*
+.not-selected {
+    border: transparent rgb(236,215,47);
+    border-left-style: none;
+    border-top-style: none;
+    background-color: rgb(236,215,47);
+    background: rgb(236,215,47);
+    transition-delay:  100ms;
+}*/
+.not-selected {
+    border: transparent inherit;
+    border-left-style: none;
+    border-top-style: none;
+    background-color: transparent;
+    background: transparent;
+    transition-delay:  100ms;
+    /*transition-property: background-color, border; */
+}
+
+.not-selecteddark-mode {
+    border: transparent inherit;
+    border-left-style: none;
+    border-top-style: none;
+    background-color: transparent;
+    background: transparent;
+    transition-delay:  100ms;
+    /*transition-property: background-color, border; */
+}
+
+.selected {
+    border: transparent rgb(250,125,35);
+    /*border-bottom-style: none;*/
+    border-left-style: none;
+    border-top-style: none;
+    background-color: linear-gradient(to bottom right, rgb(236,215,47), rgb(250,125,35));
+    background: linear-gradient(to bottom right, rgb(236,215,47), rgb(250,125,35));
+    transition-delay:  100ms;
+    /*transition-property: background-color, border;  */
+}
+
+.selecteddark-mode {
+    border: transparent rgb(52,58,65);
+    /*border-bottom-style: none;*/
+    border-left-style: none;
+    border-top-style: none;
+    background-color: linear-gradient(to bottom right, rgb(52,58,65), rgb(185,208,201));
+    background: linear-gradient(to bottom right, rgb(52,58,65), rgb(185,208,201));
+    transition-delay:  100ms;
+    color: rgb(52,58,65);
+    /*transition-property: background-color, border;  */
+}
+
+/*
+.selected-no-border {
+    background-color: linear-gradient(rgb(236,215,47), rgb(250,125,35));
+    background: linear-gradient(rgb(236,215,47), rgb(250,125,35));
+    transition-delay:  100ms;
+}*/
+
+button.themed-color {
+    background-color: rgb(250,125,35);
+    color: rgb(255,240,134);
+}
+
+button.themed-colordark-mode {
+    background-color: rgb(75,174,167);
+    color: rgb(55,64,74);
+}
+
+.button-color {
+    color: rgb(250,125,35);
+}
+
+.button-colordark-mode {
+    color: rgb(75,174,167);
+    /*background-color: rgb(75,174,167);*/
+}
+
+
+button.connect-wallet {
+    background-color: rgb(250,125,35);
+    color: rgb(255,240,134);
+    border-style: none;
+    padding: 10px;
+    margin-top: 15px;
+    margin-right: 15px;
+}
+
+button.connect-walletdark-mode {
+    background-color: rgb(75,174,167);
+    color: rgb(55,64,74);
+    border-style: none;
+    padding: 10px;
+    margin-top: 15px;
+    margin-right: 15px;
+}
+
+button.connect-wallet:hover, button.themed-color:hover{
+    /*background-image: none;*/
+    color: rgb(250,125,35);
+    background-color: rgb(255,240,134);
+}
+
+button.connect-walletdark-mode:hover, button.themed-colordark-mode:hover{
+    /*background-image: none;*/
+    background-color: rgb(185,208,201);
+    color: rgb(55,64,74);
+}
+
+ul.dropdown-menu.show {
+    background-color: rgb(250,125,35);
+    color: rgb(255,240,134);
+}
+
+/*a.dropdown-item, div.dropdown-item {
+    background-color: rgb(250,125,35);
+    color: rgb(255,240,134);
+}*/
+
+.dropdown-item {
+    /*background-color: rgb(250,125,35);*/
+    color: rgb(255,240,134);
+}
+
+.dropdown-itemdark-mode {
+    /*background-color: rgb(250,125,35);*/
+    color: rgb(185,208,201);
+}
+
+.dropdown-item:hover {
+    color: rgb(250,125,35);
+    background-color: rgb(255,240,134);
+}
+
+.dropdown-itemdark-mode:hover {
+    background-color: rgb(185,208,201);
+    color: rgb(55,64,74);
+}
+
+.dropdown-menu {
+    --bs-dropdown-color: rgb(255,240,134);
+    --bs-dropdown-bg: rgb(250,125,35);
+}
+
+/*.dropdown-menudark-mode {
+    --bs-dropdown-color: rgb(185,208,201);
+    --bs-dropdown-bg: rgb(75,174,167);
+}*/
+
+.modal-title {
+    font-weight: bold;
+    font-size: larger;
+}
+
+.padding {
+    padding: 10px;
+}
+
+a.link-row {
+    color: black;
+    background-color: rgb(251,244,179);
+    text-decoration: none;
+    text-align: center;
+}
+
+a.link-rowdark-mode {
+    background-color: rgb(185,208,201);
+    color: rgb(52,58,65);
+    text-decoration: none;
+    text-align: center;
+}
+
+div.link-row {
+    color: black;
+    background-color: rgb(251,244,179);
+    margin-bottom: 20px;
+}
+
+div.link-rowdark-mode {
+    background-color: rgb(185,208,201);
+    color: rgb(55,64,74);
+    margin-bottom: 20px;
+}
+
+a {
+    color: inherit
+}
+a:hover {
+    color: inherit
+}
+
+a.link-row:hover {
+    color: black;
+    background-color: rgb(218,101,52);
+    text-decoration: none;
+}
+
+a.link-rowdark-mode:hover {
+    background-color: rgb(75,174,167);
+    color: rgb(55,64,74);
+    text-decoration: none;
+}
+
+a.dropdown-item:hover {
+    background-color: rgb(255,240,134);
+    color: rgb(250,125,35);
+}
+
+button.btn.connect-wallet.dropdown-toggle.show {
+    background-color: rgb(250,125,35);
+    color: rgb(255,240,134);
+}
+
+button {
+    margin-left: 8px;
+}
+
+.nft-name-display {
+    width: 210px;
+    text-align: center;
+}
+
+.name-and-logo {
+    margin-top: 15px;
+    margin-left: 15px;
+}
+
+.show-hover-pointer {
+    cursor: pointer;
+}
+
+
+a.connect-button {
+    background-color: inherit;
+    color: inherit;
+    text-decoration: none;
+}
+
+a.connect-buttondark-mode {
+    background-color: inherit;
+    color: inherit;
+    text-decoration: none;
+}
+
+/*a.connect-buttondark-mode:hover {
+    background-color: rgb(185,208,201);
+    color: rgb(52,58,65);
+    text-decoration: none;
+}*/
+
+
