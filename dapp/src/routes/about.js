@@ -8,13 +8,10 @@ router.get('/', function (req, res, next) {
         theme = '';
     }
 
-    res.render('index', {
-        poolPolicyId: app.get('swap_pool_policy_id'),
+    res.render('about', {
+        /*poolPolicyId: app.get('swap_pool_policy_id'),
         poolNFTNames: app.get('swap_pool_nft_names'),
-        poolAddress: app.get('swap_pool_address'),
-        navWebpage: app.get('navWebpage'),
-        navTwitter: app.get('navTwitter'),
-        navDiscord: app.get('navDiscord'),
+        nftPerPage: app.get('nft_per_page'),*/
         themeclass: theme
     });
 });

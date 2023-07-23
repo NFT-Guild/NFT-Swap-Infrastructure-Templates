@@ -11,6 +11,7 @@ router.get('/', function (req, res, next) {
     res.render('admin', {
         poolPolicyId: app.get('swap_pool_policy_id'),
         poolNFTNames: app.get('swap_pool_nft_names'),
+        nftPerPage: app.get('nft_per_page'),
         themeclass: theme
     });
 });

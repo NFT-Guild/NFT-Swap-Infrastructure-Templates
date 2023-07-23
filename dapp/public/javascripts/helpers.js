@@ -158,7 +158,7 @@ async function getAddressAssets(address) {
     return {};
 }
 
-async function loadPolicyAssets(assetpolicy, list_html_element, filter, theme) {
+async function loadPolicyAssets(assetpolicy, list_html_element, filter, theme, pOffset, pLimit) {
 
     var xhr = new XMLHttpRequest();
     xhr.onload = function () {
@@ -168,6 +168,7 @@ async function loadPolicyAssets(assetpolicy, list_html_element, filter, theme) {
             var assetJson = JSON.parse(xhr.responseText);
 
             var htmlList = '<div class="nft-list light"><div class="light" style="margin-bottom: 10px">Select the NFTs you want to allow to swap in the swap pool</div><div class="flex-row d-flex mb-3 flex-wrap padding">';
+            var numberOfResults = 0;
             for (let i = 0; i < assetJson.length; i++) {
                 let asset = assetJson[i];
 
@@ -178,9 +179,16 @@ async function loadPolicyAssets(assetpolicy, list_html_element, filter, theme) {
                     const metadata = asset_policy[asset.asset_name_ascii];
 
                     if (filter.trim() != '') {
-                        // a filter criterion was provided. Skip if criterion is not satisfied
+                        // a filter criterion is applied. Skip if criterion is not satisfied or result item is outside offset/limit range
                         const metadataString = JSON.stringify(metadata);
                         if (metadataString.toLowerCase().indexOf(filter.toLowerCase()) == -1) { continue; }
+
+                        numberOfResults++;
+                        if(numberOfResults < pOffset) { continue; } // result item is before the start of range. Continue to next result
+                        else if(numberOfResults > (pOffset + pLimit)) { break; } // end of range has been reached. Break for-loop
+                        //else {
+                        //    result item is within the offset/limit range we want to display
+                        //}
                     }
 
                     const image = metadata['image'];
@@ -196,8 +204,9 @@ async function loadPolicyAssets(assetpolicy, list_html_element, filter, theme) {
                     }
                     catch (error) { console.log(error); }
 
+                    
+                    // no filter applied. Offset and limiting done in query. Simply output the result item
                     htmlList += `<div class="not-selected${theme} padding" id="pool_filter_nft_list_${asset.fingerprint}"><img id="pool_filter_nft_list_${asset.fingerprint}_img" loading="lazy" height="200" onclick="togglePoolFilterSelection(pool_filter_nft_list_${asset.fingerprint}, '${asset.asset_name}', '${theme}');" class="show-hover-pointer padding" src="${imageURL}"></img><div id="pool_filter_nft_list_${asset.fingerprint}_namediv" class="nft-name-display not-selected${theme} align-bottom">${metadata['name']}</div></div>`;
-
                 }
                 else if (asset.token_registry_metadata) {
 
@@ -215,12 +224,98 @@ async function loadPolicyAssets(assetpolicy, list_html_element, filter, theme) {
         else {
             document.getElementById(list_html_element).innerHTML = xhr.responseText;
         }
+
+        if(document.querySelectorAll('[id$="_namediv"]').length < (pLimit - 1)) {
+            // we are now displaying fewer results than the pLimit. There are no more results to display. Disable paging
+            disableHigherNavPages();
+        }
+        else {
+            enableHigherNavPages();
+        }
+
     };
 
-    const koiosquery = `${koios_api_url}/policy_asset_info?_asset_policy=${assetpolicy}`;
+
+    if(pOffset == undefined) pOffset = 0;   // set default if undefined
+    if(pLimit == undefined) pLimit = 50;    // set default if undefined
+    var offsetParam = `&offset=${pOffset}`;
+    if(pOffset == 0) offsetParam = '';      // leave out parameter if offset is 0
+    var limitParam = `&limit=${pLimit}`;
+    if(filter != '') {
+        offsetParam = '';
+        limitParam = '';       // leave out parameters if filter is applied. Do offset and limiting after fetch to ensure non-empty pages
+    }
+
+    
+    const koiosquery = `${koios_api_url}/policy_asset_info?_asset_policy=${assetpolicy}${offsetParam}${limitParam}`;
     xhr.open('GET', koiosquery, true);
     xhr.setRequestHeader('accept', 'application/json');
     xhr.send();
+}
+
+function stepPage(increment) {
+
+    // update page number of the 3 numbered pages
+    var navPageElem, navPageNumOld;
+    for(var i = 1; i <= 3; i++) {
+        navPageElem = document.getElementById(`page${i}`);
+        navPageNumOld = parseInt(navPageElem.innerText);
+        navPageElem.innerText = navPageNumOld + increment;
+    }
+
+    // enable / disable PREVIOUS
+    navPageElem = document.getElementById(`page1`);
+    if(parseInt(navPageElem.innerText) > 1) {
+        document.getElementById('pageprevious').parentElement.classList.remove('disabled');
+    }
+    else {
+        document.getElementById('pageprevious').parentElement.classList.add('disabled');
+    }
+}
+
+function setActivePage(pNum) {
+    var navPageElem;
+    for(var i = 1; i <= 3; i++) {
+        navPageElem = document.getElementById(`page${i}`);
+        if(i == pNum) {
+            navPageElem.classList.add('active');
+        }
+        else {
+            navPageElem.classList.remove('active');
+        }
+    }
+}
+
+function disableHigherNavPages() {
+    var navPageElem;
+
+    // disable next pager
+    navPageElem = document.getElementById(`pagenext`);
+    navPageElem.classList.add('disabled');
+
+    // loop through pages from the top and disable until active page is found
+    for(var i = 3; i >= 1; i--) {
+        navPageElem = document.getElementById(`page${i}`);
+        if(navPageElem.classList.contains('active')) break;
+
+        navPageElem.classList.add('disabled');
+    }
+}
+
+function enableHigherNavPages() {
+    var navPageElem;
+
+    // enable next pager
+    navPageElem = document.getElementById(`pagenext`);
+    navPageElem.classList.remove('disabled');
+
+    // loop through pages from the top and enable until active page is found
+    for(var i = 3; i >= 1; i--) {
+        navPageElem = document.getElementById(`page${i}`);
+        if(navPageElem.classList.contains('active')) break;
+
+        navPageElem.classList.remove('disabled');
+    }
 }
 
 function hex_to_ascii(str1) {

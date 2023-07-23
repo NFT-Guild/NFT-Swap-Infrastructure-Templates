@@ -52,10 +52,10 @@ html
             button(type="button" id="selectPoolNFTButton" class=`btn themed-color${themeclass} disabled` data-bs-toggle="modal" data-bs-target="#selectNFTsDialog" onclick=`getWalletAddress().then((addr) => { getAddressAssets(addr).then((assets) => { listNFTs(assets, document.getElementById('wallet_nfts'),'','${themeclass}', '${poolPolicyId}', '${poolNFTNames}') } ) } ).catch((reason => console.log('error: '+ reason.message)));`)= `SWAP NFT(s)`
    
       div(class=`d-flex flex-row justify-content-between flex-nowrap link-row${themeclass}`)
-            a(href="#" class=`link-row${themeclass} flex-fill padding`) ABOUT
-            a(href="#" class=`link-row${themeclass} flex-fill padding`) WEBPAGE
-            a(href="#" class=`link-row${themeclass} flex-fill padding`) TWITTER
-            a(href="#" class=`link-row${themeclass} flex-fill padding`) DISCORD
+            a(href="/about" class=`link-row${themeclass} flex-fill padding`) ABOUT
+            a(href=`${navWebpage}` class=`link-row${themeclass} flex-fill padding`) WEBPAGE
+            a(href=`${navTwitter}` class=`link-row${themeclass} flex-fill padding`) TWITTER
+            a(href=`${navDiscord}` class=`link-row${themeclass} flex-fill padding`) DISCORD
 
       div(class="modal modal-dialog-scrollable modal-xl fade" id="selectNFTsDialog" tabindex="-1" aria-labelledby="selectNFTsDialogLabel" aria-hidden="true")
          div(class="modal-dialog")

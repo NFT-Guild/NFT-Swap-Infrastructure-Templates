@@ -4,3 +4,4 @@ smart-contracts/repl-testing
 node_modules
 *.key
 *.pem
+*.code-workspace

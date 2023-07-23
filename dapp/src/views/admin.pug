@@ -22,7 +22,7 @@ html
          div(class="input-group mb-3")
             span(class=`input-group-text${themeclass}` id="basic-addon3") POLICY ID
             input(type="text" class=`form-control textfield ${themeclass}` id="policyidInput" aria-describedby="basic-addon3")
-         button(type="button" class=`btn themed-color${themeclass}` id="loadPolicyButton" onclick=`const policyid = document.getElementById('policyidInput').value; showElem('search_field'); showElem('num_selected'); loadPolicyAssets(policyid, 'policy-nft-list','', '${themeclass}');`) LOAD
+         button(type="button" class=`btn themed-color${themeclass}` id="loadPolicyButton" onclick=`const policyid = document.getElementById('policyidInput').value; showElem('search_field'); showElem('num_selected'); setActivePage(1); loadPolicyAssets(policyid, 'policy-nft-list','', '${themeclass}', 0, ${nftPerPage});`) LOAD
 
       div(id="search-field-row" class="d-flex flex-row justify-content-around")
             div(id="num_selected" style="display: none;") 0 SELECTED
@@ -36,6 +36,19 @@ html
                      path(d="M24 40q-6.65 0-11.325-4.675Q8 30.65 8 24q0-6.65 4.675-11.325Q17.35 8 24 8q4.25 0 7.45 1.725T37 14.45V8h3v12.7H27.3v-3h8.4q-1.9-3-4.85-4.85Q27.9 11 24 11q-5.45 0-9.225 3.775Q11 18.55 11 24q0 5.45 3.775 9.225Q18.55 37 24 37q4.15 0 7.6-2.375 3.45-2.375 4.8-6.275h3.1q-1.45 5.25-5.75 8.45Q29.45 40 24 40Z")
           
       div(class="nft-list light d-flex mb-3 flex-row flex-wrap" id="policy-nft-list")
+
+      nav(aria-label="Policy asset navigation")
+         ul(class=`pagination ${themeclass} justify-content-end padding`)
+            li(class="page-item disabled")
+               a(class="page-link" href="#" id="pageprevious" onclick=onclick="stepPage(-1); const pNum = parseInt(document.getElementById('page1').innerText); setActivePage(1); loadPageContent(pNum);") PREVIOUS
+            li(class="page-item" aria-current="page")
+               a(class="page-link" href="#" id="page1" onclick=`const pNum = parseInt(this.innerText); setActivePage(pNum); loadPageContent(pNum);`) 1
+            li(class="page-item")
+               a(class="page-link" href="#" id="page2" onclick="const pNum = parseInt(this.innerText); setActivePage(pNum); loadPageContent(pNum);") 2
+            li(class="page-item")
+               a(class="page-link" href="#" id="page3" onclick="const pNum = parseInt(this.innerText); setActivePage(pNum); loadPageContent(pNum);") 3
+            li(class="page-item")
+               a(class="page-link" href="#" id="pagenext" onclick="stepPage(1); const pNum = parseInt(document.getElementById('page3').innerText); setActivePage(3); loadPageContent(pNum);") NEXT
 
       div(class="d-flex flex-row justify-content-end padding")
          button(class=`btn themed-color${themeclass}` type="button" id="generatePoolButton" onclick="const policyid = document.getElementById('policyidInput').value; if(policyid.length != 56) {alert('invalid policy id');return;} buildSpecificSwap(policyid).then(swapPoolInfo => { message = swapPoolInfo.message; const mBoxTitle = document.getElementById('messageBoxLabel'); if(message.indexOf('Redeemer') > -1 || message.indexOf('error') > -1) { mBoxTitle.innerText='Something went wrong'; } else { mBoxTitle.innerText=message; } document.getElementById('message-box-content').innerHTML=swapPoolInfo.message; document.getElementById('swap-pool-script').value = JSON.stringify(swapPoolInfo.swapPoolContractScript); document.getElementById('swap-pool-address').value = swapPoolInfo.swapPoolAddress; displayMBoxScriptFields(); const messageBox = new bootstrap.Modal('#messageBox', { keyboard: false }); messageBox.show();});") CREATE POOL
@@ -101,7 +114,9 @@ html
       script !{onloadScript}
       -var walletScript = `async function getWalletAddress() { if(!connectedWallet) { alert("Wallet is not yet loaded"); return null; } else { console.log('connectedWallet',connectedWallet); var api = await connectedWallet.enable(); const address = await api.getChangeAddress(); const bech32Address = typhonjs.utils.getAddressFromHex(address).getBech32(); return bech32Address; } }`
       script !{walletScript}
-      
+      -var pagingScript = `function loadPageContent(pageNum) { const pOffset = (pageNum - 1) * ${nftPerPage}; const policyid = document.getElementById('policyidInput').value; const filterCriterion = document.getElementById('search_field_input').value; loadPolicyAssets(policyid, 'policy-nft-list',filterCriterion, '${themeclass}', pOffset, ${nftPerPage});}`
+      script !{pagingScript}
+
       script(src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous")
       script(type="module" src="javascripts/wallet-integration.js")
       script(src="https://cdn.jsdelivr.net/npm/@stricahq/typhonjs@1.2.8/dist/index.min.js")
