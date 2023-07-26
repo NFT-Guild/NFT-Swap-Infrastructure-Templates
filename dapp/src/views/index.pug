@@ -31,7 +31,10 @@ html
                div(class="message-box-footer")
    
       div(class="light" style="margin-bottom: 10px; text-align: center;") Select the NFTs you want to receive - Up to 5
-      div(class="d-flex flex-row justify-content-around")
+      div(class="d-flex flex-row justify-content-between")
+            div(id="smart_contract_dropdown-menu" class="btn-group")
+               button(type="button" id="swap_pool_selection_button" class=`btn connect-wallet${themeclass} d-flex dropdown-toggle` data-bs-toggle="dropdown" aria-expanded="false") 
+               ul(class=`dropdown-menu` id="swap_pool_selection_dropdown")
             div(id="num_selected") 0 SELECTED
             div(id="search_field")
                div(class="input-group mb-3")
@@ -49,7 +52,7 @@ html
                svg(xmlns="http://www.w3.org/2000/svg" height="48" width="48" fill=`currentColor` class=`button-color${themeclass}`)
                   path(d="M22.5 41.9V17.7l-5.9 5.9-2.1-2.1L24 12l9.5 9.5-2.1 2.1-5.9-5.9v24.2ZM8 9V6h32v3Z")
       div(class="d-flex flex-row justify-content-end padding")
-            button(type="button" id="selectPoolNFTButton" class=`btn themed-color${themeclass} disabled` data-bs-toggle="modal" data-bs-target="#selectNFTsDialog" onclick=`getWalletAddress().then((addr) => { getAddressAssets(addr).then((assets) => { listNFTs(assets, document.getElementById('wallet_nfts'),'','${themeclass}', '${poolPolicyId}', '${poolNFTNames}') } ) } ).catch((reason => console.log('error: '+ reason.message)));`)= `SWAP NFT(s)`
+            button(type="button" id="selectPoolNFTButton" class=`btn themed-color${themeclass} disabled` data-bs-toggle="modal" data-bs-target="#selectNFTsDialog" onclick=`getWalletAddress().then((addr) => { getAddressAssets(addr).then((assets) => { listNFTs(assets, document.getElementById('wallet_nfts'),'','${themeclass}', '${poolPolicyId[currentPoolIndex]}', '${poolNFTNames[currentPoolIndex]}') } ) } ).catch((reason => console.log('error: '+ reason.message)));`)= `SWAP NFT(s)`
    
       div(class=`d-flex flex-row justify-content-between flex-nowrap link-row${themeclass}`)
             a(href="/about" class=`link-row${themeclass} flex-fill padding`) ABOUT
@@ -77,8 +80,8 @@ html
                   div(class="nft-list light align-content-start d-flex mb-3 flex-row flex-wrap" id="wallet_nfts") Loading ...
                div(class="modal-footer d-flex justify-content-between")
                   button(type="button" class=`btn themed-color${themeclass}` data-bs-dismiss="modal") BACK
-                  button(type="button" class=`btn themed-color${themeclass}` data-bs-dismiss="modal" id="confirmSwapButton" onclick="doSwap().then(message => { const mBoxTitle = document.getElementById('messageBoxLabel'); if(message.indexOf('Redeemer') > -1 || message.indexOf('Error') > -1) { mBoxTitle.innerText='Something went wrong'; } else { mBoxTitle.innerText='Swap successful'; } document.getElementById('message-box-content').innerHTML=message; const messageBox = new bootstrap.Modal('#messageBox', { keyboard: false }); messageBox.show();});") CONFIRM   
-      -var onloadScript = `window.onload=function() { loadWalletConnector(document.getElementById('wallet_connector_dropdown'), document.getElementById('wallet_connector_button'),'${themeclass}'); const selectNFTDlg = document.getElementById('selectNFTsDialog'); selectNFTDlg.addEventListener('show.bs.modal', event => { /*loadWalletNFTs()*/ }); getAddressAssets('${poolAddress}').then((assets) => { listNFTs(assets, document.getElementById('pool_nfts'), 'pool', '${themeclass}' ) } )  };`;
+                  button(type="button" class=`btn themed-color${themeclass}` data-bs-dismiss="modal" id="confirmSwapButton" onclick=`doSwap(${currentPoolIndex}).then(message => { const mBoxTitle = document.getElementById('messageBoxLabel'); if(message.indexOf('Redeemer') > -1 || message.indexOf('Error') > -1) { mBoxTitle.innerText='Something went wrong'; } else { mBoxTitle.innerText='Swap successful'; } document.getElementById('message-box-content').innerHTML=message; const messageBox = new bootstrap.Modal('#messageBox', { keyboard: false }); messageBox.show();});`) CONFIRM   
+      -var onloadScript = `window.onload=function() { loadSwapPoolDropdown(document.getElementById('swap_pool_selection_dropdown'), document.getElementById('swap_pool_selection_button'), '${themeclass}', ${JSON.stringify(poolName)}, ${currentPoolIndex}); loadWalletConnector(document.getElementById('wallet_connector_dropdown'), document.getElementById('wallet_connector_button'),'${themeclass}'); const selectNFTDlg = document.getElementById('selectNFTsDialog'); selectNFTDlg.addEventListener('show.bs.modal', event => { /*loadWalletNFTs()*/ }); getAddressAssets('${poolAddress[currentPoolIndex]}').then((assets) => { listNFTs(assets, document.getElementById('pool_nfts'), 'pool', '${themeclass}' ) } )  };`;
       script !{onloadScript}
       -var walletScript = `async function getWalletAddress() { if(!connectedWallet) { alert("Wallet is not yet loaded"); return null; } else { console.log('connectedWallet',connectedWallet); var api = await connectedWallet.enable(); const address = await api.getChangeAddress(); const bech32Address = typhonjs.utils.getAddressFromHex(address).getBech32(); return bech32Address; } }`
       script !{walletScript}

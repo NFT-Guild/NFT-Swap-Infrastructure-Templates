@@ -9,8 +9,10 @@ router.get('/', function (req, res, next) {
     }
 
     res.render('admin', {
+        poolName: app.get('swap_pool_names'),
         poolPolicyId: app.get('swap_pool_policy_id'),
         poolNFTNames: app.get('swap_pool_nft_names'),
+        poolAddress: app.get('swap_pool_address'),
         nftPerPage: app.get('nft_per_page'),
         themeclass: theme
     });

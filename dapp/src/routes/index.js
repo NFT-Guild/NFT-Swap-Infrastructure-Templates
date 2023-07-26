@@ -8,7 +8,15 @@ router.get('/', function (req, res, next) {
         theme = '';
     }
 
+    var poolIndexParam = parseInt(req.query.poolIndex);
+    if(isNaN(poolIndexParam) ||
+        poolIndexParam == undefined || 
+        poolIndexParam < 0 || 
+        (poolIndexParam > app.get('swap_pool_names').length -1)) poolIndexParam = 0; 
+
     res.render('index', {
+        currentPoolIndex: poolIndexParam,
+        poolName: app.get('swap_pool_names'),
         poolPolicyId: app.get('swap_pool_policy_id'),
         poolNFTNames: app.get('swap_pool_nft_names'),
         poolAddress: app.get('swap_pool_address'),

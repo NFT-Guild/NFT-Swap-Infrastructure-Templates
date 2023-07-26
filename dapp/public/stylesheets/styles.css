@@ -223,6 +223,20 @@ button.themed-colordark-mode {
     color: rgb(75,174,167);
 }
 
+button.select-contract {
+    background-color: rgb(250,125,35);
+    color: rgb(255,240,134);
+    border-style: none;
+    padding: 10px;
+}
+
+button.select-contractdark-mode {
+    background-color: rgb(75,174,167);
+    color: rgb(55,64,74);
+    border-style: none;
+    padding: 10px;
+}
+
 button.connect-wallet {
     background-color: rgb(250,125,35);
     color: rgb(255,240,134);
@@ -241,12 +255,12 @@ button.connect-walletdark-mode {
     margin-right: 15px;
 }
 
-button.connect-wallet:hover, button.themed-color:hover{
+button.connect-wallet:hover, button.themed-color:hover, button.select-contract:hover, button.select-contract.show {
     color: rgb(250,125,35);
     background-color: rgb(255,240,134);
 }
 
-button.connect-walletdark-mode:hover, button.themed-colordark-mode:hover{
+button.connect-walletdark-mode:hover, button.themed-colordark-mode:hover, button.select-contractdark-mode:hover, button.select-contractdark-mode.show {
     background-color: rgb(185,208,201);
     color: rgb(55,64,74);
 }

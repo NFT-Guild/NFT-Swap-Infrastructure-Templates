@@ -442,6 +442,103 @@ async function copyToClipboard(textToCopy) {
     }
 }
 
+function resetOnClick(element) {
+    if(element == undefined) {
+        // no element provided. If add button is visible, reset add button onclick script. If not, reset remove button
+        element = document.getElementById('confirmAddNFTsButton');
+        if(element.style.display == 'none') {
+            element = document.getElementById('confirmRemoveNFTsButton');
+        }
+    }
+
+    var onclickJS = element.getAttribute('onclick');
+    onclickJS = onclickJS.substring(onclickJS.indexOf('.'))
+    element.setAttribute('onclick', onclickJS);
+}
+
+function loadAddNFTDropdown(dropdown, theme, swapPoolNames, poolPolicyIds, poolNFTNames) {
+
+    var swapPoolListHtml = '';
+
+    for(var i = 0; i < swapPoolNames.length; i++) {
+
+        if(swapPoolNames[i].trim() != '') {
+            swapPoolListHtml += `<li><div class="dropdown-item ${theme} d-flex" data-bs-toggle="modal" data-bs-target="#selectNFTsDialog"><a class="dropdown-item${theme}" href="#" onclick="const confButton = document.getElementById('confirmAddNFTsButton'); confButton.setAttribute('onclick', 'addNFTsToPool(${i})'+ confButton.getAttribute('onclick')); setInnerText('selectNFTsDialogLabel', 'Select NFTs to add to swap pool'); showElem('confirmAddNFTsButton'); hideElem('confirmRemoveNFTsButton'); getWalletAddress().then((addr) => { getAddressAssets(addr).then((assets) => { listNFTs(assets, document.getElementById('selectable_nfts'), 'wallet', '${theme}', '${poolPolicyIds[i]}', '${poolNFTNames[i]}') } ) } ).catch((reason => console.log('error: '+ reason.message)));">${swapPoolNames[i].trim()}</a></div></li>`;
+        }
+    }
+    
+    dropdown.innerHTML = swapPoolListHtml;
+
+}
+
+function loadRemoveNFTDropdown(dropdown, theme, swapPoolNames) {
+
+    var swapPoolListHtml = '';
+
+    for(var i = 0; i < swapPoolNames.length; i++) {
+
+        if(swapPoolNames[i].trim() != '') {
+            swapPoolListHtml += `<li><div class="dropdown-item ${theme} d-flex" data-bs-toggle="modal" data-bs-target="#selectNFTsDialog"><a class="dropdown-item${theme}" href="#" onclick="const confButton = document.getElementById('confirmRemoveNFTsButton'); confButton.setAttribute('onclick', 'removeNFTsFromPool(${i})'+ confButton.getAttribute('onclick')); setInnerText('selectNFTsDialogLabel', 'Select NFTs to remove from swap pool'); showElem('confirmRemoveNFTsButton'); hideElem('confirmAddNFTsButton'); getSwapPoolAddress(${i}).then((addr) => { getAddressAssets(addr).then((assets) => { listNFTs(assets, document.getElementById('selectable_nfts'), 'pool', '${theme}') } ) } ).catch((reason => console.log('error: '+ reason.message)));">${swapPoolNames[i].trim()}</a></div></li>`;
+        }
+    }
+    
+    dropdown.innerHTML = swapPoolListHtml;
+
+}
+
+function loadWithdrawalDropdown(dropdown, theme, swapPoolNames) {
+    var swapPoolListHtml = '';
+
+    for(var i = 0; i < swapPoolNames.length; i++) {
+
+        if(swapPoolNames[i].trim() != '') {
+            swapPoolListHtml += `<li><div class="dropdown-item ${theme} d-flex"><a class="dropdown-item${theme}" href="#" onclick="getSwapPoolUTxO(${i}).then(utxo => {withdrawFromPool(utxo[0].txHash,utxo[0].outputIndex, ${i})}).then(message => { message = JSON.stringify(message); const mBoxTitle = document.getElementById('messageBoxLabel'); if(message.indexOf('Redeemer') > -1 || message.indexOf('Error') > -1) { mBoxTitle.innerText='Something went wrong'; } else { mBoxTitle.innerText='Deposit successful'; } document.getElementById('message-box-content').innerHTML=message; const messageBox = new bootstrap.Modal('#messageBox', { keyboard: false }); messageBox.show();});">${swapPoolNames[i].trim()}</a></div></li>`;
+        }
+    }
+    
+    dropdown.innerHTML = swapPoolListHtml;
+}
+
+function loadDepositDropdown(dropdown, theme, swapPoolNames) {
+    var swapPoolListHtml = '';
+
+    for(var i = 0; i < swapPoolNames.length; i++) {
+
+        if(swapPoolNames[i].trim() != '') {
+            swapPoolListHtml += `<li><div class="dropdown-item ${theme} d-flex"><a class="dropdown-item${theme}" href="#" onclick="depositLovelace(3000000, ${i}).then(message => { message = JSON.stringify(message); const mBoxTitle = document.getElementById('messageBoxLabel'); if(message.indexOf('Redeemer') > -1 || message.indexOf('Error') > -1) { mBoxTitle.innerText='Something went wrong'; } else { mBoxTitle.innerText='Deposit successful'; } document.getElementById('message-box-content').innerHTML=message; const messageBox = new bootstrap.Modal('#messageBox', { keyboard: false }); messageBox.show();});">${swapPoolNames[i].trim()}</a></div></li>`;
+        }
+    }
+    
+    dropdown.innerHTML = swapPoolListHtml;
+}
+
+function loadSwapPoolDropdown(dropdown, button, theme, swapPoolNames, selectedIndex) {
+
+    var swapPoolListHtml = '';
+
+    if(isNaN(selectedIndex) ||
+        selectedIndex == undefined || 
+        selectedIndex < 0 || 
+        (selectedIndex > swapPoolNames.length -1)) selectedIndex = 0; 
+
+    for(var i = 0; i < swapPoolNames.length; i++) {
+
+        if(swapPoolNames[i].trim() != '') {
+            
+            if(selectedIndex == i) {
+                swapPoolListHtml += `<li><div class="dropdown-item ${theme} d-flex"><a class="dropdown-item${theme}" href="/?poolIndex=${i}">${swapPoolNames[i].trim()}</a><svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-check" viewBox="0 0 16 16"><path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.267.267 0 0 1 .02-.022z"/></svg></div></li>`;
+                button.innerHTML = `<a class="connect-button${theme}" href="#">${swapPoolNames[i].trim()}</a>`;
+            }
+            else {
+                swapPoolListHtml += `<li><div class="dropdown-item ${theme} d-flex"><a class="dropdown-item${theme}" href="/?poolIndex=${i}">${swapPoolNames[i].trim()}</a></div></li>`;
+            }
+        }
+    }
+    
+    dropdown.innerHTML = swapPoolListHtml;
+
+}
+
 async function loadWalletConnector(dropdown, button, theme) {
 
     connectorDropdown = dropdown;
