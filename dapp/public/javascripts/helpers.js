@@ -12,6 +12,68 @@ var selectedFilterNFTNameMap = new Map();
 //const koios_api_url = 'https://api.koios.rest/api/v0'; // mainnet
 const koios_api_url = 'https://preprod.koios.rest/api/v0'; // preproduction
 
+function addEnterKeyListener(sourceElem, clickElem) {
+    sourceElem.addEventListener("keypress", function(event) {
+        if (event.key === "Enter") {
+          // cancel the default action, if needed
+          event.preventDefault();
+          // trigger onclick event of element 
+          document.getElementById(clickElem.id).click();
+        }
+    });
+}
+
+function toggleSelectedPoolNFTs(theme) {
+    for (var i = 0; i < selectedPoolNFTs.length; i++) {
+        togglePoolNFTSelectionViewOnly(`${selectedPoolNFTs[i]}`, theme);
+    }
+}
+
+function updateWalletSelectionLabel() {
+    var numSelectedFromWalletLabel = document.getElementById('selectNFTsDialogLabel');
+    numSelectedFromWalletLabel.innerText = `Select ${numSelectedPoolNFTs - numSelectedWalletNFTs} NFTs to swap`;
+}
+
+function updatePoolSelectionLabel() {
+    var numSelectedFromPoolLabelTop = document.getElementById('num_selected');
+    numSelectedFromPoolLabelTop.innerText = `${numSelectedPoolNFTs} SELECTED`;
+}
+
+function resetSelectedWalletNFTs() {
+    numSelectedWalletNFTs = 0;
+    selectedWalletNFTs = [];
+    updateWalletSelectionLabel();
+}
+
+function togglePoolNFTSelectionViewOnly(nftimageid, theme) {
+    var nftimage = document.getElementById(nftimageid+'');
+    if(nftimage == null) {
+        // nftimage is not currently in view...skip toggle of selection in UI
+        return;
+    }
+    
+    var nameDiv = document.getElementById(nftimageid + "_namediv");
+
+    if (nftimageid.indexOf('pool_') == 0) {
+        if (selectedPoolNFTs.indexOf(nftimageid) > -1) {
+            // NFT is selected. set style according to active selection
+            nftimage.classList.add("selected" + theme);
+            nftimage.classList.remove("not-selected" + theme);
+            nameDiv.classList.add("selected-no-border" + theme);
+            nameDiv.classList.remove("not-selected" + theme);
+        }
+    }
+    else {
+        if (selectedWalletNFTs.indexOf(nftimageid) > -1) {
+            // NFT is selected. set style according to active selection
+            nftimage.classList.add("selected" + theme);
+            nftimage.classList.remove("not-selected" + theme);
+            nameDiv.classList.add("selected-no-border" + theme);
+            nameDiv.classList.remove("not-selected" + theme);
+        }
+    }
+}
+
 function togglePoolNFTSelection(nftimage, theme) {
     var selectButton = document.getElementById('selectPoolNFTButton');
     var confirmButton = document.getElementById('confirmSwapButton')
@@ -19,7 +81,6 @@ function togglePoolNFTSelection(nftimage, theme) {
 
     if (nftimage.id.indexOf('pool_nft_list_') == 0) {
         if (selectedPoolNFTs.indexOf(nftimage.id) > -1) {
-            console.log(`${nftimage.id} found in selected NFTs`);
             selectedPoolNFTs = selectedPoolNFTs.filter(e => e !== nftimage.id);
             nftimage.classList.remove("selected" + theme);
             nftimage.classList.add("not-selected" + theme);
@@ -28,17 +89,16 @@ function togglePoolNFTSelection(nftimage, theme) {
             numSelectedPoolNFTs = selectedPoolNFTs.length;
         }
         else {
-            console.log(`${nftimage.id} not found in selected NFTs`);
             nftimage.classList.add("selected" + theme);
             nftimage.classList.remove("not-selected" + theme);
             nameDiv.classList.add("selected-no-border" + theme);
             nameDiv.classList.remove("not-selected" + theme);
             numSelectedPoolNFTs = selectedPoolNFTs.push(nftimage.id);
         }
+        updatePoolSelectionLabel();
     }
     else {
         if (selectedWalletNFTs.indexOf(nftimage.id) > -1) {
-            console.log(`${nftimage.id} found in selected NFTs`);
             selectedWalletNFTs = selectedWalletNFTs.filter(e => e !== nftimage.id);
             nftimage.classList.remove("selected" + theme);
             nftimage.classList.add("not-selected" + theme);
@@ -47,13 +107,13 @@ function togglePoolNFTSelection(nftimage, theme) {
             numSelectedWalletNFTs = selectedWalletNFTs.length;
         }
         else {
-            console.log(`${nftimage.id} not found in selected NFTs`);
             nftimage.classList.add("selected" + theme);
             nftimage.classList.remove("not-selected" + theme);
             nameDiv.classList.add("selected-no-border" + theme);
             nameDiv.classList.remove("not-selected" + theme);
             numSelectedWalletNFTs = selectedWalletNFTs.push(nftimage.id);
         }
+        updateWalletSelectionLabel();
     }
 
     if (numSelectedPoolNFTs > 0) {
@@ -69,14 +129,6 @@ function togglePoolNFTSelection(nftimage, theme) {
     else {
         confirmButton.classList.remove("disabled");
     }
-
-    var numSelectedFromPoolLabelTop = document.getElementById('num_selected');
-    numSelectedFromPoolLabelTop.innerText = `${numSelectedPoolNFTs} SELECTED`;
-
-    var numSelectedFromWalletLabel = document.getElementById('selectNFTsDialogLabel');
-    numSelectedFromWalletLabel.innerText = `Select ${numSelectedPoolNFTs - numSelectedWalletNFTs} NFTs to swap`;
-    console.log(`${numSelectedPoolNFTs} Pool NFTs SELECTED`)
-    console.log(`${numSelectedWalletNFTs} Wallet NFTs SELECTED`)
 
 }
 
@@ -97,7 +149,6 @@ function togglePoolFilterSelection(nftimage, nftnamehex, theme) {
     var nameDiv = document.getElementById(nftimage.id + "_namediv");
 
     if (selectedPoolNFTs.indexOf(nftimage.id) > -1) {
-        console.log(`${nftimage.id} found in selected NFTs`);
         selectedPoolNFTs = selectedPoolNFTs.filter(e => e !== nftimage.id);
         nftimage.classList.remove("selected" + theme);
         nftimage.classList.add("not-selected" + theme);
@@ -107,7 +158,6 @@ function togglePoolFilterSelection(nftimage, nftnamehex, theme) {
         selectedFilterNFTNameMap.delete(nftimage.id);
     }
     else {
-        console.log(`${nftimage.id} not found in selected NFTs`);
         nftimage.classList.add("selected" + theme);
         nftimage.classList.remove("not-selected" + theme);
         nameDiv.classList.add("selected-no-border" + theme);
@@ -131,24 +181,19 @@ function togglePoolFilterSelection(nftimage, nftnamehex, theme) {
 
 
 async function getAddressAssets(address) {
-    console.log('getAddressAssets - koios()');
-
+    
     var xhr = new XMLHttpRequest();
 
     const koiosquery = `${koios_api_url}/address_assets`;
-    console.log('koiosquery', koiosquery);
     xhr.open('POST', koiosquery, false);
     xhr.setRequestHeader('accept', 'application/json');
     xhr.setRequestHeader('content-type', 'application/json');
     xhr.send(`{"_addresses":["${address}"]}`);
 
-    console.log(`koios xhr.status ${xhr.status}`)
     if (xhr.status === 200) {
         addressAssetsJSON = JSON.parse(xhr.response);
-        console.log("addressAssetsJSON", addressAssetsJSON);
-
+                    
         if (addressAssetsJSON[0]['asset_list']) {
-            console.log('asset_list', addressAssetsJSON[0]['asset_list']);
             return addressAssetsJSON[0]['asset_list'];
         }
         else {
@@ -157,6 +202,119 @@ async function getAddressAssets(address) {
     }
     return {};
 }
+
+async function getAddressAssetFingerprints(address) {
+    var xhr = new XMLHttpRequest();
+
+    const koiosquery = `${koios_api_url}/address_assets`;
+    
+    xhr.open('POST', koiosquery, false);
+    xhr.setRequestHeader('accept', 'application/json');
+    xhr.setRequestHeader('content-type', 'application/json');
+    xhr.send(`{"_addresses":["${address}"]}`);
+
+    if (xhr.status === 200) {
+        addressAssetsJSON = JSON.parse(xhr.response);
+        var asset_list = addressAssetsJSON[0]['asset_list'];
+        var asset_fingerprints = [];
+        
+        if (asset_list) {
+            for(var i = 0; i < asset_list.length; i++) {
+                asset_fingerprints.push(asset_list[i]['fingerprint']);           
+            }
+            return asset_fingerprints;
+        }
+        else {
+            console.log('no asset_list');
+        }
+    }
+    return [];
+}
+
+async function getAssetInfo(assetpolicy, fingerprints, list_html_element, filter, theme, pOffset, pLimit) {
+
+    var xhr = new XMLHttpRequest();
+    xhr.onload = function () {
+
+        if (xhr.status === 200) {
+
+            var assetJson = JSON.parse(xhr.responseText);
+            var htmlList = '';
+            var numberOfResults = 0;
+            for (let i = 0; i < assetJson.length; i++) {
+                let asset = assetJson[i];
+                
+                if (!fingerprints.includes(`${asset['fingerprint']}`)) { continue; }
+
+                if (asset.minting_tx_metadata) {
+                    if (!asset.minting_tx_metadata['721']) { continue; }
+                    const asset_policy = asset.minting_tx_metadata['721'][assetpolicy];
+
+                    const metadata = asset_policy[asset.asset_name_ascii];
+
+                    if (filter.trim() != '') {
+                        // a filter criterion is applied. Skip if criterion is not satisfied or result item is outside offset/limit range
+                        const metadataString = JSON.stringify(metadata);
+                        if (metadataString.toLowerCase().indexOf(filter.toLowerCase()) == -1) { continue; }
+                    }
+
+                    numberOfResults++;
+                    if(numberOfResults <= pOffset) { continue; } // result item is before the start of range. Continue to next result
+                    else if(numberOfResults > (pOffset + pLimit)) { break; } // end of range has been reached. Break for-loop
+
+                    const image = metadata['image'];
+                    var ipfsID = "";
+                    var imageURL = "";
+
+                    try {
+                        var ipfsIndex = image.indexOf('Qm');
+                        if (ipfsIndex > -1) {
+                            ipfsID = image.substring(image.indexOf('Qm'));
+                            imageURL = `https://image-optimizer.jpgstoreapis.com/${ipfsID}`;
+                        }
+                    }
+                    catch (error) { console.log(error); }
+
+                    
+                    // no filter applied. Offset and limiting done in query. Simply output the result item
+                    htmlList += `<div class="not-selected${theme} padding" id="pool_nft_list_${assetpolicy}${asset.asset_name}"><img id="pool_nft_list_${assetpolicy}${asset.asset_name}_img" loading="lazy" height="200" onclick="togglePoolNFTSelection(document.getElementById('pool_nft_list_${assetpolicy}${asset.asset_name}'), '${theme}');" class="show-hover-pointer padding" src="${imageURL}"></img><div id="pool_nft_list_${assetpolicy}${asset.asset_name}_namediv" class="nft-name-display not-selected${theme} align-bottom">${metadata['name']}</div></div>`;
+                }
+                else if (asset.token_registry_metadata) {
+
+                    //TODO: IMPLEMENT 
+
+                    //console.log("koios onchain image");
+                    //document.getElementById(elem_prefix + assetinfo).innerHTML = `<img id="${elem_prefix + assetinfo}_img" loading="lazy" height="200" onclick="togglePoolNFTSelection(${elem_prefix + assetinfo});" class="show-hover-pointer padding" src='data:image/jpeg;base64,${assetJson.metadata.logo}'><div id="${elem_prefix + assetinfo}_namediv" class="not-selected align-bottom">${assetJson.metadata.name}</div>`;
+                }
+            }
+
+            htmlList += '</div>';
+            document.getElementById(list_html_element).innerHTML = htmlList;
+
+        }
+        else {
+            document.getElementById(list_html_element).innerHTML = xhr.responseText;
+        }
+
+        
+        if(document.querySelectorAll('[id$="_namediv"]').length < (pLimit - 1)) {
+            // we are now displaying fewer results than the pLimit. There are no more results to display. Disable paging
+            disableHigherNavPages();
+        }
+        else {
+            enableHigherNavPages();
+        }
+
+        toggleSelectedPoolNFTs(`${theme}`)
+
+    };
+  
+    const koiosquery = `${koios_api_url}/policy_asset_info?_asset_policy=${assetpolicy}&order=asset_name_ascii.asc`;
+    xhr.open('GET', koiosquery, true);
+    xhr.setRequestHeader('accept', 'application/json');
+    xhr.send();
+}
+
 
 async function loadPolicyAssets(assetpolicy, list_html_element, filter, theme, pOffset, pLimit) {
 
@@ -167,7 +325,7 @@ async function loadPolicyAssets(assetpolicy, list_html_element, filter, theme, p
 
             var assetJson = JSON.parse(xhr.responseText);
 
-            var htmlList = '<div class="nft-list light"><div class="light" style="margin-bottom: 10px">Select the NFTs you want to allow to swap in the swap pool</div><div class="flex-row d-flex mb-3 flex-wrap padding">';
+            var htmlList = '<div class="nft-list light"><div class="flex-row d-flex mb-3 flex-wrap padding">';
             var numberOfResults = 0;
             for (let i = 0; i < assetJson.length; i++) {
                 let asset = assetJson[i];
@@ -232,6 +390,8 @@ async function loadPolicyAssets(assetpolicy, list_html_element, filter, theme, p
         else {
             enableHigherNavPages();
         }
+
+        toggleSelectedPoolNFTs(`${theme}`)
 
     };
 
@@ -375,19 +535,10 @@ function listNFTs(nftList, nftListHTMLElement, htmlprefix, theme, pool_policy_id
     if (htmlprefix == '')
         htmlprefix = 'wallet';
 
-    console.log("listNFTs - nftList", nftList);
-
-
     var doFiltering = false;
     if (pool_policy_id != undefined) {
         doFiltering = true;
     }
-
-    if (doFiltering) {
-        console.log(`policy id desired by the pool ${pool_policy_id}`);
-        console.log(`NFT names desired by the pool ${pool_nft_names}`);
-    }
-
 
     if (nftList) {
         for (var i = 0; i < nftList.length; i++) {
@@ -408,6 +559,8 @@ function listNFTs(nftList, nftListHTMLElement, htmlprefix, theme, pool_policy_id
 
         }
     }
+
+    updateWalletSelectionLabel();
 }
 
 

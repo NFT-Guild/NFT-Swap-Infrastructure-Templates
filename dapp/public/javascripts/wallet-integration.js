@@ -382,8 +382,8 @@ async function doSwap(smartContractIndex) {
         return msg;
     }
 
-    if (numSelectedPoolNFTs >= 5) {
-        msg = "Error: Number of NFTs selected must be 5 or less";
+    if (numSelectedPoolNFTs > 7) {
+        msg = "Error: Number of NFTs selected must be 7 or less";
         return msg;
     }
 

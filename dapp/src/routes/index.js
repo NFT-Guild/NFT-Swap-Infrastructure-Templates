@@ -20,6 +20,7 @@ router.get('/', function (req, res, next) {
         poolPolicyId: app.get('swap_pool_policy_id'),
         poolNFTNames: app.get('swap_pool_nft_names'),
         poolAddress: app.get('swap_pool_address'),
+        nftPerPage: app.get('nft_per_page'),
         navWebpage: app.get('navWebpage'),
         navTwitter: app.get('navTwitter'),
         navDiscord: app.get('navDiscord'),
