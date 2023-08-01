@@ -736,7 +736,8 @@ function setCookie(cookiename, value) {
 
 async function loadWalletConnector(dropdown, button, theme) {
 
-    const nonWalletNames = ['enable', 'isEnabled', 'getBalance', 'signData', 'signTx', 'submitTx', 'getUtxos', 'getCollateral', 'getUsedAddresses', 'getUnusedAddresses', 'getChangeAddress', 'getRewardAddress', 'getNetworkId', 'onAccountChange', 'onNetworkChange', 'off', '_events'];
+    const nonWalletNames = ['enable', 'isEnabled', 'getBalance', 'signData', 'signTx', 'submitTx', 'getUtxos', 'getCollateral', 'getUsedAddresses', 'getUnusedAddresses', 'getChangeAddress', 'getRewardAddress', 'getNetworkId', 'onAccountChange', 'onNetworkChange', 'off', '_events', 'typhon'];
+    //  typhon is in this list so we will use typhoncip30 instead of typhon to be compliant with the dapp connector api
 
     connectorDropdown = dropdown;
     connectorButton = button;
@@ -752,7 +753,7 @@ async function loadWalletConnector(dropdown, button, theme) {
     for(var i = 0; i < Object.keys(cardanowallets).length; i++) {
         
         currentWalletName = Object.keys(cardanowallets)[i];
-        if(nonWalletNames.includes(currentWalletName)) {continue;}
+        if(nonWalletNames.includes(currentWalletName)) { continue; }
         wallet = cardanowallets[currentWalletName];
         if (connectedWalletExtName == currentWalletName) {
             
@@ -797,11 +798,6 @@ async function loadWalletConnector(dropdown, button, theme) {
                         walletListHtml += `<li><div class="dropdown-item ${theme} d-flex"><img src="${wallet.icon}" width="30" height="30"/><a class="dropdown-item ${theme}" href="#">${adaBalance} ADA</a><svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-check" viewBox="0 0 16 16"><path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.267.267 0 0 1 .02-.022z"/></svg></div></li>`
                         button.innerHTML = `<img src="${wallet.icon}" width="30" height="30"/>&nbsp;<a class="connect-button${theme}" href="#">${adaBalance} ADA</a>`
                         connectedWallet = wallet;
-                        
-                        // typhon must be changed to typhoncip30 to be compliant with the dapp connector api
-                        if (connectedWalletExtName == 'typhon') {
-                            connectedWalletExtName = 'typhoncip30';
-                        }
                     }
                     catch (err) {
                         console.error(err)
