@@ -31,7 +31,9 @@ function toggleSelectedPoolNFTs(theme) {
 
 function updateWalletSelectionLabel() {
     var numSelectedFromWalletLabel = document.getElementById('selectNFTsDialogLabel');
-    numSelectedFromWalletLabel.innerText = `Select ${numSelectedPoolNFTs - numSelectedWalletNFTs} NFTs to swap`;
+    if(numSelectedFromWalletLabel.innerText.indexOf('NFTs to swap') > 0) {
+        numSelectedFromWalletLabel.innerText = `Select ${numSelectedPoolNFTs - numSelectedWalletNFTs} NFTs to swap`;
+    }
 }
 
 function updatePoolSelectionLabel() {
@@ -116,18 +118,22 @@ function togglePoolNFTSelection(nftimage, theme) {
         updateWalletSelectionLabel();
     }
 
-    if (numSelectedPoolNFTs > 0) {
-        selectButton.classList.remove("disabled");
-    }
-    else {
-        selectButton.classList.add("disabled");
+    if(selectButton != null) {
+        if (numSelectedPoolNFTs > 0) {
+            selectButton.classList.remove("disabled");
+        }
+        else {
+            selectButton.classList.add("disabled");
+        }
     }
 
-    if (numSelectedPoolNFTs != numSelectedWalletNFTs) {
-        confirmButton.classList.add("disabled");
-    }
-    else {
-        confirmButton.classList.remove("disabled");
+    if(confirmButton != null) {
+        if (numSelectedPoolNFTs != numSelectedWalletNFTs) {
+            confirmButton.classList.add("disabled");
+        }
+        else {
+            confirmButton.classList.remove("disabled");
+        }
     }
 
 }
@@ -407,7 +413,7 @@ async function loadPolicyAssets(assetpolicy, list_html_element, filter, theme, p
     }
 
     
-    const koiosquery = `${koios_api_url}/policy_asset_info?_asset_policy=${assetpolicy}${offsetParam}${limitParam}`;
+    const koiosquery = `${koios_api_url}/policy_asset_info?_asset_policy=${assetpolicy}&order=asset_name_ascii.asc${offsetParam}${limitParam}`;
     xhr.open('GET', koiosquery, true);
     xhr.setRequestHeader('accept', 'application/json');
     xhr.send();
@@ -616,7 +622,7 @@ function loadAddNFTDropdown(dropdown, theme, swapPoolNames, poolPolicyIds, poolN
     for(var i = 0; i < swapPoolNames.length; i++) {
 
         if(swapPoolNames[i].trim() != '') {
-            swapPoolListHtml += `<li><div class="dropdown-item ${theme} d-flex" data-bs-toggle="modal" data-bs-target="#selectNFTsDialog"><a class="dropdown-item${theme}" href="#" onclick="const confButton = document.getElementById('confirmAddNFTsButton'); confButton.setAttribute('onclick', 'addNFTsToPool(${i})'+ confButton.getAttribute('onclick')); setInnerText('selectNFTsDialogLabel', 'Select NFTs to add to swap pool'); showElem('confirmAddNFTsButton'); hideElem('confirmRemoveNFTsButton'); getWalletAddress().then((addr) => { getAddressAssets(addr).then((assets) => { listNFTs(assets, document.getElementById('selectable_nfts'), 'wallet', '${theme}', '${poolPolicyIds[i]}', '${poolNFTNames[i]}') } ) } ).catch((reason => console.log('error: '+ reason.message)));">${swapPoolNames[i].trim()}</a></div></li>`;
+            swapPoolListHtml += `<li><div class="dropdown-item ${theme} d-flex" data-bs-toggle="modal" data-bs-target="#selectNFTsDialog"><a class="dropdown-item ${theme}" href="#" onclick="const confButton = document.getElementById('confirmAddNFTsButton'); confButton.setAttribute('onclick', 'addNFTsToPool(${i})'+ confButton.getAttribute('onclick')); setInnerText('selectNFTsDialogLabel', 'Select NFTs to add to swap pool'); showElem('confirmAddNFTsButton'); hideElem('confirmRemoveNFTsButton'); getWalletAddress().then((addr) => { getAddressAssets(addr).then((assets) => { listNFTs(assets, document.getElementById('selectable_nfts'), 'wallet', '${theme}', '${poolPolicyIds[i]}', '${poolNFTNames[i]}') } ) } ).catch((reason => console.log('error: '+ reason.message)));">${swapPoolNames[i].trim()}</a></div></li>`;
         }
     }
     
@@ -631,7 +637,7 @@ function loadRemoveNFTDropdown(dropdown, theme, swapPoolNames) {
     for(var i = 0; i < swapPoolNames.length; i++) {
 
         if(swapPoolNames[i].trim() != '') {
-            swapPoolListHtml += `<li><div class="dropdown-item ${theme} d-flex" data-bs-toggle="modal" data-bs-target="#selectNFTsDialog"><a class="dropdown-item${theme}" href="#" onclick="const confButton = document.getElementById('confirmRemoveNFTsButton'); confButton.setAttribute('onclick', 'removeNFTsFromPool(${i})'+ confButton.getAttribute('onclick')); setInnerText('selectNFTsDialogLabel', 'Select NFTs to remove from swap pool'); showElem('confirmRemoveNFTsButton'); hideElem('confirmAddNFTsButton'); getSwapPoolAddress(${i}).then((addr) => { getAddressAssets(addr).then((assets) => { listNFTs(assets, document.getElementById('selectable_nfts'), 'pool', '${theme}') } ) } ).catch((reason => console.log('error: '+ reason.message)));">${swapPoolNames[i].trim()}</a></div></li>`;
+            swapPoolListHtml += `<li><div class="dropdown-item ${theme} d-flex" data-bs-toggle="modal" data-bs-target="#selectNFTsDialog"><a class="dropdown-item ${theme}" href="#" onclick="const confButton = document.getElementById('confirmRemoveNFTsButton'); confButton.setAttribute('onclick', 'removeNFTsFromPool(${i})'+ confButton.getAttribute('onclick')); setInnerText('selectNFTsDialogLabel', 'Select NFTs to remove from swap pool'); showElem('confirmRemoveNFTsButton'); hideElem('confirmAddNFTsButton'); getSwapPoolAddress(${i}).then((addr) => { getAddressAssets(addr).then((assets) => { listNFTs(assets, document.getElementById('selectable_nfts'), 'pool', '${theme}') } ) } ).catch((reason => console.log('error: '+ reason.message)));">${swapPoolNames[i].trim()}</a></div></li>`;
         }
     }
     
@@ -645,7 +651,7 @@ function loadWithdrawalDropdown(dropdown, theme, swapPoolNames) {
     for(var i = 0; i < swapPoolNames.length; i++) {
 
         if(swapPoolNames[i].trim() != '') {
-            swapPoolListHtml += `<li><div class="dropdown-item ${theme} d-flex"><a class="dropdown-item${theme}" href="#" onclick="getSwapPoolUTxO(${i}).then(utxo => {withdrawFromPool(utxo[0].txHash,utxo[0].outputIndex, ${i})}).then(message => { message = JSON.stringify(message); const mBoxTitle = document.getElementById('messageBoxLabel'); if(message.indexOf('Redeemer') > -1 || message.indexOf('Error') > -1) { mBoxTitle.innerText='Something went wrong'; } else { mBoxTitle.innerText='Deposit successful'; } document.getElementById('message-box-content').innerHTML=message; const messageBox = new bootstrap.Modal('#messageBox', { keyboard: false }); messageBox.show();});">${swapPoolNames[i].trim()}</a></div></li>`;
+            swapPoolListHtml += `<li><div class="dropdown-item ${theme} d-flex"><a class="dropdown-item ${theme}" href="#" onclick="getSwapPoolUTxO(${i}).then(utxo => {withdrawFromPool(utxo[0].txHash,utxo[0].outputIndex, ${i})}).then(message => { message = JSON.stringify(message); const mBoxTitle = document.getElementById('messageBoxLabel'); if(message.indexOf('Redeemer') > -1 || message.indexOf('Error') > -1) { mBoxTitle.innerText='Something went wrong'; } else { mBoxTitle.innerText='Deposit successful'; } document.getElementById('message-box-content').innerHTML=message; const messageBox = new bootstrap.Modal('#messageBox', { keyboard: false }); messageBox.show();});">${swapPoolNames[i].trim()}</a></div></li>`;
         }
     }
     
@@ -658,7 +664,7 @@ function loadDepositDropdown(dropdown, theme, swapPoolNames) {
     for(var i = 0; i < swapPoolNames.length; i++) {
 
         if(swapPoolNames[i].trim() != '') {
-            swapPoolListHtml += `<li><div class="dropdown-item ${theme} d-flex"><a class="dropdown-item${theme}" href="#" onclick="depositLovelace(3000000, ${i}).then(message => { message = JSON.stringify(message); const mBoxTitle = document.getElementById('messageBoxLabel'); if(message.indexOf('Redeemer') > -1 || message.indexOf('Error') > -1) { mBoxTitle.innerText='Something went wrong'; } else { mBoxTitle.innerText='Deposit successful'; } document.getElementById('message-box-content').innerHTML=message; const messageBox = new bootstrap.Modal('#messageBox', { keyboard: false }); messageBox.show();});">${swapPoolNames[i].trim()}</a></div></li>`;
+            swapPoolListHtml += `<li><div class="dropdown-item ${theme} d-flex"><a class="dropdown-item ${theme}" href="#" onclick="depositLovelace(3000000, ${i}).then(message => { message = JSON.stringify(message); const mBoxTitle = document.getElementById('messageBoxLabel'); if(message.indexOf('Redeemer') > -1 || message.indexOf('Error') > -1) { mBoxTitle.innerText='Something went wrong'; } else { mBoxTitle.innerText='Deposit successful'; } document.getElementById('message-box-content').innerHTML=message; const messageBox = new bootstrap.Modal('#messageBox', { keyboard: false }); messageBox.show();});">${swapPoolNames[i].trim()}</a></div></li>`;
         }
     }
     
@@ -679,11 +685,11 @@ function loadSwapPoolDropdown(dropdown, button, theme, swapPoolNames, selectedIn
         if(swapPoolNames[i].trim() != '') {
             
             if(selectedIndex == i) {
-                swapPoolListHtml += `<li><div class="dropdown-item ${theme} d-flex"><a class="dropdown-item${theme}" href="/?poolIndex=${i}">${swapPoolNames[i].trim()}</a><svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-check" viewBox="0 0 16 16"><path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.267.267 0 0 1 .02-.022z"/></svg></div></li>`;
+                swapPoolListHtml += `<li><div class="dropdown-item ${theme} d-flex"><a class="dropdown-item ${theme}" href="/?poolIndex=${i}">${swapPoolNames[i].trim()}</a><svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-check" viewBox="0 0 16 16"><path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.267.267 0 0 1 .02-.022z"/></svg></div></li>`;
                 button.innerHTML = `<a class="connect-button${theme}" href="#">${swapPoolNames[i].trim()}</a>`;
             }
             else {
-                swapPoolListHtml += `<li><div class="dropdown-item ${theme} d-flex"><a class="dropdown-item${theme}" href="/?poolIndex=${i}">${swapPoolNames[i].trim()}</a></div></li>`;
+                swapPoolListHtml += `<li><div class="dropdown-item ${theme} d-flex"><a class="dropdown-item ${theme}" href="/?poolIndex=${i}">${swapPoolNames[i].trim()}</a></div></li>`;
             }
         }
     }
@@ -692,69 +698,131 @@ function loadSwapPoolDropdown(dropdown, button, theme, swapPoolNames, selectedIn
 
 }
 
+function delay(time) {
+    return new Promise(resolve => setTimeout(resolve, time));
+}
+
+function getCookie(cookiename) {
+    var cookieString = document.cookie;
+    const indexStart = cookieString.indexOf(cookiename);
+    if (indexStart == -1) {
+        // no cookie found with that name
+        return '';
+    }
+    else {
+        // cookie found..check value
+        const indexEnd = cookieString.indexOf(';',indexStart);
+        var cookieValue;
+        if(indexEnd == -1) {
+            cookieValue = cookieString.substring(indexStart);
+        }
+        else {
+            cookieValue = cookieString.substring(indexStart, indexEnd);
+        }
+
+        cookieValue = cookieValue.substring(cookieValue.indexOf('=') + 1);
+
+        
+        return cookieValue;
+    }
+}
+
+function setCookie(cookiename, value) {
+    const expirationDate = new Date();
+    expirationDate.setMonth(expirationDate.getMonth()+1);
+    
+    document.cookie = `${cookiename}=${value}; expires=${expirationDate};`;
+}
+
 async function loadWalletConnector(dropdown, button, theme) {
+
+    const nonWalletNames = ['enable', 'isEnabled', 'getBalance', 'signData', 'signTx', 'submitTx', 'getUtxos', 'getCollateral', 'getUsedAddresses', 'getUnusedAddresses', 'getChangeAddress', 'getRewardAddress', 'getNetworkId', 'onAccountChange', 'onNetworkChange', 'off', '_events'];
 
     connectorDropdown = dropdown;
     connectorButton = button;
 
     const cardanowallets = window.cardano;
 
-    console.log('cardanowallets', Object.keys(cardanowallets));
-
-
     var walletListHtml = '';
-    var connectedWalletHtml = '';
+    
+    connectedWalletExtName = getCookie('connectedwallet');
 
-    //for(var i = 0; i < Object.keys(cardanowallets).length; i++) {
-    //wallet = cardanowallets[Object.keys(cardanowallets)[i]];
-    wallet = cardanowallets['nami'];
-    const api = await wallet.enable();
-    console.log('nami enabled', api);
+    console.log('connecting to '+ connectedWalletExtName);
 
-    if (wallet.name && wallet.icon) {
+    for(var i = 0; i < Object.keys(cardanowallets).length; i++) {
+        
+        currentWalletName = Object.keys(cardanowallets)[i];
+        if(nonWalletNames.includes(currentWalletName)) {continue;}
+        wallet = cardanowallets[currentWalletName];
+        if (connectedWalletExtName == currentWalletName) {
+            
+            const api = await wallet.enable();
+            console.log(`${wallet.name} enabled`);
 
-        if (await wallet.isEnabled()) {
-            try {
-                console.log('wallet', wallet);
+            if (wallet.name && wallet.icon) {
 
-                adaBalance = 0;
-                walletListHtml += `<li><div class="dropdown-item ${theme} d-flex"><img src="${wallet.icon}" width="30" height="30"/><a class="dropdown-item${theme}" href="#">${adaBalance} ADA</a><svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-check" viewBox="0 0 16 16"><path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.267.267 0 0 1 .02-.022z"/></svg></div></li>`
-                //button.innerHTML = `${wallet.name.toUpperCase()} CONNECTED`;
-                button.innerHTML = `<img src="${wallet.icon}" width="30" height="30"/>&nbsp;<a class="connect-button${theme}" href="#">${adaBalance} ADA</a>`
-                connectedWallet = wallet;
-                //connectedWalletExtName = Object.keys(cardanowallets)[i];
-                connectedWalletExtName = 'nami'
-
-                // typhon must be changed to typhoncip30 to be compliant with the dapp connector api
-                if (connectedWalletExtName == 'typhon') {
-                    connectedWalletExtName = 'typhoncip30';
+                if (await wallet.isEnabled()) {
+                    try {
+                        
+                        var lucid;
+                        var retries = 0;
+                        while(lucid == null && retries < 3) {
+                            try {
+                                // some wallets time out...retry before giving up
+                                lucid = await connectToLucid();
+                            }
+                            catch(e) { 
+                                console.log(`Connection to ${wallet.name} failed. Retrying...`);
+                                retries++; 
+                                await delay(500); 
+                            }
+                        }
+                        if(lucid == null) {
+                            // unable to connect to wallet. Display warning icon
+                            console.log(`unable to initialize ${wallet.name}`);
+                            walletListHtml += `<li><div class="dropdown-item ${theme} d-flex"><svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-exclamation-circle" viewBox="0 0 16 16">
+                            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                            <path d="M7.002 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0zM7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 4.995z"/>
+                            </svg>&nbsp;<a class="dropdown-item ${theme}" href="#">${wallet.name}</a></div></li>`
+                            button.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-exclamation-circle" viewBox="0 0 16 16">
+                            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                            <path d="M7.002 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0zM7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 4.995z"/>
+                            </svg>&nbsp;<a class="connect-button${theme}" href="#">${wallet.name}</a>`
+                            continue;
+                        }
+                        
+                        const utxos = await lucid.wallet.getUtxos();
+                        const lovelace = utxos.reduce((acc, utxo) => acc + utxo.assets.lovelace, 0n);
+                        const adaBalance = lovelace / 1000000n;
+                        walletListHtml += `<li><div class="dropdown-item ${theme} d-flex"><img src="${wallet.icon}" width="30" height="30"/><a class="dropdown-item ${theme}" href="#">${adaBalance} ADA</a><svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-check" viewBox="0 0 16 16"><path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.267.267 0 0 1 .02-.022z"/></svg></div></li>`
+                        button.innerHTML = `<img src="${wallet.icon}" width="30" height="30"/>&nbsp;<a class="connect-button${theme}" href="#">${adaBalance} ADA</a>`
+                        connectedWallet = wallet;
+                        
+                        // typhon must be changed to typhoncip30 to be compliant with the dapp connector api
+                        if (connectedWalletExtName == 'typhon') {
+                            connectedWalletExtName = 'typhoncip30';
+                        }
+                    }
+                    catch (err) {
+                        console.error(err)
+                    }
                 }
-
-
             }
-            catch (err) {
-                console.error(err)
-            }
-
-            //i = Object.keys(cardanowallets).length; // break loop...found connected wallet
         }
         else {
-            walletListHtml += `<li><div class="dropdown-item d-flex"><img src="${wallet.icon}" width="30" height="30"/><a class="dropdown-item" href="#" onclick="connectwallet('${Object.keys(cardanowallets)[i]}')">${wallet.name.toUpperCase()}</a></div></li>`
+            walletListHtml += `<li><div class="dropdown-item ${theme} d-flex"><img src="${wallet.icon}" width="30" height="30"/><a class="dropdown-item ${theme}" href="#" onclick="connectwallet('${currentWalletName}')">${wallet.name.toUpperCase()}</a></div></li>`
         }
     }
-    //}
 
     dropdown.innerHTML = walletListHtml;
 
     if (connectedWallet == null) {
-
         button.innerHTML = "CONNECT WALLET";
     }
-
-
 }
 
 async function connectwallet(name) {
-    console.log("connect wallet called");
     const api = await window.cardano[name].enable();
+    setCookie('connectedwallet', name);
+    location.reload();
 }

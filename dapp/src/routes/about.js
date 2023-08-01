@@ -9,6 +9,9 @@ router.get('/', function (req, res, next) {
     }
 
     res.render('about', {
+        navWebpage: app.get('navWebpage'),
+        navTwitter: app.get('navTwitter'),
+        navDiscord: app.get('navDiscord'),
         themeclass: theme
     });
 });

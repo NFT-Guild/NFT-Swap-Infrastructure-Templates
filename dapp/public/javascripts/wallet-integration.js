@@ -499,15 +499,12 @@ function getSelectedWalletAssets(assetsToReturnToSc) {
     return assetsToReturnToSc;
 }
 
-async function connectToLucid() {
-    console.log("connect wallet called");
+async function connectToLucid() {    
     const lucid = await Lucid.new(
         new Blockfrost(blockfrost_api_url, blockfrost_api_key), blockfrost_api_env
     );
-
     const api = await window.cardano[connectedWalletExtName].enable();
     lucid.selectWallet(api);
-
     return lucid;
 }
 
@@ -534,5 +531,3 @@ window.depositLovelace = depositLovelace;
 window.withdrawFromPool = withdrawFromPool;
 window.buildSpecificFilteredSwap = buildSpecificFilteredSwap;
 window.getSwapPoolUTxO = getSwapPoolUTxO;
-
-
