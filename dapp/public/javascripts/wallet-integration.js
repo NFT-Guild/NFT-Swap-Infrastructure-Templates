@@ -68,8 +68,39 @@ async function getSwapPoolUTxO(smartContractIndex) {
     return utxoAtScript;
 }
 
+async function waitForTxConfirm(txid, spinnerId) {
+    
+    const response = await fetch(`${koios_api_url}/tx_status`, {
+        method: "POST", // *GET, POST, PUT, DELETE, etc.
+        mode: "cors", // no-cors, *cors, same-origin
+        cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
+        credentials: "same-origin", // include, *same-origin, omit
+        headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+        },
+        redirect: "follow", // manual, *follow, error
+        referrerPolicy: "no-referrer", // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
+        body: `{"_tx_hashes":["${txid}"]}`, // body data type must match "Content-Type" header
+    });
+
+    const jsonData = await response.json();
+
+    if(jsonData[0].tx_hash == txid) {
+        if(jsonData[0].num_confirmations > 0) {
+            // tx confirmed. stop spinner
+            hideElem(spinnerId);
+        }
+        else {
+            // tx still not confirmed. wait 1 second and ask again
+            setTimeout(waitForTxConfirm, 1000, txid, spinnerId);
+        }
+    }
+}
+
 async function withdrawFromPool(hash, idx, smartContractIndex) {
     var msg;
+    const spinnerId = 'testWithdrawSpinner';
 
     const lucid = await connectToLucid();
 
@@ -97,39 +128,41 @@ async function withdrawFromPool(hash, idx, smartContractIndex) {
             msg = error;
         })
 
-    if (!txCreatedSuccessfully) return msg;
-
-    var txSignedSuccessfully = true;
-    console.log('tx created');
-    const signedTx = await tx
-        .sign()
-        .complete()
-        .catch(error => {
-            txSignedSuccessfully = false;
-            msg = error;
-        })
-
-    if (!txSignedSuccessfully) return msg;
-
-    console.log('tx signed');
+    if (!txCreatedSuccessfully) return msg ;
 
     var txSubmittedSuccessfully = true;
-    const txHash = await signedTx
-        .submit()
-        .catch(error => {
-            txSubmittedSuccessfully = false;
-            msg = error;
-        })
+    var txHash = '';
+    try {
+        showElem(spinnerId);
+        txHash = await signAndSubmitTx(tx, spinnerId)
+    }
+    catch(error) {
+        txSubmittedSuccessfully = false;
+        msg = error;
+        hideElem(spinnerId);
+    }
 
     if (!txSubmittedSuccessfully) return msg;
 
-    msg = `Withdrawal performed. Transaction id: <a target="_blank" href="${tx_explorer_url}/${txHash}">${txHash}</a>`;
+    msg = `Withdrawal performed.<br>Waiting for confirmation from the Cardano blockchain.<br>Transaction id: <a target="_blank" href="${tx_explorer_url}/${txHash}">${txHash}</a>`;
     return msg;
 }
 
+async function signAndSubmitTx(tx, spinnerId) {
+        const signedTx = await tx.sign().complete();
+        return await submitTx(signedTx, spinnerId);
+}
+
+async function submitTx(signedTx, spinnerId) {
+    const tid = await signedTx.submit();
+    console.log("Cardano tx submitted: " + tid);
+    waitForTxConfirm(tid, spinnerId);
+    return tid;
+}
 
 async function depositLovelace(amount, smartContractIndex) {
     var msg;
+    const spinnerId = 'testDepositSpinner';
     
     const lucid = await connectToLucid();
 
@@ -145,33 +178,23 @@ async function depositLovelace(amount, smartContractIndex) {
             msg = error;
         })
 
-    if (!txCreatedSuccessfully) return msg;
-
-    var txSignedSuccessfully = true;
-    console.log('tx created');
-    const signedTx = await tx
-        .sign()
-        .complete()
-        .catch(error => {
-            txSignedSuccessfully = false;
-            msg = error;
-        })
-
-    if (!txSignedSuccessfully) return msg;
-
-    console.log('tx signed');
+    if (!txCreatedSuccessfully) return msg ;
 
     var txSubmittedSuccessfully = true;
-    const txHash = await signedTx
-        .submit()
-        .catch(error => {
-            txSubmittedSuccessfully = false;
-            msg = error;
-        })
+    var txHash = '';
+    try {
+        showElem(spinnerId);
+        txHash = await signAndSubmitTx(tx, spinnerId)
+    }
+    catch(error) {
+        txSubmittedSuccessfully = false;
+        msg = error;
+        hideElem(spinnerId);
+    }
 
     if (!txSubmittedSuccessfully) return msg;
 
-    msg = `Deposit performed. Transaction id: <a target="_blank" href="${tx_explorer_url}/${txHash}">${txHash}</a>`;
+    msg = `Deposit sent to contract.<br>Waiting for confirmation from the Cardano blockchain.<br>Transaction id: <a target="_blank" href="${tx_explorer_url}/${txHash}">${txHash}</a>`;
     return msg;
 }
 
@@ -250,6 +273,7 @@ async function getSwapPoolAddress(smartContractIndex) {
 
 async function addNFTsToPool(smartContractIndex) {
     var msg;
+    const spinnerId = 'addNFTSpinner';
 
     const lucid = await connectToLucid();
 
@@ -269,38 +293,29 @@ async function addNFTsToPool(smartContractIndex) {
             msg = error;
         })
 
-    if (!txCreatedSuccessfully) return msg;
-
-    var txSignedSuccessfully = true;
-    console.log('tx created');
-    const signedTx = await tx
-        .sign()
-        .complete()
-        .catch(error => {
-            txSignedSuccessfully = false;
-            msg = error;
-        })
-
-    if (!txSignedSuccessfully) return msg;
-
-    console.log('tx signed');
+    if (!txCreatedSuccessfully) return msg ;
 
     var txSubmittedSuccessfully = true;
-    const txHash = await signedTx
-        .submit()
-        .catch(error => {
-            txSubmittedSuccessfully = false;
-            msg = error;
-        })
+    var txHash = '';
+    try {
+        showElem(spinnerId);
+        txHash = await signAndSubmitTx(tx, spinnerId)
+    }
+    catch(error) {
+        txSubmittedSuccessfully = false;
+        msg = error;
+        hideElem(spinnerId);
+    }
 
     if (!txSubmittedSuccessfully) return msg;
 
-    msg = `Add performed. Transaction id: <a target="_blank" href="${tx_explorer_url}/${txHash}">${txHash}</a>`;
+    msg = `Add performed.<br>Waiting for confirmation from the Cardano blockchain.<br>Transaction id: <a target="_blank" href="${tx_explorer_url}/${txHash}">${txHash}</a>`;
     return msg;
 }
 
 async function removeNFTsFromPool(smartContractIndex) {
     var msg;
+    const spinnerId = 'removeNFTSpinner';
 
     if (numSelectedPoolNFTs > 10) {
         msg = "Error: Number of NFTs selected must be 10 or less";
@@ -340,35 +355,25 @@ async function removeNFTsFromPool(smartContractIndex) {
         .catch(error => {
             txCreatedSuccessfully = false;
             msg = error;
-        })
+        });
 
-    if (!txCreatedSuccessfully) return msg;
-
-    var txSignedSuccessfully = true;
-    console.log('tx created');
-    const signedTx = await tx
-        .sign()
-        .complete()
-        .catch(error => {
-            txSignedSuccessfully = false;
-            msg = error;
-        })
-
-    if (!txSignedSuccessfully) return msg;
-
-    console.log('tx signed');
+    if (!txCreatedSuccessfully) return msg ;
 
     var txSubmittedSuccessfully = true;
-    const txHash = await signedTx
-        .submit()
-        .catch(error => {
-            txSubmittedSuccessfully = false;
-            msg = error;
-        })
+    var txHash = '';
+    try {
+        showElem(spinnerId);
+        txHash = await signAndSubmitTx(tx, spinnerId)
+    }
+    catch(error) {
+        txSubmittedSuccessfully = false;
+        msg = error;
+        hideElem(spinnerId);
+    }
 
     if (!txSubmittedSuccessfully) return msg;
- 
-    msg = `Removal performed. Transaction id: <a target="_blank" href="${tx_explorer_url}/${txHash}">${txHash}</a>`;
+
+    msg = `Removal performed.<br>Waiting for confirmation from the Cardano blockchain.<br>Transaction id: <a target="_blank" href="${tx_explorer_url}/${txHash}">${txHash}</a>`;
     return msg;
 }
 
@@ -376,6 +381,7 @@ async function removeNFTsFromPool(smartContractIndex) {
 async function doSwap(smartContractIndex) {
 
     var msg;
+    const spinnerId = 'swapNFTsSpinner';
 
     if (numSelectedPoolNFTs != numSelectedWalletNFTs) {
         msg = "Error: Selected NFTs from pool doesn't equal number selected NFTs from wallet";
@@ -422,31 +428,23 @@ async function doSwap(smartContractIndex) {
             msg = error;
         })
 
-    if (!txCreatedSuccessfully) return msg;
-
-    var txSignedSuccessfully = true;
-    console.log('tx created');
-    const signedTx = await tx
-        .sign()
-        .complete()
-        .catch(error => {
-            txSignedSuccessfully = false;
-            msg = error;
-        })
-
-    if (!txSignedSuccessfully) return msg;
+    if (!txCreatedSuccessfully) return msg ;
 
     var txSubmittedSuccessfully = true;
-    const txHash = await signedTx
-        .submit()
-        .catch(error => {
-            txSubmittedSuccessfully = false;
-            msg = error;
-        })
+    var txHash = '';
+    try {
+        showElem(spinnerId);
+        txHash = await signAndSubmitTx(tx, spinnerId)
+    }
+    catch(error) {
+        txSubmittedSuccessfully = false;
+        msg = error;
+        hideElem(spinnerId);
+    }
 
     if (!txSubmittedSuccessfully) return msg;
 
-    msg = `Swap performed. Transaction id: <a target="_blank" href="${tx_explorer_url}/${txHash}">${txHash}</a>`;
+    msg = `Swap performed.<br>Waiting for confirmation from the Cardano blockchain.<br>Transaction id: <a target="_blank" href="${tx_explorer_url}/${txHash}">${txHash}</a>`;
     return msg;
 }
 

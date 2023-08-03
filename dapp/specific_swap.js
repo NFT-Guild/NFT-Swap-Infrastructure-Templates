@@ -62,7 +62,7 @@ app.set('nft_per_page', 50);
 
 // example format and values for swap pool settings
 /*
-app.set('swap_pool_names', ['Common', 'Rare']);
+app.set('swap_pool_names', ['Common (policy-wide)', 'Rare']);
 
 app.set('swap_pool_policy_id', ['141efecf55e4e6c91399e1d4561f9845481369a6f200209d4085ae9e', '141efecf55e4e6c91399e1d4561f9845481369a6f200209d4085ae9e']);
 

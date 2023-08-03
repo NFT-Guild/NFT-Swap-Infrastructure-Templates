@@ -12,6 +12,31 @@ var selectedFilterNFTNameMap = new Map();
 //const koios_api_url = 'https://api.koios.rest/api/v0'; // mainnet
 const koios_api_url = 'https://preprod.koios.rest/api/v0'; // preproduction
 
+
+function removeTechnicalGibberish(message) {
+    if(message == null || message == undefined) {return '';}
+    if(message.indexOf('Redeemer') > -1) {
+        // example:
+        // Redeemer (Spend, 2): The provided Plutus code called 'error'. ExBudget { mem: 12740384, cpu: 9611748796, } CLEANUP FAILED:
+        message = message.substring(message.indexOf('}'));
+        
+        // example:
+        // } CLEANUP FAILED: Operation can only be performed by contract owner PT5
+        message = message.replace('}','');
+        message = message.replace('PT5', '');
+        message.trim();
+    }
+    else if(message.indexOf('"info":') > -1) {
+        // message is a JSON string with an info object. Return content of info
+        const msgJSON = JSON.parse(message);
+        message = msgJSON['info'];
+    }
+    else if(message.indexOf('InputsExhaustedError') > -1) {
+        message = 'Please verify that your wallet has more than 5 ADA.<br>Refresh page and try again.';
+    }
+    return message;
+}
+
 function addEnterKeyListener(sourceElem, clickElem) {
     sourceElem.addEventListener("keypress", function(event) {
         if (event.key === "Enter") {
@@ -651,12 +676,25 @@ function loadWithdrawalDropdown(dropdown, theme, swapPoolNames) {
     for(var i = 0; i < swapPoolNames.length; i++) {
 
         if(swapPoolNames[i].trim() != '') {
-            swapPoolListHtml += `<li><div class="dropdown-item ${theme} d-flex"><a class="dropdown-item ${theme}" href="#" onclick="getSwapPoolUTxO(${i}).then(utxo => {withdrawFromPool(utxo[0].txHash,utxo[0].outputIndex, ${i})}).then(message => { message = JSON.stringify(message); const mBoxTitle = document.getElementById('messageBoxLabel'); if(message.indexOf('Redeemer') > -1 || message.indexOf('Error') > -1) { mBoxTitle.innerText='Something went wrong'; } else { mBoxTitle.innerText='Deposit successful'; } document.getElementById('message-box-content').innerHTML=message; const messageBox = new bootstrap.Modal('#messageBox', { keyboard: false }); messageBox.show();});">${swapPoolNames[i].trim()}</a></div></li>`;
+            swapPoolListHtml += `<li><div class="dropdown-item ${theme} d-flex"><a class="dropdown-item ${theme}" href="#" onclick="getSwapPoolUTxO(${i}).then(utxo => {withdrawFromPool(utxo[0].txHash,utxo[0].outputIndex, ${i})});">${swapPoolNames[i].trim()}</a></div></li>`;
         }
     }
     
     dropdown.innerHTML = swapPoolListHtml;
 }
+
+function errorReturned(message) {
+    var foundError = false;
+    if(message == null || message == undefined) {return false;}
+    if( message.indexOf('Redeemer') > -1 || 
+        message.indexOf('Error') > -1 || 
+        message.indexOf('user declined') > -1 || 
+        message.indexOf('InputsExhaustedError') > -1) {
+            console.log('found error in message');
+            foundError = true;
+    };
+    return foundError;
+} 
 
 function loadDepositDropdown(dropdown, theme, swapPoolNames) {
     var swapPoolListHtml = '';
@@ -664,7 +702,7 @@ function loadDepositDropdown(dropdown, theme, swapPoolNames) {
     for(var i = 0; i < swapPoolNames.length; i++) {
 
         if(swapPoolNames[i].trim() != '') {
-            swapPoolListHtml += `<li><div class="dropdown-item ${theme} d-flex"><a class="dropdown-item ${theme}" href="#" onclick="depositLovelace(3000000, ${i}).then(message => { message = JSON.stringify(message); const mBoxTitle = document.getElementById('messageBoxLabel'); if(message.indexOf('Redeemer') > -1 || message.indexOf('Error') > -1) { mBoxTitle.innerText='Something went wrong'; } else { mBoxTitle.innerText='Deposit successful'; } document.getElementById('message-box-content').innerHTML=message; const messageBox = new bootstrap.Modal('#messageBox', { keyboard: false }); messageBox.show();});">${swapPoolNames[i].trim()}</a></div></li>`;
+            swapPoolListHtml += `<li><div class="dropdown-item ${theme} d-flex"><a class="dropdown-item ${theme}" href="#" onclick="depositLovelace(3000000, ${i}).then(message => { message = JSON.stringify(message); const mBoxTitle = document.getElementById('messageBoxLabel'); if(errorReturned(message)) { mBoxTitle.innerText='Something went wrong'; } else { mBoxTitle.innerText='Deposit successful'; } document.getElementById('message-box-content').innerHTML=removeTechnicalGibberish(message); const messageBox = new bootstrap.Modal('#messageBox', { keyboard: false }); messageBox.show();});">${swapPoolNames[i].trim()}</a></div></li>`;
         }
     }
     
