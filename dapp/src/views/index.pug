@@ -68,7 +68,7 @@ html
                   path(d="M22.5 41.9V17.7l-5.9 5.9-2.1-2.1L24 12l9.5 9.5-2.1 2.1-5.9-5.9v24.2ZM8 9V6h32v3Z")
       div(class="d-flex flex-row justify-content-end padding")
          button(type="button" id="selectPoolNFTButton" class=`btn themed-color${themeclass} disabled` data-bs-toggle="modal" data-bs-target="#selectNFTsDialog" onclick=`getWalletAddress().then((addr) => { getAddressAssets(addr).then((assets) => { listNFTs(assets, document.getElementById('wallet_nfts'),'','${themeclass}', '${poolPolicyId[currentPoolIndex]}', '${poolNFTNames[currentPoolIndex]}') } ) } ).catch((reason => console.log('error: '+ reason.message)));`)= `SWAP NFT(s)`
-            span(class="spinner-border" role="status" id="swapNFTsSpinner" style="width:15px !important; height:15px !important;display:none;")
+            span(class="spinner-border" role="status" id="swapNFTsSpinner" style="display:none;")
       div(class=`d-flex flex-row justify-content-between flex-nowrap link-row${themeclass}`)
             a(href="/about" class=`link-row${themeclass} flex-fill padding`) ABOUT
             a(href=`${navWebpage}` class=`link-row${themeclass} flex-fill padding`) WEBPAGE

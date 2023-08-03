@@ -424,6 +424,11 @@ button {
     cursor: pointer;
 }
 
+span.spinner-border {
+    margin-left: 5px;
+    width:15px !important; 
+    height:15px !important;
+}
 
 a.connect-button {
     background-color: inherit;
