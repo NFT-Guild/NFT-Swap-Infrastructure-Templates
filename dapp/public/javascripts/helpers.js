@@ -16,15 +16,23 @@ const koios_api_url = 'https://preprod.koios.rest/api/v0'; // preproduction
 function removeTechnicalGibberish(message) {
     if(message == null || message == undefined) {return '';}
     if(message.indexOf('Redeemer') > -1) {
-        // example:
-        // Redeemer (Spend, 2): The provided Plutus code called 'error'. ExBudget { mem: 12740384, cpu: 9611748796, } CLEANUP FAILED:
-        message = message.substring(message.indexOf('}'));
-        
-        // example:
-        // } CLEANUP FAILED: Operation can only be performed by contract owner PT5
-        message = message.replace('}','');
-        message = message.replace('PT5', '');
-        message.trim();
+
+        if(message.indexOf('Over budget') > -1) {
+            // example: 
+            // Redeemer (Spend, 1): Over budget mem: -1036 & cpu: 6310129259 ExBudget { mem: -1036, cpu: 6310129259,}
+            message = 'Tx too large to be processed by the swap pool smart contract.<br>Please remove one NFT and try again.';
+        }
+        else {
+            // example:
+            // Redeemer (Spend, 2): The provided Plutus code called 'error'. ExBudget { mem: 12740384, cpu: 9611748796, } CLEANUP FAILED:
+            message = message.substring(message.indexOf('}'));
+            
+            // example:
+            // } CLEANUP FAILED: Operation can only be performed by contract owner PT5
+            message = message.replace('}','');
+            message = message.replace('PT5', '');
+            message.trim();
+        }
     }
     else if(message.indexOf('"info":') > -1) {
         // message is a JSON string with an info object. Return content of info
@@ -772,6 +780,32 @@ function setCookie(cookiename, value) {
     document.cookie = `${cookiename}=${value}; expires=${expirationDate};`;
 }
 
+function setActiveTheme(theme) {
+    const dropDownButton = document.getElementById('themeSelectionDropdown');
+
+    var themeImage = '<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-brightness-high" viewBox="0 0 16 16"><path d="M8 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6zm0 1a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM8 0a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 0zm0 13a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 13zm8-5a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2a.5.5 0 0 1 .5.5zM3 8a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2A.5.5 0 0 1 3 8zm10.657-5.657a.5.5 0 0 1 0 .707l-1.414 1.415a.5.5 0 1 1-.707-.708l1.414-1.414a.5.5 0 0 1 .707 0zm-9.193 9.193a.5.5 0 0 1 0 .707L3.05 13.657a.5.5 0 0 1-.707-.707l1.414-1.414a.5.5 0 0 1 .707 0zm9.193 2.121a.5.5 0 0 1-.707 0l-1.414-1.414a.5.5 0 0 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .707zM4.464 4.465a.5.5 0 0 1-.707 0L2.343 3.05a.5.5 0 1 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .708z"/></svg>'
+
+    if(theme == 'dark-mode') {
+        themeImage = '<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-moon" viewBox="0 0 16 16"><path d="M6 .278a.768.768 0 0 1 .08.858 7.208 7.208 0 0 0-.878 3.46c0 4.021 3.278 7.277 7.318 7.277.527 0 1.04-.055 1.533-.16a.787.787 0 0 1 .81.316.733.733 0 0 1-.031.893A8.349 8.349 0 0 1 8.344 16C3.734 16 0 12.286 0 7.71 0 4.266 2.114 1.312 5.124.06A.752.752 0 0 1 6 .278zM4.858 1.311A7.269 7.269 0 0 0 1.025 7.71c0 4.02 3.279 7.276 7.319 7.276a7.316 7.316 0 0 0 5.205-2.162c-.337.042-.68.063-1.029.063-4.61 0-8.343-3.714-8.343-8.29 0-1.167.242-2.278.681-3.286z"/></svg>'
+    }
+
+    dropDownButton.innerHTML = themeImage;
+}
+
+async function fulfillWithTimeLimit(timeLimit, task, failureValue){
+    let timeout;
+    const timeoutPromise = new Promise((resolve, reject) => {
+        timeout = setTimeout(() => {
+            resolve(failureValue);
+        }, timeLimit);
+    });
+    const response = await Promise.race([task, timeoutPromise]);
+    if(timeout){ //the code works without this but let's be safe and clean up the timeout
+        clearTimeout(timeout);
+    }
+    return response;
+}
+
 async function loadWalletConnector(dropdown, button, theme) {
 
     const nonWalletNames = ['enable', 'isEnabled', 'getBalance', 'signData', 'signTx', 'submitTx', 'getUtxos', 'getCollateral', 'getUsedAddresses', 'getUnusedAddresses', 'getChangeAddress', 'getRewardAddress', 'getNetworkId', 'onAccountChange', 'onNetworkChange', 'off', '_events', 'typhon'];
@@ -796,51 +830,57 @@ async function loadWalletConnector(dropdown, button, theme) {
         if (connectedWalletExtName == currentWalletName) {
             
             const api = await wallet.enable();
-            console.log(`${wallet.name} enabled`);
+            
+            if (await wallet.isEnabled()) {
+                try {
 
-            if (wallet.name && wallet.icon) {
-
-                if (await wallet.isEnabled()) {
-                    try {
-                        
-                        var lucid;
-                        var retries = 0;
-                        while(lucid == null && retries < 3) {
-                            try {
-                                // some wallets time out...retry before giving up
-                                lucid = await connectToLucid();
-                            }
-                            catch(e) { 
-                                console.log(`Connection to ${wallet.name} failed. Retrying...`);
-                                retries++; 
-                                await delay(500); 
-                            }
+                    var lucid;
+                    var retries = 0;
+                    while (lucid == null && retries < 3) {
+                        try {
+                            // some wallets time out...retry before giving up
+                            lucid = await connectToLucid();
                         }
-                        if(lucid == null) {
-                            // unable to connect to wallet. Display warning icon
-                            console.log(`unable to initialize ${wallet.name}`);
-                            walletListHtml += `<li><div class="dropdown-item ${theme} d-flex"><svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-exclamation-circle" viewBox="0 0 16 16">
+                        catch (e) {
+                            console.log(`Connection to ${wallet.name} failed. Retrying...`);
+                            retries++;
+                            await delay(500);
+                        }
+                    }
+                    if (lucid == null) {
+                        // unable to connect to wallet. Display warning icon
+                        console.log(`unable to initialize ${wallet.name}`);
+                        walletListHtml += `<li><div class="dropdown-item ${theme} d-flex"><svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-exclamation-circle" viewBox="0 0 16 16">
                             <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
                             <path d="M7.002 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0zM7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 4.995z"/>
                             </svg>&nbsp;<a class="dropdown-item ${theme}" href="#">${wallet.name}</a></div></li>`
-                            button.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-exclamation-circle" viewBox="0 0 16 16">
+                        continue;
+                    }
+
+                    const utxos = await fulfillWithTimeLimit(1000, lucid.wallet.getUtxos(), null);
+                    console.log('utxos', utxos);
+                    if (utxos == null) {
+                        // unable to connect to wallet. Display warning icon
+                        console.log(`unable to get utxos of ${wallet.name}`);
+                        walletListHtml += `<li><div class="dropdown-item ${theme} d-flex"><svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-exclamation-circle" viewBox="0 0 16 16">
                             <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
                             <path d="M7.002 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0zM7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 4.995z"/>
-                            </svg>&nbsp;<a class="connect-button${theme}" href="#">${wallet.name}</a>`
-                            continue;
-                        }
-                        
-                        const utxos = await lucid.wallet.getUtxos();
-                        const lovelace = utxos.reduce((acc, utxo) => acc + utxo.assets.lovelace, 0n);
-                        const adaBalance = lovelace / 1000000n;
-                        walletListHtml += `<li><div class="dropdown-item ${theme} d-flex"><img src="${wallet.icon}" width="30" height="30"/><a class="dropdown-item ${theme}" href="#">${adaBalance} ADA</a><svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-check" viewBox="0 0 16 16"><path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.267.267 0 0 1 .02-.022z"/></svg></div></li>`
-                        button.innerHTML = `<img src="${wallet.icon}" width="30" height="30"/>&nbsp;<a class="connect-button${theme}" href="#">${adaBalance} ADA</a>`
-                        connectedWallet = wallet;
+                            </svg>&nbsp;<a class="dropdown-item ${theme}" href="#">Please open ${wallet.name} wallet manually and refresh page</a></div></li>`
+                        continue;
                     }
-                    catch (err) {
-                        console.error(err)
-                    }
+
+                    const lovelace = utxos.reduce((acc, utxo) => acc + utxo.assets.lovelace, 0n);
+                    const adaBalance = lovelace / 1000000n;
+                    walletListHtml += `<li><div class="dropdown-item ${theme} d-flex"><img src="${wallet.icon}" width="30" height="30"/><a class="dropdown-item ${theme}" href="#">${adaBalance} ADA</a><svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-check" viewBox="0 0 16 16"><path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.267.267 0 0 1 .02-.022z"/></svg></div></li>`
+                    button.innerHTML = `<img src="${wallet.icon}" width="30" height="30"/>&nbsp;<a class="connect-button${theme}" href="#">${adaBalance} ADA</a>`
+                    connectedWallet = wallet;
                 }
+                catch (err) {
+                    console.error(err)
+                }
+            }
+            else {
+                console.log(`${wallet.name} not enabled`);
             }
         }
         else {
