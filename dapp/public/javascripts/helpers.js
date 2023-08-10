@@ -223,11 +223,11 @@ async function getAddressAssets(address) {
     
     var xhr = new XMLHttpRequest();
 
-    const koiosquery = `${koios_api_url}/address_assets`;
+    const koiosquery = `${koios_api_url}/account_assets`;
     xhr.open('POST', koiosquery, false);
     xhr.setRequestHeader('accept', 'application/json');
     xhr.setRequestHeader('content-type', 'application/json');
-    xhr.send(`{"_addresses":["${address}"]}`);
+    xhr.send(`{"_stake_addresses":${JSON.stringify(address)}}`);
 
     if (xhr.status === 200) {
         addressAssetsJSON = JSON.parse(xhr.response);
@@ -655,7 +655,7 @@ function loadAddNFTDropdown(dropdown, theme, swapPoolNames, poolPolicyIds, poolN
     for(var i = 0; i < swapPoolNames.length; i++) {
 
         if(swapPoolNames[i].trim() != '') {
-            swapPoolListHtml += `<li><div class="dropdown-item ${theme} d-flex" data-bs-toggle="modal" data-bs-target="#selectNFTsDialog"><a class="dropdown-item ${theme}" href="#" onclick="const confButton = document.getElementById('confirmAddNFTsButton'); confButton.setAttribute('onclick', 'addNFTsToPool(${i})'+ confButton.getAttribute('onclick')); setInnerText('selectNFTsDialogLabel', 'Select NFTs to add to swap pool'); showElem('confirmAddNFTsButton'); hideElem('confirmRemoveNFTsButton'); getWalletAddress().then((addr) => { getAddressAssets(addr).then((assets) => { listNFTs(assets, document.getElementById('selectable_nfts'), 'wallet', '${theme}', '${poolPolicyIds[i]}', '${poolNFTNames[i]}') } ) } ).catch((reason => console.log('error: '+ reason.message)));">${swapPoolNames[i].trim()}</a></div></li>`;
+            swapPoolListHtml += `<li><div class="dropdown-item ${theme} d-flex" data-bs-toggle="modal" data-bs-target="#selectNFTsDialog"><a class="dropdown-item ${theme}" href="#" onclick="const confButton = document.getElementById('confirmAddNFTsButton'); confButton.setAttribute('onclick', 'addNFTsToPool(${i})'+ confButton.getAttribute('onclick')); setInnerText('selectNFTsDialogLabel', 'Select NFTs to add to swap pool'); showElem('confirmAddNFTsButton'); hideElem('confirmRemoveNFTsButton'); getRewardAddresses().then((addr) => { getAddressAssets(addr).then((assets) => { listNFTs(assets, document.getElementById('selectable_nfts'), 'wallet', '${theme}', '${poolPolicyIds[i]}', '${poolNFTNames[i]}') } ) } ).catch((reason => console.log('error: '+ reason.message)));">${swapPoolNames[i].trim()}</a></div></li>`;
         }
     }
     
