@@ -9,7 +9,7 @@ import {
 
 
 // BLOCKFROST MAINNET / PREPROD SETTING - CHANGE TO YOUR DESIRED ENVIRONMENT
-//cost blockfrost_api_url = 'https://cardano-mainnet.blockfrost.io/api/v0'; // mainnet
+//const blockfrost_api_url = 'https://cardano-mainnet.blockfrost.io/api/v0'; // mainnet
 const blockfrost_api_url = 'https://cardano-preprod.blockfrost.io/api/v0'; // preprod
 
 // consider to reengineer so blockfrost_api_key is invisible, if you experience miss-use
@@ -18,7 +18,7 @@ const blockfrost_api_key = 'preprodEjFneFL6OYHnNmdWLCSKYvlm73cGm90a'; // Example
 const blockfrost_api_env = 'Preprod'; // preprod
 
 // TX EXPLORER MAINNET / PREPROD SETTING - CHANGE TO YOUR DESIRED ENVIRONMENT
-// tx_explorer_url = 'https://cardanoscan.io/transaction'; // mainnet
+//const tx_explorer_url = 'https://cardanoscan.io/transaction'; // mainnet
 const tx_explorer_url = 'https://preprod.cardanoscan.io/transaction'; // preprod
 
 /*
@@ -65,7 +65,6 @@ async function getSwapPoolUTxO(smartContractIndex) {
     const lucid = await connectToLucid();
     const poolSCAddress = lucid.utils.validatorToAddress(smartContracts[smartContractIndex]);
     const utxoAtScript = await lucid.utxosAt(poolSCAddress);
-    console.log('utxos', utxoAtScript);
     return utxoAtScript;
 }
 

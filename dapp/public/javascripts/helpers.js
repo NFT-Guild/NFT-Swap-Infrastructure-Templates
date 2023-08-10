@@ -698,7 +698,6 @@ function errorReturned(message) {
         message.indexOf('Error') > -1 || 
         message.indexOf('user declined') > -1 || 
         message.indexOf('InputsExhaustedError') > -1) {
-            console.log('found error in message');
             foundError = true;
     };
     return foundError;
@@ -858,7 +857,6 @@ async function loadWalletConnector(dropdown, button, theme) {
                     }
 
                     const utxos = await fulfillWithTimeLimit(1000, lucid.wallet.getUtxos(), null);
-                    console.log('utxos', utxos);
                     if (utxos == null) {
                         // unable to connect to wallet. Display warning icon
                         console.log(`unable to get utxos of ${wallet.name}`);
