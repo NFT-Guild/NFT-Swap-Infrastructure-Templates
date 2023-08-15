@@ -146,7 +146,7 @@ async function withdrawFromPool(hash, idx, smartContractIndex) {
 
     if (!txSubmittedSuccessfully) return msg;
 
-    msg = `Withdrawal performed.<br>Waiting for confirmation from the Cardano blockchain.<br>Transaction id: <a target="_blank" href="${tx_explorer_url}/${txHash}">${txHash}</a>`;
+    msg = `Withdrawal performed.<br> Waiting for confirmation from the Cardano blockchain.<br> Transaction id: <a target="_blank" href="${tx_explorer_url}/${txHash}">${txHash}</a>`;
     return msg;
 }
 
@@ -196,7 +196,7 @@ async function depositLovelace(amount, smartContractIndex) {
 
     if (!txSubmittedSuccessfully) return msg;
 
-    msg = `Deposit sent to contract.<br>Waiting for confirmation from the Cardano blockchain.<br>Transaction id: <a target="_blank" href="${tx_explorer_url}/${txHash}">${txHash}</a>`;
+    msg = `Deposit sent to contract.<br> Waiting for confirmation from the Cardano blockchain.<br> Transaction id: <a target="_blank" href="${tx_explorer_url}/${txHash}">${txHash}</a>`;
     return msg;
 }
 
@@ -311,7 +311,7 @@ async function addNFTsToPool(smartContractIndex) {
 
     if (!txSubmittedSuccessfully) return msg;
 
-    msg = `Add performed.<br>Waiting for confirmation from the Cardano blockchain.<br>Transaction id: <a target="_blank" href="${tx_explorer_url}/${txHash}">${txHash}</a>`;
+    msg = `Add performed.<br> Waiting for confirmation from the Cardano blockchain.<br> Transaction id: <a target="_blank" href="${tx_explorer_url}/${txHash}">${txHash}</a>`;
     return msg;
 }
 
@@ -370,7 +370,7 @@ async function removeNFTsFromPool(smartContractIndex) {
 
     if (!txSubmittedSuccessfully) return msg;
 
-    msg = `Removal performed.<br>Waiting for confirmation from the Cardano blockchain.<br>Transaction id: <a target="_blank" href="${tx_explorer_url}/${txHash}">${txHash}</a>`;
+    msg = `Removal performed.<br> Waiting for confirmation from the Cardano blockchain.<br> Transaction id: <a target="_blank" href="${tx_explorer_url}/${txHash}">${txHash}</a>`;
     return msg;
 }
 
@@ -436,7 +436,7 @@ async function doSwap(smartContractIndex) {
 
     if (!txSubmittedSuccessfully) return msg;
 
-    msg = `Swap performed.<br>Waiting for confirmation from the Cardano blockchain.<br>Transaction id: <a target="_blank" href="${tx_explorer_url}/${txHash}">${txHash}</a>`;
+    msg = `Swap performed.<br> Waiting for confirmation from the Cardano blockchain.<br> Transaction id: <a target="_blank" href="${tx_explorer_url}/${txHash}">${txHash}</a>`;
     return msg;
 }
 

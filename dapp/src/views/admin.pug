@@ -36,7 +36,7 @@ html
          div(class="input-group mb-3")
             span(class=`input-group-text${themeclass}` id="basic-addon3") POLICY ID
             input(type="text" class=`form-control textfield ${themeclass}` id="policyidInput" aria-describedby="basic-addon3")
-         button(type="button" class=`btn themed-color${themeclass}` id="loadPolicyButton" onclick=`const policyid = document.getElementById('policyidInput').value; showElem('search_field'); showElem('num_selected'); showElem('select_nfts_label'); setActivePage(1); loadPolicyAssets(policyid, 'policy-nft-list','', '${themeclass}', 0, ${nftPerPage});`) LOAD
+         button(type="button" class=`btn themed-color${themeclass}` id="loadPolicyButton" onclick=`const policyid = document.getElementById('policyidInput').value; showElem('search_field'); showElem('num_selected'); showElem('select_nfts_label'); setActivePage(1,'policy'); loadPolicyAssets(policyid, 'policy-nft-list','', '${themeclass}', 0, ${nftPerPage});`) LOAD
 
       div(class="light" style="display: none; margin-bottom: 10px; text-align: center;" id="select_nfts_label") Select the NFTs you want to allow to swap in the swap pool
       div(id="search-field-row" class="d-flex flex-row justify-content-around")
@@ -56,15 +56,15 @@ html
       nav(aria-label="Policy asset navigation")
          ul(class=`pagination ${themeclass} justify-content-end padding`)
             li(class="page-item disabled")
-               a(class="page-link" href="#" id="pageprevious" onclick=onclick="stepPage(-1); const pNum = parseInt(document.getElementById('page1').innerText); setActivePage(1); loadPageContent(pNum);") PREVIOUS
+               a(class="page-link" href="#" id="policypageprevious" onclick="stepPage(-1, 'policy'); const pNum = parseInt(document.getElementById('policypage1').innerText); setActivePage(pNum, 'policy'); loadPolicyPageContent(pNum);") PREVIOUS
             li(class="page-item" aria-current="page")
-               a(class="page-link" href="#" id="page1" onclick=`const pNum = parseInt(this.innerText); setActivePage(pNum); loadPageContent(pNum);`) 1
+               a(class="page-link" href="#" id="policypage1" onclick=`const pNum = parseInt(this.innerText); setActivePage(pNum, 'policy'); loadPolicyPageContent(pNum);`) 1
             li(class="page-item")
-               a(class="page-link" href="#" id="page2" onclick="const pNum = parseInt(this.innerText); setActivePage(pNum); loadPageContent(pNum);") 2
+               a(class="page-link" href="#" id="policypage2" onclick="const pNum = parseInt(this.innerText); setActivePage(pNum, 'policy'); loadPolicyPageContent(pNum);") 2
             li(class="page-item")
-               a(class="page-link" href="#" id="page3" onclick="const pNum = parseInt(this.innerText); setActivePage(pNum); loadPageContent(pNum);") 3
+               a(class="page-link" href="#" id="policypage3" onclick="const pNum = parseInt(this.innerText); setActivePage(pNum, 'policy'); loadPolicyPageContent(pNum);") 3
             li(class="page-item")
-               a(class="page-link" href="#" id="pagenext" onclick="stepPage(1); const pNum = parseInt(document.getElementById('page3').innerText); setActivePage(3); loadPageContent(pNum);") NEXT
+               a(class="page-link" href="#" id="policypagenext" onclick="stepPage(1, 'policy'); const pNum = parseInt(document.getElementById('policypage3').innerText); setActivePage(pNum, 'policy'); loadPolicyPageContent(pNum);") NEXT
 
       div(class="d-flex flex-row justify-content-end padding")
          button(class=`btn themed-color${themeclass}` type="button" id="generatePoolButton" onclick="const policyid = document.getElementById('policyidInput').value; if(policyid.length != 56) {alert('invalid policy id');return;} buildSpecificSwap(policyid).then(swapPoolInfo => { message = swapPoolInfo.message; const mBoxTitle = document.getElementById('messageBoxLabel'); if(message.indexOf('Redeemer') > -1 || message.indexOf('error') > -1) { mBoxTitle.innerText='Something went wrong'; } else { mBoxTitle.innerText=message; } document.getElementById('message-box-content').innerHTML=swapPoolInfo.message; document.getElementById('swap-pool-script').value = JSON.stringify(swapPoolInfo.swapPoolContractScript); document.getElementById('swap-pool-address').value = swapPoolInfo.swapPoolAddress; displayMBoxScriptFields(); const messageBox = new bootstrap.Modal('#messageBox', { keyboard: false }); messageBox.show();});") CREATE POOL
@@ -138,16 +138,46 @@ html
                      
                      h1(class="modal-title fs-5 padding" id="selectNFTsDialogLabel") Select NFTs to add to swap pool
                   div(class="nft-list light align-content-start d-flex mb-3 flex-row flex-wrap" id="selectable_nfts") Loading ...
+
+                  nav(aria-label="Add asset navigation" id="addAssetNavigation" style="display:none;")
+                     ul(class=`pagination ${themeclass} justify-content-end padding`)
+                        li(class="page-item disabled")
+                           a(class="page-link" href="#" id="walletpageprevious" onclick="stepPage(-1, 'wallet'); const pNum = parseInt(document.getElementById('walletpage1').innerText); setActivePage(pNum, 'wallet'); loadAddPageContent(pNum);") PREVIOUS
+                        li(class="page-item" aria-current="page")
+                           a(class="page-link" href="#" id="walletpage1" onclick=`const pNum = parseInt(this.innerText); setActivePage(pNum, 'wallet'); loadAddPageContent(pNum);`) 1
+                        li(class="page-item")
+                           a(class="page-link" href="#" id="walletpage2" onclick="const pNum = parseInt(this.innerText); setActivePage(pNum, 'wallet'); loadAddPageContent(pNum);") 2
+                        li(class="page-item")
+                           a(class="page-link" href="#" id="walletpage3" onclick="const pNum = parseInt(this.innerText); setActivePage(pNum, 'wallet'); loadAddPageContent(pNum);") 3
+                        li(class="page-item")
+                           a(class="page-link" href="#" id="walletpagenext" onclick="stepPage(1, 'wallet'); const pNum = parseInt(document.getElementById('walletpage3').innerText); setActivePage(pNum, 'wallet'); loadAddPageContent(pNum);") NEXT
+                  nav(aria-label="Remove asset navigation" id="removeAssetNavigation" style="display:none;")
+                     ul(class=`pagination ${themeclass} justify-content-end padding`)
+                        li(class="page-item disabled")
+                           a(class="page-link" href="#" id="poolpageprevious" onclick="stepPage(-1, 'pool'); const pNum = parseInt(document.getElementById('poolpage1').innerText); setActivePage(pNum, 'pool'); loadRemovePageContent(pNum);") PREVIOUS
+                        li(class="page-item" aria-current="page")
+                           a(class="page-link" href="#" id="poolpage1" onclick=`const pNum = parseInt(this.innerText); setActivePage(pNum, 'pool'); loadRemovePageContent(pNum);`) 1
+                        li(class="page-item")
+                           a(class="page-link" href="#" id="poolpage2" onclick="const pNum = parseInt(this.innerText); setActivePage(pNum, 'pool'); loadRemovePageContent(pNum);") 2
+                        li(class="page-item")
+                           a(class="page-link" href="#" id="poolpage3" onclick="const pNum = parseInt(this.innerText); setActivePage(pNum, 'pool'); loadRemovePageContent(pNum);") 3
+                        li(class="page-item")
+                           a(class="page-link" href="#" id="poolpagenext" onclick="stepPage(1, 'pool'); const pNum = parseInt(document.getElementById('poolpage3').innerText); setActivePage(pNum, 'pool'); loadRemovePageContent(pNum);") NEXT
+
                div(class="modal-footer d-flex justify-content-between")
                   button(type="button" class=`btn themed-color${themeclass}` data-bs-dismiss="modal" onclick="resetOnClick()") BACK
                   button(type="button" class=`btn themed-color${themeclass}` data-bs-dismiss="modal" id="confirmAddNFTsButton" onclick=".then(message => { const mBoxTitle = document.getElementById('messageBoxLabel'); if(errorReturned(message)) { mBoxTitle.innerText='Something went wrong'; } else { mBoxTitle.innerText='Add NFT(s) successful'; } document.getElementById('message-box-content').innerHTML=removeTechnicalGibberish(message); displayMBoxMessageFieldOnly(); const messageBox = new bootstrap.Modal('#messageBox', { keyboard: false }); resetOnClick(this); messageBox.show();});") CONFIRM ADD  
                   button(type="button" class=`btn themed-color${themeclass}` data-bs-dismiss="modal" id="confirmRemoveNFTsButton" onclick=".then(message => { const mBoxTitle = document.getElementById('messageBoxLabel'); if(errorReturned(message)) { mBoxTitle.innerText='Something went wrong'; } else { mBoxTitle.innerText='Remove NFT(s) successful'; } document.getElementById('message-box-content').innerHTML=removeTechnicalGibberish(message); displayMBoxMessageFieldOnly(); const messageBox = new bootstrap.Modal('#messageBox', { keyboard: false }); resetOnClick(this); messageBox.show();});") CONFIRM REMOVE
-      -var onloadScript = `window.onload=function() { setActiveTheme('${themeclass}'); loadAddNFTDropdown(document.getElementById('add_nft_to_pool_selection_dropdown'), '${themeclass}', ${JSON.stringify(poolName)}, ${JSON.stringify(poolPolicyId)}, ${JSON.stringify(poolNFTNames)}); loadRemoveNFTDropdown(document.getElementById('remove_nft_from_pool_selection_dropdown'), '${themeclass}', ${JSON.stringify(poolName)}); loadDepositDropdown(document.getElementById('deposit_to_pool_selection_dropdown'), '${themeclass}', ${JSON.stringify(poolName)}); loadWithdrawalDropdown(document.getElementById('withdraw_from_pool_selection_dropdown'), '${themeclass}', ${JSON.stringify(poolName)}); loadWalletConnector(document.getElementById('wallet_connector_dropdown'), document.getElementById('wallet_connector_button'),'${themeclass}'); const searchField = document.getElementById('search_field_input'); const searchButton = document.getElementById('search_field_button'); addEnterKeyListener(searchField, searchButton); };`;
+      -var onloadScript = `window.onload=function() { setActiveTheme('${themeclass}'); loadAddNFTDropdown(document.getElementById('add_nft_to_pool_selection_dropdown'), '${themeclass}', ${JSON.stringify(poolName)}, ${JSON.stringify(poolPolicyId)}, ${JSON.stringify(poolNFTNames)}, ${nftPerPage}); loadRemoveNFTDropdown(document.getElementById('remove_nft_from_pool_selection_dropdown'), '${themeclass}', ${JSON.stringify(poolName)}, ${nftPerPage}); loadDepositDropdown(document.getElementById('deposit_to_pool_selection_dropdown'), '${themeclass}', ${JSON.stringify(poolName)}); loadWithdrawalDropdown(document.getElementById('withdraw_from_pool_selection_dropdown'), '${themeclass}', ${JSON.stringify(poolName)}); loadWalletConnector(document.getElementById('wallet_connector_dropdown'), document.getElementById('wallet_connector_button'),'${themeclass}'); const searchField = document.getElementById('search_field_input'); const searchButton = document.getElementById('search_field_button'); addEnterKeyListener(searchField, searchButton); };`;
       script !{onloadScript}
       -var walletStakeAddrScript = `async function getRewardAddresses() { if(!connectedWallet) { alert("Wallet is not yet loaded"); return null; } else { console.log('connectedWallet',connectedWallet); var api = await connectedWallet.enable(); const addresses = await api.getRewardAddresses(); var bech32Addresses = []; for(var i = 0; i < addresses.length; i++) { bech32Addresses.push(typhonjs.utils.getAddressFromHex(addresses[i]).getBech32()); } return bech32Addresses; } }`
       script !{walletStakeAddrScript}
-      -var pagingScript = `function loadPageContent(pageNum) { const pOffset = (pageNum - 1) * ${nftPerPage}; const policyid = document.getElementById('policyidInput').value; const filterCriterion = document.getElementById('search_field_input').value; loadPolicyAssets(policyid, 'policy-nft-list',filterCriterion, '${themeclass}', pOffset, ${nftPerPage});}`
-      script !{pagingScript}
+      -var policyPagingScript = `function loadPolicyPageContent(pageNum) { const pOffset = (pageNum - 1) * ${nftPerPage}; const policyid = document.getElementById('policyidInput').value; const filterCriterion = document.getElementById('search_field_input').value; loadPolicyAssets(policyid, 'policy-nft-list',filterCriterion, '${themeclass}', pOffset, ${nftPerPage});}`
+      script !{policyPagingScript}
+      -var addPagingScript = `function loadAddPageContent(pageNum) { const pOffset = (pageNum - 1) * ${nftPerPage}; getRewardAddresses().then((addr) => { getAddressAssets(addr).then((assets) => { listNFTs(assets, document.getElementById('selectable_nfts'), 'wallet', '${themeclass}', currentPolicyId, currentNFTNames, pOffset, ${nftPerPage}) } ) } ).catch((reason => console.log('error: '+ reason.message)));}`
+      script !{addPagingScript}
+      -var removePagingScript = `function loadRemovePageContent(pageNum) { const pOffset = (pageNum - 1) * ${nftPerPage}; getSwapPoolAddress(currentSwapPoolIndex).then((addr) => { getAddressAssets(addr).then((assets) => { currentPolicyId = null; currentNFTNames = null; listNFTs(assets, document.getElementById('selectable_nfts'), 'pool', '${themeclass}', currentPolicyId, currentNFTNames, pOffset, ${nftPerPage}) } ) } ).catch((reason => console.log('error: '+ reason.message)));}`
+      script !{removePagingScript}
 
       script(src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous")
       script(src="https://cdn.jsdelivr.net/npm/@stricahq/typhonjs@1.2.8/dist/index.min.js")

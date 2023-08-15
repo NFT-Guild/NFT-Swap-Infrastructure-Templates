@@ -389,8 +389,8 @@ button {
     --bs-pagination-active-color: rgb(250,125,35);
     --bs-pagination-active-bg: rgb(255,240,134);
     --bs-pagination-active-border-color:rgb(255,240,134);
-    --bs-pagination-focus-color: rgb(250,125,35);
-    --bs-pagination-focus-bg: rgb(255,240,134);
+    --bs-pagination-focus-color: rgb(255,240,134);
+    --bs-pagination-focus-bg: rgb(250,125,35);
 }
 
 .pagination.dark-mode {
@@ -406,8 +406,8 @@ button {
     --bs-pagination-active-color: rgb(55,64,74);
     --bs-pagination-active-bg: rgb(185,208,201);
     --bs-pagination-active-border-color:rgb(185,208,201);
-    --bs-pagination-focus-color: rgb(75,174,167);
-    --bs-pagination-focus-bg: rgb(55,64,74);
+    --bs-pagination-focus-color: rgb(55,64,74);
+    --bs-pagination-focus-bg: rgb(75,174,167);
 }
 
 .nft-name-display {

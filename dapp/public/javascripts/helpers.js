@@ -8,16 +8,23 @@ var numSelectedPoolNFTs = 0;
 var numSelectedWalletNFTs = 0;
 var selectedFilterNFTNameMap = new Map();
 
+var currentPolicyId, currentNFTNames, currentSwapPoolIndex;
+
 // KOIOS MAINNET / PREPROD SETTING - CHANGE TO YOUR DESIRED ENVIRONMENT
 //const koios_api_url = 'https://api.koios.rest/api/v0'; // mainnet
 const koios_api_url = 'https://preprod.koios.rest/api/v0'; // preproduction
 
 
 function removeTechnicalGibberish(message) {
-    if(message == null || message == undefined) {return '';}
-    if(message.indexOf('Redeemer') > -1) {
+    if(message == null || message == undefined) { return ''; }
 
-        if(message.indexOf('Over budget') > -1) {
+    if(typeof message === 'object') { message = JSON.stringify(message); }
+
+    message = message.toLowerCase();
+
+    if(message.indexOf('redeemer') > -1) {
+
+        if(message.indexOf('over budget') > -1) {
             // example: 
             // Redeemer (Spend, 1): Over budget mem: -1036 & cpu: 6310129259 ExBudget { mem: -1036, cpu: 6310129259,}
             message = 'Tx too large to be processed by the swap pool smart contract.<br>Please remove one NFT and try again.';
@@ -30,19 +37,30 @@ function removeTechnicalGibberish(message) {
             // example:
             // } CLEANUP FAILED: Operation can only be performed by contract owner PT5
             message = message.replace('}','');
-            message = message.replace('PT5', '');
+            message = message.replace('pt5', '');
             message.trim();
         }
     }
     else if(message.indexOf('"info":') > -1) {
         // message is a JSON string with an info object. Return content of info
         const msgJSON = JSON.parse(message);
-        message = msgJSON['info'];
+        message = msgJSON['info']; 
     }
-    else if(message.indexOf('InputsExhaustedError') > -1) {
+    else if(message.indexOf('inputsexhaustederror') > -1) {
         message = 'Please verify that your wallet has more than 5 ADA.<br>Refresh page and try again.';
     }
-    return message;
+
+    return toProperCase(message);
+}
+
+function toProperCase(msg) {
+    const words = msg.split(" ");
+
+    for (let i = 0; i < words.length; i++) {
+        words[i] = words[i][0].toUpperCase() + words[i].substr(1);
+    }
+
+    return words.join(" ");
 }
 
 function addEnterKeyListener(sourceElem, clickElem) {
@@ -222,138 +240,40 @@ function togglePoolFilterSelection(nftimage, nftnamehex, theme) {
 async function getAddressAssets(address) {
     
     var xhr = new XMLHttpRequest();
+    var koiosquery, koiosparams = '';
 
-    const koiosquery = `${koios_api_url}/account_assets`;
+    if(typeof address === 'string' || address instanceof String) {
+        koiosquery = `${koios_api_url}/address_assets`;
+        koiosparams = `{"_addresses":["${address}"]}`;
+    }
+    else {
+        koiosquery = `${koios_api_url}/account_assets`;
+        koiosparams = `{"_stake_addresses":${JSON.stringify(address)}}`
+    }
+
     xhr.open('POST', koiosquery, false);
     xhr.setRequestHeader('accept', 'application/json');
     xhr.setRequestHeader('content-type', 'application/json');
-    xhr.send(`{"_stake_addresses":${JSON.stringify(address)}}`);
+    xhr.send(koiosparams);
 
     if (xhr.status === 200) {
         addressAssetsJSON = JSON.parse(xhr.response);
-                    
-        if (addressAssetsJSON[0]['asset_list']) {
-            return addressAssetsJSON[0]['asset_list'];
+        if(addressAssetsJSON[0]) {
+            if (addressAssetsJSON[0]['asset_list']) {
+                return addressAssetsJSON[0]['asset_list'];
+            }
+            else {
+                console.log('no asset_list');
+            }
         }
         else {
             console.log('no asset_list');
         }
+                    
+        
     }
     return {};
 }
-
-async function getAddressAssetFingerprints(address) {
-    var xhr = new XMLHttpRequest();
-
-    const koiosquery = `${koios_api_url}/address_assets`;
-    
-    xhr.open('POST', koiosquery, false);
-    xhr.setRequestHeader('accept', 'application/json');
-    xhr.setRequestHeader('content-type', 'application/json');
-    xhr.send(`{"_addresses":["${address}"]}`);
-
-    if (xhr.status === 200) {
-        addressAssetsJSON = JSON.parse(xhr.response);
-        var asset_list = addressAssetsJSON[0]['asset_list'];
-        var asset_fingerprints = [];
-        
-        if (asset_list) {
-            for(var i = 0; i < asset_list.length; i++) {
-                asset_fingerprints.push(asset_list[i]['fingerprint']);           
-            }
-            return asset_fingerprints;
-        }
-        else {
-            console.log('no asset_list');
-        }
-    }
-    return [];
-}
-
-async function getAssetInfo(assetpolicy, fingerprints, list_html_element, filter, theme, pOffset, pLimit) {
-
-    var xhr = new XMLHttpRequest();
-    xhr.onload = function () {
-
-        if (xhr.status === 200) {
-
-            var assetJson = JSON.parse(xhr.responseText);
-            var htmlList = '';
-            var numberOfResults = 0;
-            for (let i = 0; i < assetJson.length; i++) {
-                let asset = assetJson[i];
-                
-                if (!fingerprints.includes(`${asset['fingerprint']}`)) { continue; }
-
-                if (asset.minting_tx_metadata) {
-                    if (!asset.minting_tx_metadata['721']) { continue; }
-                    const asset_policy = asset.minting_tx_metadata['721'][assetpolicy];
-
-                    const metadata = asset_policy[asset.asset_name_ascii];
-
-                    if (filter.trim() != '') {
-                        // a filter criterion is applied. Skip if criterion is not satisfied or result item is outside offset/limit range
-                        const metadataString = JSON.stringify(metadata);
-                        if (metadataString.toLowerCase().indexOf(filter.toLowerCase()) == -1) { continue; }
-                    }
-
-                    numberOfResults++;
-                    if(numberOfResults <= pOffset) { continue; } // result item is before the start of range. Continue to next result
-                    else if(numberOfResults > (pOffset + pLimit)) { break; } // end of range has been reached. Break for-loop
-
-                    const image = metadata['image'];
-                    var ipfsID = "";
-                    var imageURL = "";
-
-                    try {
-                        var ipfsIndex = image.indexOf('Qm');
-                        if (ipfsIndex > -1) {
-                            ipfsID = image.substring(image.indexOf('Qm'));
-                            imageURL = `https://image-optimizer.jpgstoreapis.com/${ipfsID}`;
-                        }
-                    }
-                    catch (error) { console.log(error); }
-
-                    
-                    // no filter applied. Offset and limiting done in query. Simply output the result item
-                    htmlList += `<div class="not-selected${theme} padding" id="pool_nft_list_${assetpolicy}${asset.asset_name}"><img id="pool_nft_list_${assetpolicy}${asset.asset_name}_img" loading="lazy" height="200" onclick="togglePoolNFTSelection(document.getElementById('pool_nft_list_${assetpolicy}${asset.asset_name}'), '${theme}');" class="show-hover-pointer padding" src="${imageURL}"></img><div id="pool_nft_list_${assetpolicy}${asset.asset_name}_namediv" class="nft-name-display not-selected${theme} align-bottom">${metadata['name']}</div></div>`;
-                }
-                else if (asset.token_registry_metadata) {
-
-                    //TODO: IMPLEMENT 
-
-                    //console.log("koios onchain image");
-                    //document.getElementById(elem_prefix + assetinfo).innerHTML = `<img id="${elem_prefix + assetinfo}_img" loading="lazy" height="200" onclick="togglePoolNFTSelection(${elem_prefix + assetinfo});" class="show-hover-pointer padding" src='data:image/jpeg;base64,${assetJson.metadata.logo}'><div id="${elem_prefix + assetinfo}_namediv" class="not-selected align-bottom">${assetJson.metadata.name}</div>`;
-                }
-            }
-
-            htmlList += '</div>';
-            document.getElementById(list_html_element).innerHTML = htmlList;
-
-        }
-        else {
-            document.getElementById(list_html_element).innerHTML = xhr.responseText;
-        }
-
-        
-        if(document.querySelectorAll('[id$="_namediv"]').length < (pLimit - 1)) {
-            // we are now displaying fewer results than the pLimit. There are no more results to display. Disable paging
-            disableHigherNavPages();
-        }
-        else {
-            enableHigherNavPages();
-        }
-
-        toggleSelectedPoolNFTs(`${theme}`)
-
-    };
-  
-    const koiosquery = `${koios_api_url}/policy_asset_info?_asset_policy=${assetpolicy}&order=asset_name_ascii.asc`;
-    xhr.open('GET', koiosquery, true);
-    xhr.setRequestHeader('accept', 'application/json');
-    xhr.send();
-}
-
 
 async function loadPolicyAssets(assetpolicy, list_html_element, filter, theme, pOffset, pLimit) {
 
@@ -366,6 +286,7 @@ async function loadPolicyAssets(assetpolicy, list_html_element, filter, theme, p
 
             var htmlList = '<div class="nft-list light"><div class="flex-row d-flex mb-3 flex-wrap padding">';
             var numberOfResults = 0;
+            var nftsOnThePage = 0;
             for (let i = 0; i < assetJson.length; i++) {
                 let asset = assetJson[i];
 
@@ -401,7 +322,7 @@ async function loadPolicyAssets(assetpolicy, list_html_element, filter, theme, p
                     }
                     catch (error) { console.log(error); }
 
-                    
+                    nftsOnThePage++;
                     // no filter applied. Offset and limiting done in query. Simply output the result item
                     htmlList += `<div class="not-selected${theme} padding" id="pool_filter_nft_list_${asset.fingerprint}"><img id="pool_filter_nft_list_${asset.fingerprint}_img" loading="lazy" height="200" onclick="togglePoolFilterSelection(pool_filter_nft_list_${asset.fingerprint}, '${asset.asset_name}', '${theme}');" class="show-hover-pointer padding" src="${imageURL}"></img><div id="pool_filter_nft_list_${asset.fingerprint}_namediv" class="nft-name-display not-selected${theme} align-bottom">${metadata['name']}</div></div>`;
                 }
@@ -422,14 +343,14 @@ async function loadPolicyAssets(assetpolicy, list_html_element, filter, theme, p
             document.getElementById(list_html_element).innerHTML = xhr.responseText;
         }
 
-        if(document.querySelectorAll('[id$="_namediv"]').length < (pLimit - 1)) {
+        if(nftsOnThePage < pLimit) {
             // we are now displaying fewer results than the pLimit. There are no more results to display. Disable paging
-            disableHigherNavPages();
+            disableHigherNavPages('policy');
         }
         else {
-            enableHigherNavPages();
+            enableHigherNavPages('policy');
         }
-
+    
         toggleSelectedPoolNFTs(`${theme}`)
 
     };
@@ -437,46 +358,47 @@ async function loadPolicyAssets(assetpolicy, list_html_element, filter, theme, p
 
     if(pOffset == undefined) pOffset = 0;   // set default if undefined
     if(pLimit == undefined) pLimit = 50;    // set default if undefined
-    var offsetParam = `&offset=${pOffset}`;
-    if(pOffset == 0) offsetParam = '';      // leave out parameter if offset is 0
+    var offsetParam = `&offset=${pOffset+1}`; // increase with 1 because of how Koios interprets the value
     var limitParam = `&limit=${pLimit}`;
+    
     if(filter != '') {
         offsetParam = '';
         limitParam = '';       // leave out parameters if filter is applied. Do offset and limiting after fetch to ensure non-empty pages
     }
 
-    
     const koiosquery = `${koios_api_url}/policy_asset_info?_asset_policy=${assetpolicy}&order=asset_name_ascii.asc${offsetParam}${limitParam}`;
     xhr.open('GET', koiosquery, true);
     xhr.setRequestHeader('accept', 'application/json');
     xhr.send();
 }
 
-function stepPage(increment) {
+function stepPage(increment, prefix) {
 
     // update page number of the 3 numbered pages
     var navPageElem, navPageNumOld;
     for(var i = 1; i <= 3; i++) {
-        navPageElem = document.getElementById(`page${i}`);
+        navPageElem = document.getElementById(`${prefix}page${i}`);
         navPageNumOld = parseInt(navPageElem.innerText);
         navPageElem.innerText = navPageNumOld + increment;
     }
 
     // enable / disable PREVIOUS
-    navPageElem = document.getElementById(`page1`);
+    navPageElem = document.getElementById(`${prefix}page1`);
     if(parseInt(navPageElem.innerText) > 1) {
-        document.getElementById('pageprevious').parentElement.classList.remove('disabled');
+        document.getElementById(`${prefix}pageprevious`).parentElement.classList.remove('disabled');
     }
     else {
-        document.getElementById('pageprevious').parentElement.classList.add('disabled');
+        document.getElementById(`${prefix}pageprevious`).parentElement.classList.add('disabled');
     }
 }
 
-function setActivePage(pNum) {
+function setActivePage(pNum, prefix) {
+
     var navPageElem;
     for(var i = 1; i <= 3; i++) {
-        navPageElem = document.getElementById(`page${i}`);
-        if(i == pNum) {
+        navPageElem = document.getElementById(`${prefix}page${i}`);
+        
+        if(parseInt(navPageElem.innerText) == pNum) {
             navPageElem.classList.add('active');
         }
         else {
@@ -485,32 +407,32 @@ function setActivePage(pNum) {
     }
 }
 
-function disableHigherNavPages() {
+function disableHigherNavPages(prefix) {
     var navPageElem;
-
+    
     // disable next pager
-    navPageElem = document.getElementById(`pagenext`);
+    navPageElem = document.getElementById(`${prefix}pagenext`);
     navPageElem.classList.add('disabled');
 
     // loop through pages from the top and disable until active page is found
     for(var i = 3; i >= 1; i--) {
-        navPageElem = document.getElementById(`page${i}`);
+        navPageElem = document.getElementById(`${prefix}page${i}`);
         if(navPageElem.classList.contains('active')) break;
 
         navPageElem.classList.add('disabled');
     }
 }
 
-function enableHigherNavPages() {
+function enableHigherNavPages(prefix) {
     var navPageElem;
-
+    
     // enable next pager
-    navPageElem = document.getElementById(`pagenext`);
+    navPageElem = document.getElementById(`${prefix}pagenext`);
     navPageElem.classList.remove('disabled');
 
     // loop through pages from the top and enable until active page is found
     for(var i = 3; i >= 1; i--) {
-        navPageElem = document.getElementById(`page${i}`);
+        navPageElem = document.getElementById(`${prefix}page${i}`);
         if(navPageElem.classList.contains('active')) break;
 
         navPageElem.classList.remove('disabled');
@@ -569,37 +491,64 @@ function loadNFTInfoKoios(elem_prefix, assetinfo, theme) {
     xhr.send();
 }
 
-function listNFTs(nftList, nftListHTMLElement, htmlprefix, theme, pool_policy_id, pool_nft_names) {
+function listNFTs(nftList, nftListHTMLElement, htmlprefix, theme, pool_policy_id, pool_nft_names, pOffset, pLimit) {
     var html = '';
     if (htmlprefix == '')
         htmlprefix = 'wallet';
 
     var doFiltering = false;
-    if (pool_policy_id != undefined) {
+    if (pool_policy_id != undefined && pool_policy_id != '') {
         doFiltering = true;
     }
+
+    var numberOfResults = 0;
+    var nftsOnThePage = 0;
 
     if (nftList) {
         for (var i = 0; i < nftList.length; i++) {
             if (doFiltering && nftList[i].policy_id != pool_policy_id) { continue; }
             if (doFiltering && pool_nft_names != '' && pool_nft_names.indexOf(nftList[i].asset_name) == -1) { continue; }
+
+            numberOfResults++;
+            if(numberOfResults <= pOffset) { continue; } // result item is before the start of range. Continue to next result
+            else if(numberOfResults > (pOffset + pLimit)) { break; } // end of range has been reached. Break for-loop
+            nftsOnThePage++;
             html += `<div id='${htmlprefix}_nft_list_${nftList[i].policy_id}${nftList[i].asset_name}' class='not-selected${theme} padding'></div>`
         }
     }
 
     nftListHTMLElement.innerHTML = html;
 
+    numberOfResults = 0;
+
     if (nftList) {
         for (var i = 0; i < nftList.length; i++) {
 
             if (doFiltering && nftList[i].policy_id != pool_policy_id) { continue; }
             if (doFiltering && pool_nft_names != '' && pool_nft_names.indexOf(nftList[i].asset_name) == -1) { continue; }
+
+            numberOfResults++;
+            if(numberOfResults <= pOffset) { continue; } // result item is before the start of range. Continue to next result
+            else if(numberOfResults > (pOffset + pLimit)) { break; } // end of range has been reached. Break for-loop
+
             loadNFTInfoKoios(`${htmlprefix}_nft_list_`, `${nftList[i].policy_id}${nftList[i].asset_name}`, theme);
 
         }
     }
 
-    updateWalletSelectionLabel();
+    if(htmlprefix == 'wallet') {
+        updateWalletSelectionLabel();
+    }
+
+    if(nftsOnThePage < pLimit) {
+        // we are now displaying fewer results than the pLimit. There are no more results to display. Disable paging
+        disableHigherNavPages(htmlprefix);
+    }
+    else {
+        enableHigherNavPages(htmlprefix);
+    }
+
+    toggleSelectedPoolNFTs(`${theme}`)
 }
 
 
@@ -648,14 +597,14 @@ function resetOnClick(element) {
     element.setAttribute('onclick', onclickJS);
 }
 
-function loadAddNFTDropdown(dropdown, theme, swapPoolNames, poolPolicyIds, poolNFTNames) {
+function loadAddNFTDropdown(dropdown, theme, swapPoolNames, poolPolicyIds, poolNFTNames, nftPerPage) {
 
     var swapPoolListHtml = '';
 
     for(var i = 0; i < swapPoolNames.length; i++) {
 
         if(swapPoolNames[i].trim() != '') {
-            swapPoolListHtml += `<li><div class="dropdown-item ${theme} d-flex" data-bs-toggle="modal" data-bs-target="#selectNFTsDialog"><a class="dropdown-item ${theme}" href="#" onclick="const confButton = document.getElementById('confirmAddNFTsButton'); confButton.setAttribute('onclick', 'addNFTsToPool(${i})'+ confButton.getAttribute('onclick')); setInnerText('selectNFTsDialogLabel', 'Select NFTs to add to swap pool'); showElem('confirmAddNFTsButton'); hideElem('confirmRemoveNFTsButton'); getRewardAddresses().then((addr) => { getAddressAssets(addr).then((assets) => { listNFTs(assets, document.getElementById('selectable_nfts'), 'wallet', '${theme}', '${poolPolicyIds[i]}', '${poolNFTNames[i]}') } ) } ).catch((reason => console.log('error: '+ reason.message)));">${swapPoolNames[i].trim()}</a></div></li>`;
+            swapPoolListHtml += `<li><div class="dropdown-item ${theme} d-flex" data-bs-toggle="modal" data-bs-target="#selectNFTsDialog"><a class="dropdown-item ${theme}" href="#" onclick="setActivePage(1, 'wallet'); showElem('addAssetNavigation'); hideElem('removeAssetNavigation'); const confButton = document.getElementById('confirmAddNFTsButton'); resetOnClick(confButton); confButton.setAttribute('onclick', 'addNFTsToPool(${i})'+ confButton.getAttribute('onclick')); setInnerText('selectNFTsDialogLabel', 'Select NFTs to add to swap pool'); showElem('confirmAddNFTsButton'); hideElem('confirmRemoveNFTsButton'); getRewardAddresses().then((addr) => { getAddressAssets(addr).then((assets) => { currentPolicyId = '${poolPolicyIds[i]}'; currentNFTNames = '${poolNFTNames[i]}'; listNFTs(assets, document.getElementById('selectable_nfts'), 'wallet', '${theme}', currentPolicyId, currentNFTNames, 0, ${nftPerPage}) } ) } ).catch((reason => console.log('error: '+ reason.message)));">${swapPoolNames[i].trim()}</a></div></li>`;
         }
     }
     
@@ -663,14 +612,14 @@ function loadAddNFTDropdown(dropdown, theme, swapPoolNames, poolPolicyIds, poolN
 
 }
 
-function loadRemoveNFTDropdown(dropdown, theme, swapPoolNames) {
+function loadRemoveNFTDropdown(dropdown, theme, swapPoolNames, nftPerPage) {
 
     var swapPoolListHtml = '';
 
     for(var i = 0; i < swapPoolNames.length; i++) {
 
         if(swapPoolNames[i].trim() != '') {
-            swapPoolListHtml += `<li><div class="dropdown-item ${theme} d-flex" data-bs-toggle="modal" data-bs-target="#selectNFTsDialog"><a class="dropdown-item ${theme}" href="#" onclick="const confButton = document.getElementById('confirmRemoveNFTsButton'); confButton.setAttribute('onclick', 'removeNFTsFromPool(${i})'+ confButton.getAttribute('onclick')); setInnerText('selectNFTsDialogLabel', 'Select NFTs to remove from swap pool'); showElem('confirmRemoveNFTsButton'); hideElem('confirmAddNFTsButton'); getSwapPoolAddress(${i}).then((addr) => { getAddressAssets(addr).then((assets) => { listNFTs(assets, document.getElementById('selectable_nfts'), 'pool', '${theme}') } ) } ).catch((reason => console.log('error: '+ reason.message)));">${swapPoolNames[i].trim()}</a></div></li>`;
+            swapPoolListHtml += `<li><div class="dropdown-item ${theme} d-flex" data-bs-toggle="modal" data-bs-target="#selectNFTsDialog"><a class="dropdown-item ${theme}" href="#" onclick="setActivePage(1, 'pool'); showElem('removeAssetNavigation'); hideElem('addAssetNavigation'); const confButton = document.getElementById('confirmRemoveNFTsButton'); resetOnClick(confButton); confButton.setAttribute('onclick', 'removeNFTsFromPool(${i})'+ confButton.getAttribute('onclick')); setInnerText('selectNFTsDialogLabel', 'Select NFTs to remove from swap pool'); showElem('confirmRemoveNFTsButton'); hideElem('confirmAddNFTsButton'); currentSwapPoolIndex = ${i}; getSwapPoolAddress(${i}).then((addr) => { getAddressAssets(addr).then((assets) => { currentPolicyId = null; currentNFTNames = null; listNFTs(assets, document.getElementById('selectable_nfts'), 'pool', '${theme}', currentPolicyId, currentNFTNames, 0, ${nftPerPage}) } ) } ).catch((reason => console.log('error: '+ reason.message)));">${swapPoolNames[i].trim()}</a></div></li>`;
         }
     }
     
@@ -693,11 +642,17 @@ function loadWithdrawalDropdown(dropdown, theme, swapPoolNames) {
 
 function errorReturned(message) {
     var foundError = false;
-    if(message == null || message == undefined) {return false;}
-    if( message.indexOf('Redeemer') > -1 || 
-        message.indexOf('Error') > -1 || 
-        message.indexOf('user declined') > -1 || 
-        message.indexOf('InputsExhaustedError') > -1) {
+
+    if(message == null || message == undefined) { return false; }
+    if(typeof message === 'object') { message = JSON.stringify(message); }
+
+    message = message.toLowerCase();
+
+    if( message.indexOf('redeemer') > -1 || 
+        message.indexOf('error') > -1 || 
+        message.indexOf('user declined') > -1 ||
+        message.indexOf('rejected') > -1 || 
+        message.indexOf('inputsexhaustederror') > -1) {
             foundError = true;
     };
     return foundError;
@@ -709,7 +664,7 @@ function loadDepositDropdown(dropdown, theme, swapPoolNames) {
     for(var i = 0; i < swapPoolNames.length; i++) {
 
         if(swapPoolNames[i].trim() != '') {
-            swapPoolListHtml += `<li><div class="dropdown-item ${theme} d-flex"><a class="dropdown-item ${theme}" href="#" onclick="depositLovelace(3000000, ${i}).then(message => { message = JSON.stringify(message); const mBoxTitle = document.getElementById('messageBoxLabel'); if(errorReturned(message)) { mBoxTitle.innerText='Something went wrong'; } else { mBoxTitle.innerText='Deposit successful'; } document.getElementById('message-box-content').innerHTML=removeTechnicalGibberish(message); const messageBox = new bootstrap.Modal('#messageBox', { keyboard: false }); messageBox.show();});">${swapPoolNames[i].trim()}</a></div></li>`;
+            swapPoolListHtml += `<li><div class="dropdown-item ${theme} d-flex"><a class="dropdown-item ${theme}" href="#" onclick="depositLovelace(3000000, ${i}).then(message => { const mBoxTitle = document.getElementById('messageBoxLabel'); if(errorReturned(message)) { mBoxTitle.innerText='Something went wrong'; } else { mBoxTitle.innerText='Deposit successful'; } document.getElementById('message-box-content').innerHTML=removeTechnicalGibberish(message); const messageBox = new bootstrap.Modal('#messageBox', { keyboard: false }); messageBox.show();});">${swapPoolNames[i].trim()}</a></div></li>`;
         }
     }
     
@@ -843,7 +798,7 @@ async function loadWalletConnector(dropdown, button, theme) {
                         catch (e) {
                             console.log(`Connection to ${wallet.name} failed. Retrying...`);
                             retries++;
-                            await delay(500);
+                            await delay(1500);
                         }
                     }
                     if (lucid == null) {
