@@ -652,6 +652,7 @@ function errorReturned(message) {
         message.indexOf('error') > -1 || 
         message.indexOf('user declined') > -1 ||
         message.indexOf('rejected') > -1 || 
+        message.indexOf('failed') > -1 ||
         message.indexOf('inputsexhaustederror') > -1) {
             foundError = true;
     };

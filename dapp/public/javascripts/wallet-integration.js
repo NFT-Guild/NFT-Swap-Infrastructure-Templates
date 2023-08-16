@@ -127,7 +127,7 @@ async function withdrawFromPool(hash, idx, smartContractIndex) {
         .complete()
         .catch(error => {
             txCreatedSuccessfully = false;
-            msg = error;
+            msg = 'Tx creation failed: ' + error;
         })
 
     if (!txCreatedSuccessfully) return msg ;
@@ -140,7 +140,7 @@ async function withdrawFromPool(hash, idx, smartContractIndex) {
     }
     catch(error) {
         txSubmittedSuccessfully = false;
-        msg = error;
+        msg = 'Tx submission failed: ' + error;
         hideElem(spinnerId);
     }
 
@@ -177,7 +177,7 @@ async function depositLovelace(amount, smartContractIndex) {
         .complete()
         .catch(error => {
             txCreatedSuccessfully = false;
-            msg = error;
+            msg = 'Tx creation failed: ' + error;
         })
 
     if (!txCreatedSuccessfully) return msg ;
@@ -190,7 +190,7 @@ async function depositLovelace(amount, smartContractIndex) {
     }
     catch(error) {
         txSubmittedSuccessfully = false;
-        msg = error;
+        msg = 'Tx submission failed: ' + error;
         hideElem(spinnerId);
     }
 
@@ -292,7 +292,7 @@ async function addNFTsToPool(smartContractIndex) {
         .complete()
         .catch(error => {
             txCreatedSuccessfully = false;
-            msg = error;
+            msg = 'Tx creation failed: ' + error;
         })
 
     if (!txCreatedSuccessfully) return msg ;
@@ -305,7 +305,7 @@ async function addNFTsToPool(smartContractIndex) {
     }
     catch(error) {
         txSubmittedSuccessfully = false;
-        msg = error;
+        msg = 'Tx submission failed: ' + error;
         hideElem(spinnerId);
     }
 
@@ -351,7 +351,7 @@ async function removeNFTsFromPool(smartContractIndex) {
         .complete()
         .catch(error => {
             txCreatedSuccessfully = false;
-            msg = error;
+            msg = 'Tx creation failed: ' + error;
         });
 
     if (!txCreatedSuccessfully) return msg ;
@@ -364,7 +364,7 @@ async function removeNFTsFromPool(smartContractIndex) {
     }
     catch(error) {
         txSubmittedSuccessfully = false;
-        msg = error;
+        msg = 'Tx submission failed: ' + error;
         hideElem(spinnerId);
     }
 
@@ -417,7 +417,7 @@ async function doSwap(smartContractIndex) {
         .complete()
         .catch(error => {
             txCreatedSuccessfully = false;
-            msg = error;
+            msg = 'Tx creation failed: ' + error;
         })
 
     if (!txCreatedSuccessfully) return msg ;
@@ -430,7 +430,7 @@ async function doSwap(smartContractIndex) {
     }
     catch(error) {
         txSubmittedSuccessfully = false;
-        msg = error;
+        msg = 'Tx submission failed: ' + error;
         hideElem(spinnerId);
     }
 
