@@ -56,7 +56,9 @@ html
       nav(aria-label="Policy asset navigation")
          ul(class=`pagination ${themeclass} justify-content-end padding`)
             li(class="page-item disabled")
-               a(class="page-link" href="#" id="policypageprevious" onclick="stepPage(-1, 'policy'); const pNum = parseInt(document.getElementById('policypage1').innerText); setActivePage(pNum, 'policy'); loadPolicyPageContent(pNum);") PREVIOUS
+               a(class="page-link" href="#" id="policypagesetprevious" onclick="stepPageSetPrev('policy'); loadPolicyPageContent(getActivePage('policy'));")= '<<'
+            li(class="page-item disabled")
+               a(class="page-link" href="#" id="policypageprevious" onclick="stepPagePrev('policy'); loadPolicyPageContent(getActivePage('policy'));")= '<'
             li(class="page-item" aria-current="page")
                a(class="page-link" href="#" id="policypage1" onclick=`const pNum = parseInt(this.innerText); setActivePage(pNum, 'policy'); loadPolicyPageContent(pNum);`) 1
             li(class="page-item")
@@ -64,7 +66,9 @@ html
             li(class="page-item")
                a(class="page-link" href="#" id="policypage3" onclick="const pNum = parseInt(this.innerText); setActivePage(pNum, 'policy'); loadPolicyPageContent(pNum);") 3
             li(class="page-item")
-               a(class="page-link" href="#" id="policypagenext" onclick="stepPage(1, 'policy'); const pNum = parseInt(document.getElementById('policypage3').innerText); setActivePage(pNum, 'policy'); loadPolicyPageContent(pNum);") NEXT
+               a(class="page-link" href="#" id="policypagenext" onclick="stepPageNext('policy'); loadPolicyPageContent(getActivePage('policy'));")= '>'
+            li(class="page-item")
+               a(class="page-link" href="#" id="policypagesetnext" onclick="stepPageSetNext('policy'); loadPolicyPageContent(getActivePage('policy'));")= '>>'
 
       div(class="d-flex flex-row justify-content-end padding")
          button(class=`btn themed-color${themeclass}` type="button" id="generatePoolButton" onclick="const policyid = document.getElementById('policyidInput').value; if(policyid.length != 56) {alert('invalid policy id');return;} buildSpecificSwap(policyid).then(swapPoolInfo => { message = swapPoolInfo.message; const mBoxTitle = document.getElementById('messageBoxLabel'); if(message.indexOf('Redeemer') > -1 || message.indexOf('error') > -1) { mBoxTitle.innerText='Something went wrong'; } else { mBoxTitle.innerText=message; } document.getElementById('message-box-content').innerHTML=swapPoolInfo.message; document.getElementById('swap-pool-script').value = JSON.stringify(swapPoolInfo.swapPoolContractScript); document.getElementById('swap-pool-address').value = swapPoolInfo.swapPoolAddress; displayMBoxScriptFields(); const messageBox = new bootstrap.Modal('#messageBox', { keyboard: false }); messageBox.show();});") CREATE POOL
@@ -142,7 +146,9 @@ html
                   nav(aria-label="Add asset navigation" id="addAssetNavigation" style="display:none;")
                      ul(class=`pagination ${themeclass} justify-content-end padding`)
                         li(class="page-item disabled")
-                           a(class="page-link" href="#" id="walletpageprevious" onclick="stepPage(-1, 'wallet'); const pNum = parseInt(document.getElementById('walletpage1').innerText); setActivePage(pNum, 'wallet'); loadAddPageContent(pNum);") PREVIOUS
+                           a(class="page-link" href="#" id="walletpagesetprevious" onclick="stepPageSetPrev('wallet'); loadAddPageContent(getActivePage('wallet'));")= '<<'
+                        li(class="page-item disabled")
+                           a(class="page-link" href="#" id="walletpageprevious" onclick="stepPagePrev('wallet'); loadAddPageContent(getActivePage('wallet'));")= '<'
                         li(class="page-item" aria-current="page")
                            a(class="page-link" href="#" id="walletpage1" onclick=`const pNum = parseInt(this.innerText); setActivePage(pNum, 'wallet'); loadAddPageContent(pNum);`) 1
                         li(class="page-item")
@@ -150,11 +156,15 @@ html
                         li(class="page-item")
                            a(class="page-link" href="#" id="walletpage3" onclick="const pNum = parseInt(this.innerText); setActivePage(pNum, 'wallet'); loadAddPageContent(pNum);") 3
                         li(class="page-item")
-                           a(class="page-link" href="#" id="walletpagenext" onclick="stepPage(1, 'wallet'); const pNum = parseInt(document.getElementById('walletpage3').innerText); setActivePage(pNum, 'wallet'); loadAddPageContent(pNum);") NEXT
+                           a(class="page-link" href="#" id="walletpagenext" onclick="stepPageNext('wallet'); loadAddPageContent(getActivePage('wallet'));")= '>'
+                        li(class="page-item")
+                           a(class="page-link" href="#" id="walletpagesetnext" onclick="stepPageSetNext('wallet'); loadAddPageContent(getActivePage('wallet'));")= '>>'
                   nav(aria-label="Remove asset navigation" id="removeAssetNavigation" style="display:none;")
                      ul(class=`pagination ${themeclass} justify-content-end padding`)
                         li(class="page-item disabled")
-                           a(class="page-link" href="#" id="poolpageprevious" onclick="stepPage(-1, 'pool'); const pNum = parseInt(document.getElementById('poolpage1').innerText); setActivePage(pNum, 'pool'); loadRemovePageContent(pNum);") PREVIOUS
+                           a(class="page-link" href="#" id="poolpagesetprevious" onclick="stepPageSetPrev('pool'); loadRemovePageContent(getActivePage('pool'));")= '<<'
+                        li(class="page-item disabled")
+                           a(class="page-link" href="#" id="poolpageprevious" onclick="stepPagePrev('pool'); loadRemovePageContent(getActivePage('pool'));")= '<'
                         li(class="page-item" aria-current="page")
                            a(class="page-link" href="#" id="poolpage1" onclick=`const pNum = parseInt(this.innerText); setActivePage(pNum, 'pool'); loadRemovePageContent(pNum);`) 1
                         li(class="page-item")
@@ -162,7 +172,9 @@ html
                         li(class="page-item")
                            a(class="page-link" href="#" id="poolpage3" onclick="const pNum = parseInt(this.innerText); setActivePage(pNum, 'pool'); loadRemovePageContent(pNum);") 3
                         li(class="page-item")
-                           a(class="page-link" href="#" id="poolpagenext" onclick="stepPage(1, 'pool'); const pNum = parseInt(document.getElementById('poolpage3').innerText); setActivePage(pNum, 'pool'); loadRemovePageContent(pNum);") NEXT
+                           a(class="page-link" href="#" id="poolpagenext" onclick="stepPageNext('pool'); loadRemovePageContent(getActivePage('pool'));")= '>'
+                        li(class="page-item")
+                           a(class="page-link" href="#" id="poolpagesetnext" onclick="stepPageSetNext('pool'); loadRemovePageContent(getActivePage('pool'));")= '>>'
 
                div(class="modal-footer d-flex justify-content-between")
                   button(type="button" class=`btn themed-color${themeclass}` data-bs-dismiss="modal" onclick="resetOnClick()") BACK

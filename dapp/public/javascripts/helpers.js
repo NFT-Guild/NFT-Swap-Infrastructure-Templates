@@ -372,24 +372,87 @@ async function loadPolicyAssets(assetpolicy, list_html_element, filter, theme, p
     xhr.send();
 }
 
-function stepPage(increment, prefix) {
-
-    // update page number of the 3 numbered pages
-    var navPageElem, navPageNumOld;
-    for(var i = 1; i <= 3; i++) {
-        navPageElem = document.getElementById(`${prefix}page${i}`);
-        navPageNumOld = parseInt(navPageElem.innerText);
-        navPageElem.innerText = navPageNumOld + increment;
+function stepPageNext(prefix) {
+    const currentPage = getActivePage(prefix);
+    var navPageElem = document.getElementById(`${prefix}page3`);
+    if(parseInt(navPageElem.innerText) == currentPage) {
+        // we are on the last page of the set...navigate to first page of next set
+        stepPageSetNext(prefix);
     }
+    else {
+        setActivePage(currentPage + 1, prefix);
+    }
+}
 
-    // enable / disable PREVIOUS
-    navPageElem = document.getElementById(`${prefix}page1`);
-    if(parseInt(navPageElem.innerText) > 1) {
+function stepPagePrev(prefix) {
+    const currentPage = getActivePage(prefix);
+    var navPageElem = document.getElementById(`${prefix}page1`);
+    if(parseInt(navPageElem.innerText) == currentPage) {
+        // we are on the first page of the set...navigate to last page of previous set
+        stepPageSetPrev(prefix);
+    }
+    else {
+        setActivePage(currentPage - 1, prefix);
+    }
+}
+
+function updateStepPrev(prefix) {
+    // enable / disable step prev page
+    if(getActivePage(prefix) > 1) {
         document.getElementById(`${prefix}pageprevious`).parentElement.classList.remove('disabled');
     }
     else {
         document.getElementById(`${prefix}pageprevious`).parentElement.classList.add('disabled');
+        document.getElementById(`${prefix}pagesetprevious`).parentElement.classList.add('disabled');
     }
+
+    var navPageElem = document.getElementById(`${prefix}page1`);
+    if(parseInt(navPageElem.innerText) == 1) {
+        document.getElementById(`${prefix}pagesetprevious`).parentElement.classList.add('disabled');
+    }
+    else {
+        document.getElementById(`${prefix}pagesetprevious`).parentElement.classList.remove('disabled');
+    }
+}
+
+function stepPageSetNext(prefix) {
+
+    // update page number of the 3 numbered pages and clear active state of all pages
+    var navPageElem, navPageNumOld;
+    for(var i = 1; i <= 3; i++) {
+        navPageElem = document.getElementById(`${prefix}page${i}`);
+        navPageNumOld = parseInt(navPageElem.innerText);
+        navPageElem.innerText = navPageNumOld + 3;
+        navPageElem.classList.remove('active');
+        navPageElem.classList.remove('disabled');
+    }
+
+    // set first page in set as active page 
+    navPageElem = document.getElementById(`${prefix}page1`);
+    setActivePage(parseInt(navPageElem.innerText), prefix);
+
+    // enable / disable PREVIOUS
+    updateStepPrev(prefix);
+}
+
+function stepPageSetPrev(prefix) {
+
+    // update page number of the 3 numbered pages and clear active state of all pages
+    var navPageElem, navPageNumOld;
+    for(var i = 1; i <= 3; i++) {
+        navPageElem = document.getElementById(`${prefix}page${i}`);
+        navPageNumOld = parseInt(navPageElem.innerText);
+        navPageElem.innerText = navPageNumOld - 3;
+        navPageElem.classList.remove('active');
+        navPageElem.classList.remove('disabled');
+    }
+
+    // set last page in set active page
+    navPageElem = document.getElementById(`${prefix}page3`);
+    setActivePage(parseInt(navPageElem.innerText), prefix);
+
+    // enable / disable PREVIOUS
+    updateStepPrev(prefix);
 }
 
 function setActivePage(pNum, prefix) {
@@ -405,6 +468,19 @@ function setActivePage(pNum, prefix) {
             navPageElem.classList.remove('active');
         }
     }
+    updateStepPrev(prefix);
+}
+
+function getActivePage(prefix) {
+    var navPageElem;
+    for(var i = 1; i <= 3; i++) {
+        navPageElem = document.getElementById(`${prefix}page${i}`);
+        if(navPageElem.classList.contains('active')) {
+            return parseInt(navPageElem.innerText);
+        }
+    }
+    // if this point is reached, no page is active
+    return -1;
 }
 
 function disableHigherNavPages(prefix) {
@@ -412,6 +488,9 @@ function disableHigherNavPages(prefix) {
     
     // disable next pager
     navPageElem = document.getElementById(`${prefix}pagenext`);
+    navPageElem.classList.add('disabled');
+    // disable next set pager
+    navPageElem = document.getElementById(`${prefix}pagesetnext`);
     navPageElem.classList.add('disabled');
 
     // loop through pages from the top and disable until active page is found
@@ -428,6 +507,10 @@ function enableHigherNavPages(prefix) {
     
     // enable next pager
     navPageElem = document.getElementById(`${prefix}pagenext`);
+    navPageElem.classList.remove('disabled');
+
+    // enable next set pager
+    navPageElem = document.getElementById(`${prefix}pagesetnext`);
     navPageElem.classList.remove('disabled');
 
     // loop through pages from the top and enable until active page is found
