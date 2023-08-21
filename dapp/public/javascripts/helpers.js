@@ -74,9 +74,12 @@ function addEnterKeyListener(sourceElem, clickElem) {
     });
 }
 
-function toggleSelectedPoolNFTs(theme) {
+function toggleSelectedNFTs(theme) {
     for (var i = 0; i < selectedPoolNFTs.length; i++) {
-        togglePoolNFTSelectionViewOnly(`${selectedPoolNFTs[i]}`, theme);
+        toggleNFTSelectionViewOnly(`${selectedPoolNFTs[i]}`, theme);
+    }
+    for (var i = 0; i < selectedWalletNFTs.length; i++) {
+        toggleNFTSelectionViewOnly(`${selectedWalletNFTs[i]}`, theme);
     }
 }
 
@@ -98,7 +101,7 @@ function resetSelectedWalletNFTs() {
     updateWalletSelectionLabel();
 }
 
-function togglePoolNFTSelectionViewOnly(nftimageid, theme) {
+function toggleNFTSelectionViewOnly(nftimageid, theme) {
     var nftimage = document.getElementById(nftimageid+'');
     if(nftimage == null) {
         // nftimage is not currently in view...skip toggle of selection in UI
@@ -112,8 +115,10 @@ function togglePoolNFTSelectionViewOnly(nftimageid, theme) {
             // NFT is selected. set style according to active selection
             nftimage.classList.add("selected" + theme);
             nftimage.classList.remove("not-selected" + theme);
-            nameDiv.classList.add("selected-no-border" + theme);
-            nameDiv.classList.remove("not-selected" + theme);
+            if(nameDiv != null) {
+                nameDiv.classList.add("selected-no-border" + theme);
+                nameDiv.classList.remove("not-selected" + theme);
+            }
         }
     }
     else {
@@ -121,8 +126,10 @@ function togglePoolNFTSelectionViewOnly(nftimageid, theme) {
             // NFT is selected. set style according to active selection
             nftimage.classList.add("selected" + theme);
             nftimage.classList.remove("not-selected" + theme);
-            nameDiv.classList.add("selected-no-border" + theme);
-            nameDiv.classList.remove("not-selected" + theme);
+            if(nameDiv != null) {
+                nameDiv.classList.add("selected-no-border" + theme);
+                nameDiv.classList.remove("not-selected" + theme);
+            }
         }
     }
 }
@@ -351,7 +358,7 @@ async function loadPolicyAssets(assetpolicy, list_html_element, filter, theme, p
             enableHigherNavPages('policy');
         }
     
-        toggleSelectedPoolNFTs(`${theme}`)
+        toggleSelectedNFTs(`${theme}`)
 
     };
 
@@ -631,7 +638,7 @@ function listNFTs(nftList, nftListHTMLElement, htmlprefix, theme, pool_policy_id
         enableHigherNavPages(htmlprefix);
     }
 
-    toggleSelectedPoolNFTs(`${theme}`)
+    toggleSelectedNFTs(`${theme}`)
 }
 
 
@@ -846,8 +853,7 @@ async function fulfillWithTimeLimit(timeLimit, task, failureValue){
 
 async function loadWalletConnector(dropdown, button, theme) {
 
-    const nonWalletNames = ['enable', 'isEnabled', 'getBalance', 'signData', 'signTx', 'submitTx', 'getUtxos', 'getCollateral', 'getUsedAddresses', 'getUnusedAddresses', 'getChangeAddress', 'getRewardAddress', 'getNetworkId', 'onAccountChange', 'onNetworkChange', 'off', '_events', 'typhon'];
-    //  typhon is in this list so we will use typhoncip30 instead of typhon to be compliant with the dapp connector api
+    const supportedWallets = ['lace', 'nami', 'eternl']
 
     connectorDropdown = dropdown;
     connectorButton = button;
@@ -863,7 +869,7 @@ async function loadWalletConnector(dropdown, button, theme) {
     for(var i = 0; i < Object.keys(cardanowallets).length; i++) {
         
         currentWalletName = Object.keys(cardanowallets)[i];
-        if(nonWalletNames.includes(currentWalletName)) { continue; }
+        if(!supportedWallets.includes(currentWalletName)) { continue; }
         wallet = cardanowallets[currentWalletName];
         if (connectedWalletExtName == currentWalletName) {
             
