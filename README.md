@@ -29,6 +29,10 @@ This is a short [demo](https://www.youtube.com/watch?v=VK_v6FuDGCg&list=PL9yobT1
 To set up a filtered swap pool that allows swaps between explicitly named NFTs of a policy, insert the policy id into the field and click the LOAD button. All NFTs of the policy are then loaded. Then select all the NFTs that the swap pool should allow. When you are done, click the CREATE FILTERED POOL button. You are then presented with a dialog containing the generated smart contract code, the list of allowed NFT names and contract address. Copy these values into the appointed constants in the files specific_swap.js and wallet-integration.js and reload the dapp to publish your changes.
 To see how this is done, you can watch this short [demo](https://www.youtube.com/watch?v=2UCtS4nEUP4&list=PL9yobT1b_0gxoW81cavVgqYZw-Fi8yf-q&index=5) of the steps
 
+### Rule Based NFT swap pool
+**Not a complete implementation at this time. Hard-coded values that can be changed manually in the code, but we are working on a dialog in the Admin module for setting this in the GUI**
+
+
 ### Recommended step before adding NFTs to your swap pool
 To verify that the generated smart contract is working as expected, verify this by doing test deposits of ADA to the contract with the TEST DEPOSIT button and then update the code of the TEST WITHDRAWAL button to withdraw the ADA deposit UTxO you just did. If this is successful (meaning you withdraw about the same amount you deposited) you have verified that the contract recognize you as the owner of the swap pool and hence can remove NFTs from the swap pool. 
 
@@ -37,3 +41,4 @@ To verify that the generated smart contract is working as expected, verify this 
 | --- | --- |
 | [Specific Swap](smart-contracts/SpecificSwap.hs) | The base contract used for swap pools allowing swaps of all policy NFTs |
 | [Filtered Specific Swap](smart-contracts/SpecificSwapFiltered.hs) | The base contract of swap pools allowing swap of explicitly named NFTs of a policy |
+| [Rule Based Specific Swap](smart-contracts/SpecificSwapTokenNameRule.hs) | The base contract of swap pools allowing swap of NFTs of a policy with names starting with a defined text and specified number series |
