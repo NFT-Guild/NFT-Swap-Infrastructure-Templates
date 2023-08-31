@@ -2,6 +2,12 @@ var express = require('express');
 var router = express.Router();
 
 function getCookie(cookieString, cookiename) {
+
+    if(cookieString == null) {
+        // no cookie currently set
+        return '';
+    }
+
     const indexStart = cookieString.indexOf(cookiename);
     if (indexStart == -1) {
         // no cookie found with that name

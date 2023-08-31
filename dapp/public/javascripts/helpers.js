@@ -795,6 +795,12 @@ function delay(time) {
 
 function getCookie(cookiename) {
     var cookieString = document.cookie;
+
+    if(cookieString == null) {
+        // no cookie currently set
+        return '';
+    }
+
     const indexStart = cookieString.indexOf(cookiename);
     if (indexStart == -1) {
         // no cookie found with that name
