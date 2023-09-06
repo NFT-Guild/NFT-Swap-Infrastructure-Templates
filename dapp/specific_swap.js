@@ -103,7 +103,9 @@ app.set('swap_pool_address',    [
 app.set('nft_per_page', 20);
 */
 //////////////////////////////////////////////
-
+app.set('nftProjectName', 'NFTName'); // the NFT project name to be displayed on the "GET ..." button, example: Trybbles
+app.set('getNFTsMarketplaceURL', '#'); // link to marketplace where your NFTs can be bought. The target of the "GET ..." button, example: https://www.jpg.store/collection/trybbles?tab=items
+app.set('getNFTsIconURL', '#'); // change to full address of a icon that symbolises your NFT collection, displayed on the "GET NFTs" button, example: https://cdn.discordapp.com/attachments/1007576669558677504/1148908192378662912/Reveal-Animation-T-s.gif
 app.set('navWebpage', '#'); // change to the full address of your web site, example: https://github.com/cent-development
 app.set('navTwitter', '#'); // change to the full address of your twitter page, https://twitter.com/yourprofile
 app.set('navDiscord', '#'); // change to the full address of your Discord server, https://discord.gg/serverid

@@ -246,6 +246,13 @@ button.connect-wallet {
     margin-right: 15px;
 }
 
+button.get-nfts {
+    border-style: none;
+    padding: 10px;
+    margin-top: 15px;
+    margin-right: 15px;
+}
+
 button.connect-wallet.dark-mode {
     background-color: rgb(75,174,167);
     color: rgb(55,64,74);
