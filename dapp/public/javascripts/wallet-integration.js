@@ -279,24 +279,12 @@ async function buildSpecificFilteredSwap(policyid) {
     };
 }
 
-async function buildSpecificRuleSwap(policyid) {
+async function buildSpecificRuleSwap(policyid, nftNamePrefix, digitIndexStart, digitLength, digitRangeFirst, digitRangeLast) {
 
-    // Temporary hardcoded implementation to do testing. Dialog will be added soon to handle the initialization of the contract
-    // Until dialog is in place, make appropriate changes to the hard-coded values below to get desired behaviour
-
-    //if (selectedPoolNFTs.length == 0) return { message: "Please select NFTs for the filter" };
-
-    /*var nftNameHex;
-    var filterNFTsHex = [];
-    var filterNFTNames = [];
-    for (var i = 0; i < selectedPoolNFTs.length; i++) {
-        nftNameHex = selectedFilterNFTNameMap.get(selectedPoolNFTs[i])
-        filterNFTsHex.push(nftNameHex);
-        filterNFTNames.push(toText(nftNameHex));
-    }*/
+    //'TrybblesSeriesOneEmoko'
 
     let utf8Encoder = new TextEncoder();
-    let prefixBytes = utf8Encoder.encode('TrybblesSeriesOneEmoko')
+    let prefixBytes = utf8Encoder.encode(nftNamePrefix)
 
     let prefixHex = toHex(prefixBytes);
 
@@ -310,30 +298,26 @@ async function buildSpecificRuleSwap(policyid) {
         type: "PlutusV2",
         script: applyParamsToScript(
             uninitRuleSwapPlutusCbor,
-            //[new Constr(0, [pkh, policyid, 'TrybblesSeriesOneEmoko', start index, length, nft num from, nft num to])]
-            [new Constr(0, [pkh, policyid, prefixHex, 22n, 3n, 50n, 59n])]
+            //[new Constr(0, [pkh, policyid, nft name prefix (hex), start index, length, nft num from, nft num to])]
+            [new Constr(0, [pkh, policyid, prefixHex, BigInt(digitIndexStart), BigInt(digitLength), BigInt(digitRangeFirst), BigInt(digitRangeLast)])]
         )
     };
 
     const specificRuleSwapAddress = lucid.utils.validatorToAddress(specificRuleSwapValidator);
 
-    console.log('rule contract', {
-        message: "Rule swap pool generated successfully",
+    return {
+        message: "Rule based swap pool generated successfully",
         swapPoolContractScript: specificRuleSwapValidator,
         swapPoolAddress: specificRuleSwapAddress,
         swapPoolOwnerAddress: bech32_addr,
-        /*nftsHex: filterNFTsHex,
-        nftsNames: filterNFTNames*/
-    });
-    /*
-    return {
-        message: "Filtered swap pool generated successfully",
-        swapPoolContractScript: specificFilteredSwapValidator,
-        swapPoolAddress: specificSwapAddress,
-        swapPoolOwnerAddress: bech32_addr,
-        nftsHex: filterNFTsHex,
-        nftsNames: filterNFTNames
-    };*/
+        swapPoolRules: {
+            nftNamePrefix: nftNamePrefix,
+            digitIndexStart: parseInt(digitIndexStart),
+            digitLength: parseInt(digitLength),
+            digitRangeFirst: parseInt(digitRangeFirst),
+            digitRangeLast: parseInt(digitRangeLast)
+        }
+    };
 }
 
 async function getSwapPoolAddress(smartContractIndex) {

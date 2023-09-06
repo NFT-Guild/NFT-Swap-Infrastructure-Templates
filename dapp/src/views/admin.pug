@@ -73,7 +73,7 @@ html
       div(class="d-flex flex-row justify-content-end padding")
          button(class=`btn themed-color${themeclass}` type="button" id="generatePoolButton" onclick="const policyid = document.getElementById('policyidInput').value; if(policyid.length != 56) {alert('invalid policy id');return;} buildSpecificSwap(policyid).then(swapPoolInfo => { message = swapPoolInfo.message; const mBoxTitle = document.getElementById('messageBoxLabel'); if(message.indexOf('Redeemer') > -1 || message.indexOf('error') > -1) { mBoxTitle.innerText='Something went wrong'; } else { mBoxTitle.innerText=message; } document.getElementById('message-box-content').innerHTML=swapPoolInfo.message; document.getElementById('swap-pool-script').value = JSON.stringify(swapPoolInfo.swapPoolContractScript); document.getElementById('swap-pool-address').value = swapPoolInfo.swapPoolAddress; displayMBoxScriptFields(); const messageBox = new bootstrap.Modal('#messageBox', { keyboard: false }); messageBox.show();});") CREATE POOL
          button(class=`btn themed-color${themeclass} disabled` type="button" id="generateFilteredPoolButton" onclick="const policyid = document.getElementById('policyidInput').value; if(policyid.length != 56) {alert('invalid policy id');return;} else if(numSelectedPoolNFTs < 1){alert('Please select some NFTs for the filter');return;} buildSpecificFilteredSwap(policyid).then(swapPoolInfo => { message = swapPoolInfo.message; const mBoxTitle = document.getElementById('messageBoxLabel'); if(message.indexOf('Redeemer') > -1 || message.indexOf('error') > -1) { mBoxTitle.innerText='Something went wrong'; } else { mBoxTitle.innerText=message; } document.getElementById('message-box-content').innerHTML=swapPoolInfo.message; document.getElementById('swap-pool-script').value = JSON.stringify(swapPoolInfo.swapPoolContractScript); document.getElementById('swap-pool-address').value = swapPoolInfo.swapPoolAddress; document.getElementById('filter-nft-hex').value = JSON.stringify(swapPoolInfo.nftsHex); displayMBoxFilteredScriptFields(); const messageBox = new bootstrap.Modal('#messageBox', { keyboard: false }); messageBox.show();});") CREATE FILTERED POOL
-         button(class=`btn themed-color${themeclass}` type="button" id="generateRulePoolButton" onclick="const policyid = document.getElementById('policyidInput').value; if(policyid.length != 56) {alert('invalid policy id');return;} buildSpecificRuleSwap(policyid); /*.then(swapPoolInfo => { message = swapPoolInfo.message; const mBoxTitle = document.getElementById('messageBoxLabel'); if(message.indexOf('Redeemer') > -1 || message.indexOf('error') > -1) { mBoxTitle.innerText='Something went wrong'; } else { mBoxTitle.innerText=message; } document.getElementById('message-box-content').innerHTML=swapPoolInfo.message; document.getElementById('swap-pool-script').value = JSON.stringify(swapPoolInfo.swapPoolContractScript); document.getElementById('swap-pool-address').value = swapPoolInfo.swapPoolAddress; displayMBoxScriptFields(); const messageBox = new bootstrap.Modal('#messageBox', { keyboard: false }); messageBox.show();});*/") CREATE RULE POOL
+         button(type="button" id="buildRulePoolButton" class=`btn themed-color${themeclass}` data-bs-toggle="modal" data-bs-target="#buildRuleContractDialog")= `CREATE RULE POOL`
          
          div(id="add_nft_to_pool_dropdown_menu" class="btn-group")
                button(type="button" id="add_nft_to_pool_selection_button" class=`btn select-contract${themeclass} d-flex dropdown-toggle text-wrap` data-bs-toggle="dropdown" aria-expanded="false") ADD NFT(S) TO POOL
@@ -120,6 +120,14 @@ html
                         svg(xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class=`bi bi-clipboard button-color${themeclass} show-hover-pointer` viewBox="0 0 16 16" onclick="copyToClipboard(document.getElementById('filter-nft-hex').value);")
                            path(d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z")
                            path(d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z")
+                  div(class=`d-flex flex-row mb-3`)
+                     div(class=`input-group` id="message-box-rules-row" style="display: none;")
+                        span(class=`input-group-text${themeclass}`) Swap pool rules
+                        textarea(class=`form-control textfield ${themeclass}` aria-label="Swap pool rules" id="swap-pool-rules")
+                        
+                        svg(xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class=`bi bi-clipboard button-color${themeclass} show-hover-pointer` viewBox="0 0 16 16" onclick="copyToClipboard(document.getElementById('swap-pool-rules').value);")
+                           path(d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z")
+                           path(d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z")
 
                   div(class=`d-flex flex-row mb-3`)
                      div(class=`input-group` id="message-box-pool-addr-row" style="display: none;")
@@ -132,6 +140,50 @@ html
 
                   button(type="button" class=`btn themed-color${themeclass}` data-bs-dismiss="modal") OK
                div(class="message-box-footer")
+      div(class="modal modal-dialog-scrollable modal-xl fade" id="buildRuleContractDialog" tabindex="-1" aria-labelledby="buildRuleContractDialogLabel" aria-hidden="true")
+         div(class="modal-dialog")
+            div(class="modal-content")
+               div(class=`modal-header ${themeclass}`)
+                  button(type="button" class=`btn-close themed-color${themeclass}` data-bs-dismiss="modal" aria-label="Close" onclick="resetOnClick()")
+               div(class=`modal-body ${themeclass} light`)
+                  div(class="d-flex flex-row")
+                     
+                     h1(class="modal-title fs-3 padding" id="buildRuleContractDialogLabel") Rule based swap pool settings
+                  div(class="input-group mb-3")
+                     span(class=`input-group-text${themeclass}` id="basic-addon3") POLICY ID
+                     input(type="text" class=`form-control textfield ${themeclass}` id="dlgPolicyidInput" style="text-align:right;" aria-describedby="basic-addon3")
+                  div(class="input-group mb-3")
+                     span(class=`input-group-text${themeclass}` id="basic-addon3") NFT NAME STARTS WITH
+                     input(type="text" class=`form-control textfield ${themeclass}` id="dlgNamePrefixInput" style="text-align:right;" aria-describedby="basic-addon3" onChange="document.getElementById('dlgDigitStartInput').value = this.value.length; updateSettingsVisualized('settingsVisualized', 'exampleVisualized')")
+                  div(class="input-group mb-3")
+                     span(class=`input-group-text${themeclass}` id="basic-addon3") DIGIT START POSITION
+                     input(type="text" class=`form-control textfield ${themeclass}` id="dlgDigitStartInput" style="text-align:right;" aria-describedby="basic-addon3" onChange="updateSettingsVisualized('settingsVisualized', 'exampleVisualized')")
+                  div(class="input-group mb-3")
+                     span(class=`input-group-text${themeclass}` id="basic-addon3") DIGIT LENGTH
+                     input(type="text" class=`form-control textfield ${themeclass}` id="dlgDigitLengthInput" style="text-align:right;" aria-describedby="basic-addon3" onChange="updateSettingsVisualized('settingsVisualized', 'exampleVisualized')")
+                  div(class="input-group mb-3")
+                     span(class=`input-group-text${themeclass}` id="basic-addon3") DIGIT START RANGE
+                     input(type="text" class=`form-control textfield ${themeclass}` id="dlgDigitRangeStartInput" style="text-align:right;" aria-describedby="basic-addon3" onChange="updateSettingsVisualized('settingsVisualized', 'exampleVisualized')")
+                  div(class="input-group mb-3")
+                     span(class=`input-group-text${themeclass}` id="basic-addon3") DIGIT END RANGE
+                     input(type="text" class=`form-control textfield ${themeclass}` id="dlgDigitRangeEndInput" style="text-align:right;" aria-describedby="basic-addon3" onChange="updateSettingsVisualized('settingsVisualized', 'exampleVisualized')")
+
+                  div(class="d-flex flex-row justify-content-between")
+                     h1(class="modal-title fs-7 padding" id="ruleVisualizedDialogLabel") Current settings visualized:
+                     h1(class="modal-title fs-5 padding" id="settingsVisualized")
+
+                  div(class="d-flex flex-row justify-content-between")
+                     h1(class="modal-title fs-7 padding" id="buildRuleContractDialogLabel") Example NFT name according to rule:
+                     h1(class="modal-title fs-5 padding" id="exampleVisualized")
+
+                  div(class="d-flex flex-row justify-content-between")
+                     div(class="form-check")
+                        input(class="form-check-input" type="checkbox" value="" id="verifyRulesCheck" onChange="if(this.checked) { const policyid = document.getElementById('dlgPolicyidInput').value; if(policyid.length != 56) { alert('invalid policy id'); this.checked = false; return;} if(verifyDlgFields()) {setActive('confirmCreateRuleButton')} else { alert('Please ensure all fields have a valid value before continuing'); this.checked = false; } } else { setDisabled('confirmCreateRuleButton')}" disabled)
+                        label(class="form-check-label" for="verifyRulesCheck") I have verified the rule and example to be OK
+                  
+               div(class="modal-footer d-flex justify-content-between")
+                  button(type="button" class=`btn themed-color${themeclass}` data-bs-dismiss="modal" onclick="clearRuleContractBuilderDialog()") BACK
+                  button(type="button" class=`btn themed-color${themeclass}` data-bs-dismiss="modal" id="confirmCreateRuleButton" onclick="buildSpecificRuleSwap(getInputValue('dlgPolicyidInput'), getInputValue('dlgNamePrefixInput'), getInputValue('dlgDigitStartInput'), getInputValue('dlgDigitLengthInput'), getInputValue('dlgDigitRangeStartInput'), getInputValue('dlgDigitRangeEndInput')).then(swapPoolInfo => { message = swapPoolInfo.message; const mBoxTitle = document.getElementById('messageBoxLabel'); if(message.indexOf('Redeemer') > -1 || message.indexOf('error') > -1) { mBoxTitle.innerText='Something went wrong'; } else { mBoxTitle.innerText=message; } document.getElementById('message-box-content').innerHTML=swapPoolInfo.message; document.getElementById('swap-pool-script').value = JSON.stringify(swapPoolInfo.swapPoolContractScript); document.getElementById('swap-pool-address').value = swapPoolInfo.swapPoolAddress; document.getElementById('swap-pool-rules').value = JSON.stringify(swapPoolInfo.swapPoolRules); displayMBoxRulesScriptFields(); const messageBox = new bootstrap.Modal('#messageBox', { keyboard: false }); messageBox.show();}); clearRuleContractBuilderDialog();" disabled) CREATE RULE POOL
 
       div(class="modal modal-dialog-scrollable modal-xl fade" id="selectNFTsDialog" tabindex="-1" aria-labelledby="selectNFTsDialogLabel" aria-hidden="true")
          div(class="modal-dialog")
@@ -181,15 +233,15 @@ html
                   button(type="button" class=`btn themed-color${themeclass}` data-bs-dismiss="modal" onclick="resetOnClick()") BACK
                   button(type="button" class=`btn themed-color${themeclass}` data-bs-dismiss="modal" id="confirmAddNFTsButton" onclick=".then(message => { const mBoxTitle = document.getElementById('messageBoxLabel'); if(errorReturned(message)) { mBoxTitle.innerText='Something went wrong'; } else { mBoxTitle.innerText='Add NFT(s) successful'; } document.getElementById('message-box-content').innerHTML=removeTechnicalGibberish(message); displayMBoxMessageFieldOnly(); const messageBox = new bootstrap.Modal('#messageBox', { keyboard: false }); resetOnClick(this); messageBox.show();});") CONFIRM ADD  
                   button(type="button" class=`btn themed-color${themeclass}` data-bs-dismiss="modal" id="confirmRemoveNFTsButton" onclick=".then(message => { const mBoxTitle = document.getElementById('messageBoxLabel'); if(errorReturned(message)) { mBoxTitle.innerText='Something went wrong'; } else { mBoxTitle.innerText='Remove NFT(s) successful'; } document.getElementById('message-box-content').innerHTML=removeTechnicalGibberish(message); displayMBoxMessageFieldOnly(); const messageBox = new bootstrap.Modal('#messageBox', { keyboard: false }); resetOnClick(this); messageBox.show();});") CONFIRM REMOVE
-      -var onloadScript = `window.onload=function() { setActiveTheme('${themeclass}'); loadAddNFTDropdown(document.getElementById('add_nft_to_pool_selection_dropdown'), '${themeclass}', ${JSON.stringify(poolName)}, ${JSON.stringify(poolPolicyId)}, ${JSON.stringify(poolNFTNames)}, ${nftPerPage}); loadRemoveNFTDropdown(document.getElementById('remove_nft_from_pool_selection_dropdown'), '${themeclass}', ${JSON.stringify(poolName)}, ${nftPerPage}); loadDepositDropdown(document.getElementById('deposit_to_pool_selection_dropdown'), '${themeclass}', ${JSON.stringify(poolName)}); loadWithdrawalDropdown(document.getElementById('withdraw_from_pool_selection_dropdown'), '${themeclass}', ${JSON.stringify(poolName)}); loadWalletConnector(document.getElementById('wallet_connector_dropdown'), document.getElementById('wallet_connector_button'),'${themeclass}'); const searchField = document.getElementById('search_field_input'); const searchButton = document.getElementById('search_field_button'); addEnterKeyListener(searchField, searchButton); };`;
+      -var onloadScript = `window.onload=function() { setActiveTheme('${themeclass}'); loadAddNFTDropdown(document.getElementById('add_nft_to_pool_selection_dropdown'), '${themeclass}', ${JSON.stringify(poolName)}, ${JSON.stringify(poolPolicyId)}, ${JSON.stringify(poolNFTNames)}, ${JSON.stringify(poolRules)}, ${nftPerPage}); loadRemoveNFTDropdown(document.getElementById('remove_nft_from_pool_selection_dropdown'), '${themeclass}', ${JSON.stringify(poolName)}, ${nftPerPage}); loadDepositDropdown(document.getElementById('deposit_to_pool_selection_dropdown'), '${themeclass}', ${JSON.stringify(poolName)}); loadWithdrawalDropdown(document.getElementById('withdraw_from_pool_selection_dropdown'), '${themeclass}', ${JSON.stringify(poolName)}); loadWalletConnector(document.getElementById('wallet_connector_dropdown'), document.getElementById('wallet_connector_button'),'${themeclass}'); const searchField = document.getElementById('search_field_input'); const searchButton = document.getElementById('search_field_button'); addEnterKeyListener(searchField, searchButton); };`;
       script !{onloadScript}
       -var walletStakeAddrScript = `async function getRewardAddresses() { if(!connectedWallet) { alert("Wallet is not yet loaded"); return null; } else { console.log('connectedWallet',connectedWallet); var api = await connectedWallet.enable(); const addresses = await api.getRewardAddresses(); var bech32Addresses = []; for(var i = 0; i < addresses.length; i++) { bech32Addresses.push(typhonjs.utils.getAddressFromHex(addresses[i]).getBech32()); } return bech32Addresses; } }`
       script !{walletStakeAddrScript}
       -var policyPagingScript = `function loadPolicyPageContent(pageNum) { const pOffset = (pageNum - 1) * ${nftPerPage}; const policyid = document.getElementById('policyidInput').value; const filterCriterion = document.getElementById('search_field_input').value; loadPolicyAssets(policyid, 'policy-nft-list',filterCriterion, '${themeclass}', pOffset, ${nftPerPage});}`
       script !{policyPagingScript}
-      -var addPagingScript = `function loadAddPageContent(pageNum) { const pOffset = (pageNum - 1) * ${nftPerPage}; getRewardAddresses().then((addr) => { getAddressAssets(addr).then((assets) => { listNFTs(assets, document.getElementById('selectable_nfts'), 'wallet', '${themeclass}', currentPolicyId, currentNFTNames, pOffset, ${nftPerPage}) } ) } ).catch((reason => console.log('error: '+ reason.message)));}`
+      -var addPagingScript = `function loadAddPageContent(pageNum) { const pOffset = (pageNum - 1) * ${nftPerPage}; getRewardAddresses().then((addr) => { getAddressAssets(addr).then((assets) => { listNFTs(assets, document.getElementById('selectable_nfts'), 'wallet', '${themeclass}', currentPolicyId, currentNFTNames, currentRules, pOffset, ${nftPerPage}) } ) } ).catch((reason => console.log('error: '+ reason.message)));}`
       script !{addPagingScript}
-      -var removePagingScript = `function loadRemovePageContent(pageNum) { const pOffset = (pageNum - 1) * ${nftPerPage}; getSwapPoolAddress(currentSwapPoolIndex).then((addr) => { getAddressAssets(addr).then((assets) => { currentPolicyId = null; currentNFTNames = null; listNFTs(assets, document.getElementById('selectable_nfts'), 'pool', '${themeclass}', currentPolicyId, currentNFTNames, pOffset, ${nftPerPage}) } ) } ).catch((reason => console.log('error: '+ reason.message)));}`
+      -var removePagingScript = `function loadRemovePageContent(pageNum) { const pOffset = (pageNum - 1) * ${nftPerPage}; getSwapPoolAddress(currentSwapPoolIndex).then((addr) => { getAddressAssets(addr).then((assets) => { currentPolicyId = null; currentNFTNames = null; currentRules = null; listNFTs(assets, document.getElementById('selectable_nfts'), 'pool', '${themeclass}', currentPolicyId, currentNFTNames, currentRules, pOffset, ${nftPerPage}) } ) } ).catch((reason => console.log('error: '+ reason.message)));}`
       script !{removePagingScript}
 
       script(src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous")

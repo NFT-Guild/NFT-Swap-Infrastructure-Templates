@@ -63,6 +63,7 @@ router.get('/', function (req, res, next) {
         poolName: app.get('swap_pool_names'),
         poolPolicyId: app.get('swap_pool_policy_id'),
         poolNFTNames: app.get('swap_pool_nft_names'),
+        poolRules: app.get('swap_pool_rules'),
         poolAddress: app.get('swap_pool_address'),
         nftPerPage: app.get('nft_per_page'),
         navWebpage: app.get('navWebpage'),

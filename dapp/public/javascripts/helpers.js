@@ -8,7 +8,7 @@ var numSelectedPoolNFTs = 0;
 var numSelectedWalletNFTs = 0;
 var selectedFilterNFTNameMap = new Map();
 
-var currentPolicyId, currentNFTNames, currentSwapPoolIndex;
+var currentPolicyId, currentNFTNames, currentSwapPoolIndex, currentRules;
 
 // KOIOS MAINNET / PREPROD SETTING - CHANGE TO YOUR DESIRED ENVIRONMENT
 //const koios_api_url = 'https://api.koios.rest/api/v0'; // mainnet
@@ -72,6 +72,141 @@ function addEnterKeyListener(sourceElem, clickElem) {
           document.getElementById(clickElem.id).click();
         }
     });
+}
+
+function updateSettingsVisualized(ruleDisplayElem, exampleDisplayElem) {
+
+    var nftTokenNameRuleVisualized = ''; 
+    // nft name starts with
+    const nftNameStart = document.getElementById('dlgNamePrefixInput').value;
+    if(nftNameStart == "") { 
+        document.getElementById(ruleDisplayElem).innerText = '';
+        return;
+    }
+
+    nftTokenNameRuleVisualized = nftNameStart;
+
+    // nft digit start position
+    const nftDigitPosStartString = document.getElementById('dlgDigitStartInput').value;
+    var nftDigitPosStart = -1;
+    try {
+        nftDigitPosStart = parseInt(nftDigitPosStartString);
+    }
+    catch(err) {
+        nftDigitPosStart = nftNameStart.length;
+    }
+
+    var charCode = 65;
+    for(var i = nftNameStart.length; i < nftDigitPosStart; i++) {
+        // add ABCD... until the digit start position is reached
+        nftTokenNameRuleVisualized += String.fromCharCode(charCode);
+        if(charCode < 90) {
+            charCode++;
+        }
+        else {
+            charCode = 65;
+        }
+    }
+
+    // nft digit length
+    const nftDigitLengthString = document.getElementById('dlgDigitLengthInput').value;
+    var nftDigitLength = -1;
+    try {
+        nftDigitLength = parseInt(nftDigitLengthString);
+    }
+    catch(err) {
+        nftDigitLength = nftNameStart.length;
+    }
+
+    var nftTokenNameExampleVisualized = nftTokenNameRuleVisualized;
+ 
+    for(var i = 0; i < nftDigitLength; i++) {
+        // add 0000... until the digit length is reached
+        nftTokenNameRuleVisualized += '0';
+    }
+
+    // nft digit range start
+    const nftDigitRangeStartString = document.getElementById('dlgDigitRangeStartInput').value;
+    var startDigitInRange = -1;
+    try {
+        startDigitInRange = parseInt(nftDigitRangeStartString);
+    }
+    catch(err) {}
+
+    // nft digit range end
+    const nftDigitRangeEndString = document.getElementById('dlgDigitRangeEndInput').value;
+    var endDigitInRange = -1;
+    try {
+        endDigitInRange = parseInt(nftDigitRangeEndString);
+    }
+    catch(err) {}
+
+    // calculating an example nft name
+    if(startDigitInRange > -1 && endDigitInRange > -1 && endDigitInRange > startDigitInRange) {
+        randomNumInRange = randomIntFromInterval(startDigitInRange, endDigitInRange);
+        document.getElementById(exampleDisplayElem).innerText = nftTokenNameExampleVisualized + intToStringOfLength(randomNumInRange, nftDigitLength);
+        setActive('verifyRulesCheck');
+    }
+    else {
+        document.getElementById(exampleDisplayElem).innerText = 'More info needed';
+        setDisabled('verifyRulesCheck');
+    }
+
+    document.getElementById(ruleDisplayElem).innerText = nftTokenNameRuleVisualized;
+}
+
+function verifyDlgFields() {
+    const dlgInputs = document.querySelectorAll("input[id^='dlg']");
+    for(var i = 0; i < dlgInputs.length; i++) {
+        if(dlgInputs.item(i).value.trim() == '') {
+            return false;
+        }
+    }
+    return true;
+}
+
+function clearRuleContractBuilderDialog() {
+    const dlgInputs = document.querySelectorAll("input[id^='dlg']");
+    for(var i = 0; i < dlgInputs.length; i++) {
+        dlgInputs.item(i).value= '';
+    }
+
+    document.getElementById('settingsVisualized').innerText = '';
+    document.getElementById('exampleVisualized').innerText = '';
+    document.getElementById('verifyRulesCheck').checked = false;
+    setDisabled('confirmCreateRuleButton');
+}
+
+function getInputValue(inputId) {
+    var inputValue = "";
+    try {
+        inputValue = document.getElementById(inputId).value
+    }
+    catch(error) {}
+    return inputValue;
+}
+ 
+function setActive(idToActivate) {
+    const elemToActivate = document.getElementById(idToActivate);
+    elemToActivate.removeAttribute('disabled');
+}
+
+function setDisabled(idToDisable) {
+    const elemToDisable = document.getElementById(idToDisable);
+    elemToDisable.setAttribute('disabled','disabled');
+}
+
+function randomIntFromInterval(min, max) { // min and max included 
+    return Math.floor(Math.random() * (max - min + 1) + min)
+}
+
+function intToStringOfLength(intValue, length) {
+    var intValueString = intValue.toString();
+    for(var i = intValueString.length; i < length; i++) {
+        // prepend 0 until the desired length is reached
+        intValueString = '0'+intValueString;
+    }
+    return intValueString;
 }
 
 function toggleSelectedNFTs(theme) {
@@ -581,7 +716,23 @@ function loadNFTInfoKoios(elem_prefix, assetinfo, theme) {
     xhr.send();
 }
 
-function listNFTs(nftList, nftListHTMLElement, htmlprefix, theme, pool_policy_id, pool_nft_names, pOffset, pLimit) {
+function nftSatisfiesRules(nft, poolRules) {
+    
+    const nftNameAscii = hex_to_ascii(nft.asset_name)
+
+    if(!nftNameAscii.startsWith(poolRules.nftNamePrefix)) { return false; } // nft name doesn't start with the desired prefix
+
+    const nftNumberString = nftNameAscii.substring(poolRules.digitIndexStart, poolRules.digitIndexStart + poolRules.digitLength);
+
+    const nftNumber = parseInt(nftNumberString);
+    if(nftNumber < poolRules.digitRangeFirst || nftNumber > poolRules.digitRangeLast) { return false; } // nft number is not within the desired range
+
+    // when this point is reached, all rules have been satisfied
+    return true;
+}
+
+function listNFTs(nftList, nftListHTMLElement, htmlprefix, theme, pool_policy_id, pool_nft_names, poolRules, pOffset, pLimit) {
+
     var html = '';
     if (htmlprefix == '')
         htmlprefix = 'wallet';
@@ -596,8 +747,14 @@ function listNFTs(nftList, nftListHTMLElement, htmlprefix, theme, pool_policy_id
 
     if (nftList) {
         for (var i = 0; i < nftList.length; i++) {
+            // filter nft out if it doesn't belong to the pool policy id
             if (doFiltering && nftList[i].policy_id != pool_policy_id) { continue; }
+            
+            // FOR FILTERED SWAP POOLS: filter nft out if the name is not in the list of desired nft names
             if (doFiltering && pool_nft_names != '' && pool_nft_names.indexOf(nftList[i].asset_name) == -1) { continue; }
+
+            // FOR RULE BASED SWAP POOLS: filter nft out if the name doesn't satisfy the rules of desired nft names
+            if (doFiltering && Object.hasOwn(poolRules, 'nftNamePrefix')) { if(!nftSatisfiesRules(nftList[i], poolRules)) { console.log('not satisfying rules'); continue; } }
 
             numberOfResults++;
             if(numberOfResults <= pOffset) { continue; } // result item is before the start of range. Continue to next result
@@ -614,8 +771,14 @@ function listNFTs(nftList, nftListHTMLElement, htmlprefix, theme, pool_policy_id
     if (nftList) {
         for (var i = 0; i < nftList.length; i++) {
 
+            // filter nft out if it doesn't belong to the pool policy id
             if (doFiltering && nftList[i].policy_id != pool_policy_id) { continue; }
+            
+            // FOR FILTERED SWAP POOLS: filter nft out if the name is not in the list of desired nft names
             if (doFiltering && pool_nft_names != '' && pool_nft_names.indexOf(nftList[i].asset_name) == -1) { continue; }
+
+            // FOR RULE BASED SWAP POOLS: filter nft out if the name doesn't satisfy the rules of desired nft names
+            if (doFiltering && Object.hasOwn(poolRules, 'nftNamePrefix')) { if(!nftSatisfiesRules(nftList[i], poolRules)) { console.log('not satisfying rules'); continue; } }
 
             numberOfResults++;
             if(numberOfResults <= pOffset) { continue; } // result item is before the start of range. Continue to next result
@@ -654,6 +817,11 @@ function displayMBoxFilteredScriptFields() {
     showElem('message-box-filter-row');
 }
 
+function displayMBoxRulesScriptFields() {
+    displayMBoxScriptFields()
+    showElem('message-box-rules-row');
+}
+
 function displayMBoxMessageFieldOnly() {
     showElem('message-box-content');
     hideElem('message-box-pool-script-row');
@@ -687,14 +855,14 @@ function resetOnClick(element) {
     element.setAttribute('onclick', onclickJS);
 }
 
-function loadAddNFTDropdown(dropdown, theme, swapPoolNames, poolPolicyIds, poolNFTNames, nftPerPage) {
+function loadAddNFTDropdown(dropdown, theme, swapPoolNames, poolPolicyIds, poolNFTNames, poolRules, nftPerPage) {
 
     var swapPoolListHtml = '';
 
     for(var i = 0; i < swapPoolNames.length; i++) {
 
         if(swapPoolNames[i].trim() != '') {
-            swapPoolListHtml += `<li><div class="dropdown-item ${theme} d-flex" data-bs-toggle="modal" data-bs-target="#selectNFTsDialog"><a class="dropdown-item ${theme}" href="#" onclick="setActivePage(1, 'wallet'); showElem('addAssetNavigation'); hideElem('removeAssetNavigation'); const confButton = document.getElementById('confirmAddNFTsButton'); resetOnClick(confButton); confButton.setAttribute('onclick', 'addNFTsToPool(${i})'+ confButton.getAttribute('onclick')); setInnerText('selectNFTsDialogLabel', 'Select NFTs to add to swap pool'); showElem('confirmAddNFTsButton'); hideElem('confirmRemoveNFTsButton'); getRewardAddresses().then((addr) => { getAddressAssets(addr).then((assets) => { currentPolicyId = '${poolPolicyIds[i]}'; currentNFTNames = '${poolNFTNames[i]}'; listNFTs(assets, document.getElementById('selectable_nfts'), 'wallet', '${theme}', currentPolicyId, currentNFTNames, 0, ${nftPerPage}) } ) } ).catch((reason => console.log('error: '+ reason.message)));">${swapPoolNames[i].trim()}</a></div></li>`;
+            swapPoolListHtml += `<li><div class="dropdown-item ${theme} d-flex" data-bs-toggle="modal" data-bs-target="#selectNFTsDialog"><a class="dropdown-item ${theme}" href="#" onclick="setActivePage(1, 'wallet'); showElem('addAssetNavigation'); hideElem('removeAssetNavigation'); const confButton = document.getElementById('confirmAddNFTsButton'); resetOnClick(confButton); confButton.setAttribute('onclick', 'addNFTsToPool(${i})'+ confButton.getAttribute('onclick')); setInnerText('selectNFTsDialogLabel', 'Select NFTs to add to swap pool'); showElem('confirmAddNFTsButton'); hideElem('confirmRemoveNFTsButton'); getRewardAddresses().then((addr) => { getAddressAssets(addr).then((assets) => { currentPolicyId = '${poolPolicyIds[i]}'; currentNFTNames = '${poolNFTNames[i]}'; currentRules = ${poolRules[i]}; listNFTs(assets, document.getElementById('selectable_nfts'), 'wallet', '${theme}', currentPolicyId, currentNFTNames, currentRules, 0, ${nftPerPage}) } ) } ).catch((reason => console.log('error: '+ reason.message)));">${swapPoolNames[i].trim()}</a></div></li>`;
         }
     }
     
@@ -709,7 +877,7 @@ function loadRemoveNFTDropdown(dropdown, theme, swapPoolNames, nftPerPage) {
     for(var i = 0; i < swapPoolNames.length; i++) {
 
         if(swapPoolNames[i].trim() != '') {
-            swapPoolListHtml += `<li><div class="dropdown-item ${theme} d-flex" data-bs-toggle="modal" data-bs-target="#selectNFTsDialog"><a class="dropdown-item ${theme}" href="#" onclick="setActivePage(1, 'pool'); showElem('removeAssetNavigation'); hideElem('addAssetNavigation'); const confButton = document.getElementById('confirmRemoveNFTsButton'); resetOnClick(confButton); confButton.setAttribute('onclick', 'removeNFTsFromPool(${i})'+ confButton.getAttribute('onclick')); setInnerText('selectNFTsDialogLabel', 'Select NFTs to remove from swap pool'); showElem('confirmRemoveNFTsButton'); hideElem('confirmAddNFTsButton'); currentSwapPoolIndex = ${i}; getSwapPoolAddress(${i}).then((addr) => { getAddressAssets(addr).then((assets) => { currentPolicyId = null; currentNFTNames = null; listNFTs(assets, document.getElementById('selectable_nfts'), 'pool', '${theme}', currentPolicyId, currentNFTNames, 0, ${nftPerPage}) } ) } ).catch((reason => console.log('error: '+ reason.message)));">${swapPoolNames[i].trim()}</a></div></li>`;
+            swapPoolListHtml += `<li><div class="dropdown-item ${theme} d-flex" data-bs-toggle="modal" data-bs-target="#selectNFTsDialog"><a class="dropdown-item ${theme}" href="#" onclick="setActivePage(1, 'pool'); showElem('removeAssetNavigation'); hideElem('addAssetNavigation'); const confButton = document.getElementById('confirmRemoveNFTsButton'); resetOnClick(confButton); confButton.setAttribute('onclick', 'removeNFTsFromPool(${i})'+ confButton.getAttribute('onclick')); setInnerText('selectNFTsDialogLabel', 'Select NFTs to remove from swap pool'); showElem('confirmRemoveNFTsButton'); hideElem('confirmAddNFTsButton'); currentSwapPoolIndex = ${i}; getSwapPoolAddress(${i}).then((addr) => { getAddressAssets(addr).then((assets) => { currentPolicyId = null; currentNFTNames = null; currentRules = null; listNFTs(assets, document.getElementById('selectable_nfts'), 'pool', '${theme}', currentPolicyId, currentNFTNames, currentRules, 0, ${nftPerPage}) } ) } ).catch((reason => console.log('error: '+ reason.message)));">${swapPoolNames[i].trim()}</a></div></li>`;
         }
     }
     
