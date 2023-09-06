@@ -69,19 +69,22 @@ app.set('swap_pool_names',  [
                             'Common (policy-wide)', 
                             'Rare',
                             '040 - 049',
-                            '050 - 059'
+                            '050 - 059',
+                            '070 - 075'
                             ]);
 
 app.set('swap_pool_policy_id',  [
                                 '141efecf55e4e6c91399e1d4561f9845481369a6f200209d4085ae9e', 
                                 '141efecf55e4e6c91399e1d4561f9845481369a6f200209d4085ae9e', 
                                 '141efecf55e4e6c91399e1d4561f9845481369a6f200209d4085ae9e', 
+                                '141efecf55e4e6c91399e1d4561f9845481369a6f200209d4085ae9e',
                                 '141efecf55e4e6c91399e1d4561f9845481369a6f200209d4085ae9e'
                                 ]);
 
 app.set('swap_pool_nft_names',  [
                                 [],
                                 ["54727962626c65735365726965734f6e65456d6f6b6f3139323130","54727962626c65735365726965734f6e65456d6f6b6f3139333130","54727962626c65735365726965734f6e65456d6f6b6f3139343039","54727962626c65735365726965734f6e65456d6f6b6f3139353130","54727962626c65735365726965734f6e65456d6f6b6f3139363130","54727962626c65735365726965734f6e65456d6f6b6f3139373130","54727962626c65735365726965734f6e65456d6f6b6f3139383039","54727962626c65735365726965734f6e65456d6f6b6f3139393130","54727962626c65735365726965734f6e65456d6f6b6f3230303130","54727962626c65735365726965734f6e65456d6f6b6f3230313130","54727962626c65735365726965734f6e65456d6f6b6f3230323035","54727962626c65735365726965734f6e65456d6f6b6f3230333035","54727962626c65735365726965734f6e65456d6f6b6f3230343130","54727962626c65735365726965734f6e65456d6f6b6f3230353130","54727962626c65735365726965734f6e65456d6f6b6f3230363035","54727962626c65735365726965734f6e65456d6f6b6f3230373031","54727962626c65735365726965734f6e65456d6f6b6f3230383032","54727962626c65735365726965734f6e65456d6f6b6f3230393031","54727962626c65735365726965734f6e65456d6f6b6f3231303035","54727962626c65735365726965734f6e65456d6f6b6f3231313031","54727962626c65735365726965734f6e65456d6f6b6f3231323031","54727962626c65735365726965734f6e65456d6f6b6f3231333031","54727962626c65735365726965734f6e65456d6f6b6f3231343031","54727962626c65735365726965734f6e65456d6f6b6f3231353130","54727962626c65735365726965734f6e65456d6f6b6f3231363130","54727962626c65735365726965734f6e65456d6f6b6f3231393033","54727962626c65735365726965734f6e65456d6f6b6f3232333039"], 
+                                [],
                                 [],
                                 []
                                 ]);
@@ -90,14 +93,16 @@ app.set('swap_pool_rules',  [
                             {},
                             {},
                             {"nftNamePrefix":"TrybblesSeriesOneEmoko","digitIndexStart":22,"digitLength":3,"digitRangeFirst":40,"digitRangeLast":49},
-                            {"nftNamePrefix":"TrybblesSeriesOneEmoko","digitIndexStart":22,"digitLength":3,"digitRangeFirst":50,"digitRangeLast":59}
+                            {"nftNamePrefix":"TrybblesSeriesOneEmoko","digitIndexStart":22,"digitLength":3,"digitRangeFirst":50,"digitRangeLast":59},
+                            {"nftNamePrefix":"TrybblesSeriesOneEmoko","digitIndexStart":22,"digitLength":3,"digitRangeFirst":70,"digitRangeLast":75}
                             ]);
 
 app.set('swap_pool_address',    [
                                 'addr_test1wz73v5de6tklh5d7aycxavvmq6jrux6nk7xynxeu7sm5zlg28frg7',
                                 'addr_test1wzw0w5s880wy3nneejcfzla3ra73v4fk3e9fv6mtx866vucw57mw7', 
                                 'addr_test1wz2yclhpsn6vzvs2ydx0vehz6th25k2fy4fy4kyjqyktx2cav6azl', 
-                                'addr_test1wz4uptd902qvhj9ngsam5sxtyhtmcgj9d2qw7schs2dm8lcrpjzhx'
+                                'addr_test1wz4uptd902qvhj9ngsam5sxtyhtmcgj9d2qw7schs2dm8lcrpjzhx',
+                                'addr_test1wp5a47skywwhwj6l3fc6suljkfr60kz49wpfktduezyud6q6sw8vw'
                                 ]);
 
 app.set('nft_per_page', 20);

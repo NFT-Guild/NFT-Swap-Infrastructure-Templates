@@ -742,6 +742,12 @@ function listNFTs(nftList, nftListHTMLElement, htmlprefix, theme, pool_policy_id
         doFiltering = true;
     }
 
+    if(typeof poolRules === 'string') {
+        // poolRules is of type string. Decode and parse as object
+        poolRules = decodeURIComponent(poolRules)
+        poolRules = JSON.parse(poolRules);
+    }
+
     var numberOfResults = 0;
     var nftsOnThePage = 0;
 
@@ -862,8 +868,8 @@ function loadAddNFTDropdown(dropdown, theme, swapPoolNames, poolPolicyIds, poolN
     for(var i = 0; i < swapPoolNames.length; i++) {
 
         if(swapPoolNames[i].trim() != '') {
-            swapPoolListHtml += `<li><div class="dropdown-item ${theme} d-flex" data-bs-toggle="modal" data-bs-target="#selectNFTsDialog"><a class="dropdown-item ${theme}" href="#" onclick="setActivePage(1, 'wallet'); showElem('addAssetNavigation'); hideElem('removeAssetNavigation'); const confButton = document.getElementById('confirmAddNFTsButton'); resetOnClick(confButton); confButton.setAttribute('onclick', 'addNFTsToPool(${i})'+ confButton.getAttribute('onclick')); setInnerText('selectNFTsDialogLabel', 'Select NFTs to add to swap pool'); showElem('confirmAddNFTsButton'); hideElem('confirmRemoveNFTsButton'); getRewardAddresses().then((addr) => { getAddressAssets(addr).then((assets) => { currentPolicyId = '${poolPolicyIds[i]}'; currentNFTNames = '${poolNFTNames[i]}'; currentRules = ${poolRules[i]}; listNFTs(assets, document.getElementById('selectable_nfts'), 'wallet', '${theme}', currentPolicyId, currentNFTNames, currentRules, 0, ${nftPerPage}) } ) } ).catch((reason => console.log('error: '+ reason.message)));">${swapPoolNames[i].trim()}</a></div></li>`;
-        }
+            swapPoolListHtml += `<li><div class="dropdown-item ${theme} d-flex" data-bs-toggle="modal" data-bs-target="#selectNFTsDialog"><a class="dropdown-item ${theme}" href="#" onclick="setActivePage(1, 'wallet'); showElem('addAssetNavigation'); hideElem('removeAssetNavigation'); const confButton = document.getElementById('confirmAddNFTsButton'); resetOnClick(confButton); confButton.setAttribute('onclick', 'addNFTsToPool(${i})'+ confButton.getAttribute('onclick')); setInnerText('selectNFTsDialogLabel', 'Select NFTs to add to swap pool'); showElem('confirmAddNFTsButton'); hideElem('confirmRemoveNFTsButton'); getRewardAddresses().then((addr) => { getAddressAssets(addr).then((assets) => { currentPolicyId = '${poolPolicyIds[i]}'; currentNFTNames = '${poolNFTNames[i]}'; currentRules = '${encodeURIComponent(JSON.stringify(poolRules[i]))}'; listNFTs(assets, document.getElementById('selectable_nfts'), 'wallet', '${theme}', currentPolicyId, currentNFTNames, currentRules, 0, ${nftPerPage}) } ) } ).catch((reason => console.log('error: '+ reason.message)));">${swapPoolNames[i].trim()}</a></div></li>`;
+        } 
     }
     
     dropdown.innerHTML = swapPoolListHtml;
