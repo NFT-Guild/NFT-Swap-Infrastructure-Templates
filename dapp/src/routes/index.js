@@ -72,6 +72,7 @@ router.get('/', function (req, res, next) {
         navWebpage: app.get('navWebpage'),
         navTwitter: app.get('navTwitter'),
         navDiscord: app.get('navDiscord'),
+        navSupport: app.get('navSupport'),
         themeclass: theme
     });
 });
