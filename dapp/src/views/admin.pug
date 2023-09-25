@@ -7,6 +7,7 @@ html
       link(rel="stylesheet" type="text/css" href="stylesheets/styles.css")
       script(type="module" src="javascripts/wallet-integration.js")
       script(src="/javascripts/helpers.js")
+      script(src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.0/FileSaver.min.js" integrity="sha512-csNcFYJniKjJxRWRV1R7fvnXrycHP6qDR21mgz1ZP55xY5d+aHLfo9/FcGDQLfn2IfngbAHd8LdfsagcCqgTcQ==" crossorigin = "anonymous" referrerpolicy = "no-referrer")
    body(class=`${themeclass}`)
       
       div(class="d-flex flex-row justify-content-around padding")
@@ -137,14 +138,16 @@ html
                         svg(xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class=`bi bi-clipboard button-color${themeclass} show-hover-pointer` viewBox="0 0 16 16" onclick="copyToClipboard(document.getElementById('swap-pool-address').value);")
                            path(d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z")
                            path(d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z")
-
-                  button(type="button" class=`btn themed-color${themeclass}` data-bs-dismiss="modal") OK
+                  div(class="d-flex flex-row justify-content-between")
+                     button(type="button" class=`btn themed-color${themeclass}` data-bs-dismiss="modal") OK
+                     button(type="button" id="message-box-plutus-button" style="display: none;" class=`btn themed-color${themeclass}` onclick=`var blob = new Blob(['{"type": "PlutusScriptV2","description": "","cborHex": "'+ JSON.parse(document.getElementById("swap-pool-script").value).script +'"}'], {type: "text/plain;charset=utf-8" }); saveAs(blob, "rule-based-script.plutus");`) DOWNLOAD PLUTUS SCRIPT
+                     
                div(class="message-box-footer")
       div(class="modal modal-dialog-scrollable modal-xl fade" id="buildRuleContractDialog" tabindex="-1" aria-labelledby="buildRuleContractDialogLabel" aria-hidden="true")
          div(class="modal-dialog")
             div(class="modal-content")
                div(class=`modal-header ${themeclass}`)
-                  button(type="button" class=`btn-close themed-color${themeclass}` data-bs-dismiss="modal" aria-label="Close" onclick="resetOnClick()")
+                  button(type="button" class=`btn-close themed-color${themeclass}` data-bs-dismiss="modal" aria-label="Close" onclick="clearRuleContractBuilderDialog()")
                div(class=`modal-body ${themeclass} light`)
                   div(class="d-flex flex-row")
                      

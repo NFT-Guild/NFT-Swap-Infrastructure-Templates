@@ -826,6 +826,7 @@ function displayMBoxFilteredScriptFields() {
 function displayMBoxRulesScriptFields() {
     displayMBoxScriptFields()
     showElem('message-box-rules-row');
+    showElem('message-box-plutus-button');
 }
 
 function displayMBoxMessageFieldOnly() {
