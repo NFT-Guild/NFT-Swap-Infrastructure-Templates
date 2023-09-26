@@ -48,11 +48,9 @@ mkNFTSwapValidator scriptParams _ action ctx
                          numRequested              = numDesiredTokensRequested tokensRequested'
                          numReceived               = numDesiredTokensReceived tokensReceived'
                          requestedAndReceivedEqual = traceIfFalse "Number of tokens requested not equal to number of tokens received" $ numRequested == numReceived
-                         swappingMoreThanZero      = traceIfFalse "No desired tokens swapped" $ (numRequested > 0) && (numReceived > 0)
                          noUnlistedTokensWithdrawn = traceIfFalse "Unlisted tokens can only be withdrawn by the contract owner"       $ numUnlistedTokensRequested tokensRequested' == 0
                      in                              traceIfFalse "SWAP FAILED"                                                       $ all (==True) [ requestedAndReceivedEqual
                                                                                                                                                     , noUnlistedTokensWithdrawn
-                                                                                                                                                    , swappingMoreThanZero
                                                                                                                                                     ]
     | action == 1 = traceIfFalse "CLEANUP FAILED: Operation can only be performed by contract owner " performedByContractOwner
     | otherwise   = traceError   "UNSUPPORTED ACTION"

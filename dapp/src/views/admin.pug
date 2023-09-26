@@ -140,7 +140,7 @@ html
                            path(d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z")
                   div(class="d-flex flex-row justify-content-between")
                      button(type="button" class=`btn themed-color${themeclass}` data-bs-dismiss="modal") OK
-                     button(type="button" id="message-box-plutus-button" style="display: none;" class=`btn themed-color${themeclass}` onclick=`var blob = new Blob(['{"type": "PlutusScriptV2","description": "","cborHex": "'+ JSON.parse(document.getElementById("swap-pool-script").value).script +'"}'], {type: "text/plain;charset=utf-8" }); saveAs(blob, "rule-based-script.plutus");`) DOWNLOAD PLUTUS SCRIPT
+                     button(type="button" id="message-box-plutus-button" style="display: none;" class=`btn themed-color${themeclass}` onclick=`var blob = new Blob(['{"type": "PlutusScriptV2","description": "","cborHex": "'+ JSON.parse(document.getElementById("swap-pool-script").value).script +'"}'], {type: "text/plain;charset=utf-8" }); saveAs(blob, "swap-pool-script.plutus");`) DOWNLOAD PLUTUS SCRIPT
                      
                div(class="message-box-footer")
       div(class="modal modal-dialog-scrollable modal-xl fade" id="buildRuleContractDialog" tabindex="-1" aria-labelledby="buildRuleContractDialogLabel" aria-hidden="true")
