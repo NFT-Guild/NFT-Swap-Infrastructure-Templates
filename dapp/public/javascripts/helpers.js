@@ -816,6 +816,7 @@ function displayMBoxScriptFields() {
     showElem('message-box-pool-script-row');
     hideElem('message-box-filter-row');
     showElem('message-box-pool-addr-row');
+    showElem('message-box-plutus-button');
 }
 
 function displayMBoxFilteredScriptFields() {
@@ -826,7 +827,6 @@ function displayMBoxFilteredScriptFields() {
 function displayMBoxRulesScriptFields() {
     displayMBoxScriptFields()
     showElem('message-box-rules-row');
-    showElem('message-box-plutus-button');
 }
 
 function displayMBoxMessageFieldOnly() {
@@ -834,7 +834,8 @@ function displayMBoxMessageFieldOnly() {
     hideElem('message-box-pool-script-row');
     hideElem('message-box-filter-row');
     hideElem('message-box-pool-addr-row');
-    hideElem('message-box-filter-row');
+    hideElem('message-box-rules-row');
+    hideElem('message-box-plutus-button');
 }
 
 async function copyToClipboard(textToCopy) {
