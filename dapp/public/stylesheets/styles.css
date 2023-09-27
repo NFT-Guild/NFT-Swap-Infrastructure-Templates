@@ -448,3 +448,10 @@ a.connect-buttondark-mode {
     color: inherit;
     text-decoration: none;
 }
+
+.about-section {
+    text-align: left; 
+    margin-left: 2cm;
+    margin-right: 2cm;
+    margin-bottom: 0.5cm;
+}
