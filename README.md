@@ -14,9 +14,10 @@ Documentation has also been added to aid understanding of functionality, to insp
 All this, will not take away the fact that to make changes or customizations to the code, you should consult a developer.
 Non-developers should follow the instructions to configure the platform for use with standard settings.
 
-## Getting started
+## Getting started and installation instructions
 The supplied code can be used in your existing development setup if you already have one.
 Dapp code is based on nodejs and pug templates.
+Please use the [following instructions](docs/install.md) to get the dapp running on your web server.
 
 Start the dapp on you web server and navigate to the page https://<your-domain:port>/admin to get started.
 **We recommend to always do a first test of the platform in the preproduction environment so you get aquainted with setting up the dapp and to see how it works.**
