@@ -3,6 +3,8 @@ const express = require('express');
 var path = require('path');
 var fs = require('fs');
 var https = require('https');
+var bodyParser = require('body-parser');
+
 var privateKey  = fs.readFileSync('./keys/swappool.key', 'utf8');
 var certificate = fs.readFileSync('./keys/swappool.pem', 'utf8');
 
@@ -11,8 +13,13 @@ var credentials = {key: privateKey, cert: certificate};
 var indexRouter = require('./src/routes/index');
 var adminRouter = require('./src/routes/admin');
 var aboutRouter = require('./src/routes/about');
+var apiPolicyAssetRouter = require('./src/routes/api_policy_asset_info');
+var apiAssetInfoRouter = require('./src/routes/api_asset_info');
+var apiAddressAssetsRouter = require('./src/routes/api_address_assets');
+var apiTxStatusRouter = require('./src/routes/api_tx_status');
 
 const app = express()
+app.use(bodyParser.json());
 
 var httpsServer = https.createServer(credentials, app);
 
@@ -24,6 +31,10 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/', indexRouter);
 app.use('/admin', adminRouter);
 app.use('/about', aboutRouter);
+app.use('/api_policy_asset_info', apiPolicyAssetRouter);
+app.use('/api_asset_info', apiAssetInfoRouter);
+app.use('/api_address_assets', apiAddressAssetsRouter);
+app.use('/api_tx_status', apiTxStatusRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -50,7 +61,7 @@ app.set('swap_pool_theme', 'light-mode')
 
 ////////////////////////////////////////////
 // SWAP POOL SETTINGS
-
+/*
 app.set('swap_pool_names', ['COLLECTION NAME 1', 'COLLECTION NAME 2', 'COLLECTION NAME 3']);
 
 app.set('swap_pool_policy_id', ['COLLECTION POLICY ID 1','COLLECTION POLICY ID 2', 'COLLECTION POLICY ID 3']);
@@ -62,9 +73,9 @@ app.set('swap_pool_rules',  [{},{}, {'OBJECT WITH': 'CONTRACT RULES'}]);
 app.set('swap_pool_address', ['COLLECTION 1 SMART CONTRACT ADDRESS', 'COLLECTION 2 SMART CONTRACT ADDRESS', 'COLLECTION 3 SMART CONTRACT ADDRESS']);
 
 app.set('nft_per_page', 50);
-
+*/
 // example format and values for swap pool settings
-/*
+
 app.set('swap_pool_names',  [
                             'Common (policy-wide)', 
                             'Rare',
@@ -116,14 +127,21 @@ app.set('swap_pool_address',    [
                                 ]);
 
 app.set('nft_per_page', 20);
-*/
+
 //////////////////////////////////////////////
-app.set('nftProjectName', '#'); // the NFT project name to be displayed on the "GET ..." button, example: Trybbles
-app.set('getNFTsMarketplaceURL', '#'); // link to marketplace where your NFTs can be bought. The target of the "GET ..." button, example: https://www.jpg.store/collection/trybbles?tab=items
-app.set('getNFTsIconURL', '#'); // change to full address of a icon that symbolises your NFT collection, displayed on the "GET NFTs" button, example: https://cdn.discordapp.com/attachments/1007576669558677504/1148908192378662912/Reveal-Animation-T-s.gif
+app.set('nftProjectName', 'Trybbles'); // the NFT project name to be displayed on the "GET ..." button, example: Trybbles
+app.set('getNFTsMarketplaceURL', 'https://www.jpg.store/collection/trybbles?tab=items'); // link to marketplace where your NFTs can be bought. The target of the "GET ..." button, example: https://www.jpg.store/collection/trybbles?tab=items
+app.set('getNFTsIconURL', 'images/Reveal-Animation-T-s.gif'); // change to full address of a icon that symbolises your NFT collection, displayed on the "GET NFTs" button, example: https://cdn.discordapp.com/attachments/1007576669558677504/1148908192378662912/Reveal-Animation-T-s.gif
 app.set('navWebpage', '#'); // change to the full address of your web site, example: https://github.com/cent-development
 app.set('navTwitter', '#'); // change to the full address of your twitter page, https://twitter.com/yourprofile
 app.set('navDiscord', '#'); // change to the full address of your Discord server, https://discord.gg/serverid
 app.set('navSupport', '#'); // change to the full address of your Support system, for example Discord server, https://discord.gg/serverid
+
+////////////////////////////////////////////
+// KOIOS MAINNET / PREPROD SETTING - CHANGE TO YOUR DESIRED ENVIRONMENT
+//const koios_api_url = 'https://api.koios.rest/api/v1'; // mainnet
+const koios_api_url = 'https://preprod.koios.rest/api/v1'; // preproduction
+app.set('koios_api_url', koios_api_url);
+
 
 module.exports = app;

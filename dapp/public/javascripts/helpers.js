@@ -10,11 +10,6 @@ var selectedFilterNFTNameMap = new Map();
 
 var currentPolicyId, currentNFTNames, currentSwapPoolIndex, currentRules;
 
-// KOIOS MAINNET / PREPROD SETTING - CHANGE TO YOUR DESIRED ENVIRONMENT
-//const koios_api_url = 'https://api.koios.rest/api/v0'; // mainnet
-const koios_api_url = 'https://preprod.koios.rest/api/v0'; // preproduction
-
-
 function removeTechnicalGibberish(message) {
     if(message == null || message == undefined) { return ''; }
 
@@ -382,37 +377,25 @@ function togglePoolFilterSelection(nftimage, nftnamehex, theme) {
 async function getAddressAssets(address) {
     
     var xhr = new XMLHttpRequest();
-    var koiosquery, koiosparams = '';
+    var koiosparams = '';
+
+    const apiquery = '/api_address_assets';
 
     if(typeof address === 'string' || address instanceof String) {
-        koiosquery = `${koios_api_url}/address_assets`;
         koiosparams = `{"_addresses":["${address}"]}`;
     }
     else {
-        koiosquery = `${koios_api_url}/account_assets`;
         koiosparams = `{"_stake_addresses":${JSON.stringify(address)}}`
     }
 
-    xhr.open('POST', koiosquery, false);
+    xhr.open('POST', apiquery, false);
     xhr.setRequestHeader('accept', 'application/json');
     xhr.setRequestHeader('content-type', 'application/json');
     xhr.send(koiosparams);
 
     if (xhr.status === 200) {
         addressAssetsJSON = JSON.parse(xhr.response);
-        if(addressAssetsJSON[0]) {
-            if (addressAssetsJSON[0]['asset_list']) {
-                return addressAssetsJSON[0]['asset_list'];
-            }
-            else {
-                console.log('no asset_list');
-            }
-        }
-        else {
-            console.log('no asset_list');
-        }
-                    
-        
+        return addressAssetsJSON; 
     }
     return {};
 }
@@ -508,8 +491,8 @@ async function loadPolicyAssets(assetpolicy, list_html_element, filter, theme, p
         limitParam = '';       // leave out parameters if filter is applied. Do offset and limiting after fetch to ensure non-empty pages
     }
 
-    const koiosquery = `${koios_api_url}/policy_asset_info?_asset_policy=${assetpolicy}&order=asset_name_ascii.asc${offsetParam}${limitParam}`;
-    xhr.open('GET', koiosquery, true);
+    const apiquery = `/api_policy_asset_info?policy_id=${assetpolicy}&filter=${filter}&order=asset_name_ascii.asc${offsetParam}${limitParam}`;
+    xhr.open('GET', apiquery, true);
     xhr.setRequestHeader('accept', 'application/json');
     xhr.send();
 }
@@ -710,8 +693,8 @@ function loadNFTInfoKoios(elem_prefix, assetinfo, theme) {
         }
     };
 
-    const koiosquery = `${koios_api_url}/asset_info?_asset_policy=${assetpolicy}&_asset_name=${assetname}`;
-    xhr.open('GET', koiosquery, true);
+    const apiquery = `/api_asset_info?policy_id=${assetpolicy}&asset_name=${assetname}`;
+    xhr.open('GET', apiquery, true);
     xhr.setRequestHeader('accept', 'application/json');
     xhr.send();
 }
