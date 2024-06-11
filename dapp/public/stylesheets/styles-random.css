@@ -1,12 +1,21 @@
 body {
-    background: rgb(236,215,47);
+    background: #dfd8c0;
     font-family: "Outfit", sans-serif;
     font-weight: lighter;
     font-size: medium;
-    background-image: url("../images/shape-left.png"), url("../images/shape-right.png");
-    background-position: left bottom, right 70px;
+    background-image: url("../images/background-gradient.png"), url("../images/random-shape-left.png"), url("../images/random-shape-right.png");
+    background-position: left top, left center, right top;
     background-repeat: no-repeat;
-    background-size: 15%;
+    background-size: cover, 5%, 5%;
+    color: #eab426;
+}
+
+h1.header {
+    color: #495055;
+}
+
+h1.headerdark-mode {
+    color: #e69026
 }
 
 body.dark-mode {
@@ -14,8 +23,8 @@ body.dark-mode {
     background-image: url("../images/background-gradient-dark-mode.png"), url("../images/random-shape-left-dark-mode.png"), url("../images/random-shape-right-dark-mode.png");
     background-position: left top, left center, right top;
     background-repeat: no-repeat;
-    background-size: cover, 15%, 30%;
-    color: #e69026
+    background-size: cover, 5%, 5%;
+    color: #e69026;
 }
 
 body.no-background-images, .modal-body, .modal-header {
@@ -206,8 +215,8 @@ div.nft-list {
 }
 
 button.themed-color {
-    background-color: rgb(250,125,35);
-    color: rgb(255,240,134);
+    background: linear-gradient(to bottom right, #f0bf4c, #eac92c);
+    color: #353f47;
 }
 
 button.themed-colordark-mode {
@@ -238,8 +247,8 @@ button.select-contractdark-mode {
 }
 
 button.connect-wallet {
-    background-color: rgb(250,125,35);
-    color: rgb(255,240,134);
+    background: linear-gradient(to bottom right, #f0bf4c, #eac92c);
+    color: #353f47;
     border-style: none;
     padding: 10px;
     margin-top: 15px;
@@ -268,18 +277,18 @@ button.connect-wallet.dark-mode {
 }
 
 button.connect-wallet:hover, button.themed-color:hover, button.select-contract:hover, button.select-contract.show {
-    color: rgb(250,125,35);
-    background-color: rgb(255,240,134);
+    color: #353f47;
+    background: linear-gradient(to bottom right, #f0bf4c, #eac92c);
 }
 
 button.connect-wallet.dark-mode:hover, button.themed-colordark-mode:hover, button.select-contractdark-mode:hover, button.select-contractdark-mode.show {
-    background-color: rgb(185,208,201);
+    background: linear-gradient(to bottom right, #efb564, #e69026); 
     color: #333e48;
 }
 
 ul.dropdown-menu.show {
-    background-color: rgb(250,125,35);
-    color: rgb(255,240,134);
+    background: linear-gradient(to bottom right, #f0bf4c, #eac92c);
+    color: #353f47;
 }
 
 ul.dropdown-menu.dark-mode.show {
@@ -288,7 +297,7 @@ ul.dropdown-menu.dark-mode.show {
 }
 
 .dropdown-item {
-    color: rgb(255,240,134);
+    color: #353f47;
 }
 
 .dropdown-item.dark-mode {
@@ -296,18 +305,18 @@ ul.dropdown-menu.dark-mode.show {
 }
 
 .dropdown-item:hover {
-    color: rgb(250,125,35);
-    background-color: rgb(255,240,134);
+    background-color: #ffdb71;
+    color: #353f47;
 }
 
 .dropdown-item.dark-mode:hover {
-    background: linear-gradient(to bottom right, #efb564, #e69026);
+    background-color: #f6cb91;
     color: #333e48;
 }
 
 .dropdown-menu {
-    --bs-dropdown-color: rgb(255,240,134);
-    --bs-dropdown-bg: rgb(250,125,35);
+    --bs-dropdown-bg: linear-gradient(to bottom right, #f0bf4c, #eac92c);
+    --bs-dropdown-color: #353f47;
 }
 
 .dropdown-menu.dark-mode {
@@ -325,8 +334,8 @@ ul.dropdown-menu.dark-mode.show {
 }
 
 a.link-row {
-    color: black;
-    background-color: rgb(251,244,179);
+    color: #353f47;
+    background-color: #f0bf4c;
     text-decoration: none;
     text-align: center;
 }
@@ -339,8 +348,8 @@ a.link-rowdark-mode {
 }
 
 div.link-row {
-    color: black;
-    background-color: rgb(251,244,179);
+    color: #353f47;
+    background-color: #f0bf4c;
     margin-bottom: 20px;
 }
 
@@ -358,8 +367,8 @@ a:hover {
 }
 
 a.link-row:hover {
-    color: black;
-    background-color: rgb(218,101,52);
+    color: #353f47;
+    background-color: #ffdb71;
     text-decoration: none;
 }
 
@@ -369,14 +378,8 @@ a.link-rowdark-mode:hover {
     text-decoration: none;
 }
 
-a.dropdown-item:hover {
-    background-color: rgb(255,240,134);
-    color: rgb(250,125,35);
-}
-
 button.btn.connect-wallet.dropdown-toggle.show {
-    background-color: rgb(250,125,35);
-    color: rgb(255,240,134);
+    color: #353f47;
 }
 
 button.btn.connect-wallet.dark-mode.dropdown-toggle.show {
