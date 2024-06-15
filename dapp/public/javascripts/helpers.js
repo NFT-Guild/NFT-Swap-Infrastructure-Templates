@@ -214,8 +214,12 @@ function toggleSelectedNFTs(theme) {
 }
 
 function updateWalletSelectionLabel() {
+
     var numSelectedFromWalletLabel = document.getElementById('selectNFTsDialogLabel');
-    if(numSelectedFromWalletLabel.innerText.indexOf('NFTs to swap') > 0) {
+    if(numSelectedPoolNFTs == 0) {
+        numSelectedFromWalletLabel.innerText = `Select NFTs to swap`;
+    }
+    else if(numSelectedFromWalletLabel.innerText.indexOf('NFTs to swap') > 0) {
         numSelectedFromWalletLabel.innerText = `Select ${numSelectedPoolNFTs - numSelectedWalletNFTs} NFTs to swap`;
     }
 }
@@ -316,11 +320,23 @@ function togglePoolNFTSelection(nftimage, theme) {
     }
 
     if(confirmButton != null) {
-        if (numSelectedPoolNFTs != numSelectedWalletNFTs) {
-            confirmButton.classList.add("disabled");
+        if(numSelectedPoolNFTs > 0) {
+            // at least 1 pool NFT has been selected
+            if (numSelectedPoolNFTs != numSelectedWalletNFTs) {
+                confirmButton.classList.add("disabled");
+            }
+            else {
+                confirmButton.classList.remove("disabled");
+            }
         }
-        else {
-            confirmButton.classList.remove("disabled");
+        else if(numSelectedPoolNFTs == 0) {
+            // no pool NFT has been selected
+            if(numSelectedWalletNFTs > 0) {
+                confirmButton.classList.remove("disabled");
+            }
+            else {
+                confirmButton.classList.add("disabled");
+            }
         }
     }
 
@@ -656,7 +672,7 @@ function hex_to_ascii(str1) {
     return str;
 }
 
-function loadNFTInfoKoios(elem_prefix, assetinfo, theme) {
+function loadNFTInfoKoios(elem_prefix, assetinfo, theme, disableNFTSelection = false) {
     const assetpolicy = assetinfo.substring(0, 56)
     const assetname = assetinfo.substring(56);
 
@@ -677,12 +693,20 @@ function loadNFTInfoKoios(elem_prefix, assetinfo, theme) {
                 const ipfsID = image.substring(image.indexOf('Qm'));
                 const imageURL = `https://image-optimizer.jpgstoreapis.com/${ipfsID}`
 
-                document.getElementById(elem_prefix + assetinfo).innerHTML = `<img id="${elem_prefix + assetinfo}_img" loading="lazy" height="200" onclick="togglePoolNFTSelection(${elem_prefix + assetinfo}, '${theme}');" class="show-hover-pointer padding" src='${imageURL}'><div id="${elem_prefix + assetinfo}_namediv" class="nft-name-display not-selected${theme} align-bottom">${asset['name']}</div>`;
-
+                if(!disableNFTSelection) {
+                    document.getElementById(elem_prefix + assetinfo).innerHTML = `<img id="${elem_prefix + assetinfo}_img" loading="lazy" height="200" onclick="togglePoolNFTSelection(${elem_prefix + assetinfo}, '${theme}');" class="show-hover-pointer padding" src='${imageURL}'><div id="${elem_prefix + assetinfo}_namediv" class="nft-name-display not-selected${theme} align-bottom">${asset['name']}</div>`;
+                }
+                else {
+                    document.getElementById(elem_prefix + assetinfo).innerHTML = `<img id="${elem_prefix + assetinfo}_img" loading="lazy" height="200" class="padding" src='${imageURL}'><div id="${elem_prefix + assetinfo}_namediv" class="nft-name-display not-selected${theme} align-bottom">${asset['name']}</div>`;
+                }
             }
             else if (assetJson[0].token_registry_metadata) {
-                //console.log("koios onchain image");
-                document.getElementById(elem_prefix + assetinfo).innerHTML = `<img id="${elem_prefix + assetinfo}_img" loading="lazy" height="200" onclick="togglePoolNFTSelection(${elem_prefix + assetinfo}, '${theme}');" class="show-hover-pointer padding" src='data:image/jpeg;base64,${assetJson.metadata.logo}'><div id="${elem_prefix + assetinfo}_namediv" class="nft-name-display not-selected${theme} align-bottom">${assetJson.metadata.name}</div>`;
+                if(!disableNFTSelection) {
+                    document.getElementById(elem_prefix + assetinfo).innerHTML = `<img id="${elem_prefix + assetinfo}_img" loading="lazy" height="200" onclick="togglePoolNFTSelection(${elem_prefix + assetinfo}, '${theme}');" class="show-hover-pointer padding" src='data:image/jpeg;base64,${assetJson.metadata.logo}'><div id="${elem_prefix + assetinfo}_namediv" class="nft-name-display not-selected${theme} align-bottom">${assetJson.metadata.name}</div>`;
+                }
+                else {
+                    document.getElementById(elem_prefix + assetinfo).innerHTML = `<img id="${elem_prefix + assetinfo}_img" loading="lazy" height="200" class="padding" src='data:image/jpeg;base64,${assetJson.metadata.logo}'><div id="${elem_prefix + assetinfo}_namediv" class="nft-name-display not-selected${theme} align-bottom">${assetJson.metadata.name}</div>`;
+                }
             }
             else {
                 console.log("koios no metadata for nft")
@@ -714,8 +738,7 @@ function nftSatisfiesRules(nft, poolRules) {
     return true;
 }
 
-function listNFTs(nftList, nftListHTMLElement, htmlprefix, theme, pool_policy_id, pool_nft_names, poolRules, pOffset, pLimit) {
-
+function listNFTs(nftList, nftListHTMLElement, htmlprefix, theme, pool_policy_id, pool_nft_names, poolRules, pOffset, pLimit, disableNFTSelection = false) {
     var html = '';
     if (htmlprefix == '')
         htmlprefix = 'wallet';
@@ -773,7 +796,7 @@ function listNFTs(nftList, nftListHTMLElement, htmlprefix, theme, pool_policy_id
             if(numberOfResults <= pOffset) { continue; } // result item is before the start of range. Continue to next result
             else if(numberOfResults > (pOffset + pLimit)) { break; } // end of range has been reached. Break for-loop
 
-            loadNFTInfoKoios(`${htmlprefix}_nft_list_`, `${nftList[i].policy_id}${nftList[i].asset_name}`, theme);
+            loadNFTInfoKoios(`${htmlprefix}_nft_list_`, `${nftList[i].policy_id}${nftList[i].asset_name}`, theme, disableNFTSelection);
 
         }
     }
@@ -790,7 +813,9 @@ function listNFTs(nftList, nftListHTMLElement, htmlprefix, theme, pool_policy_id
         enableHigherNavPages(htmlprefix);
     }
 
-    toggleSelectedNFTs(`${theme}`)
+    if(!disableNFTSelection) {
+        toggleSelectedNFTs(`${theme}`)
+    }
 }
 
 
@@ -993,10 +1018,10 @@ function setCookie(cookiename, value) {
 function setActiveTheme(theme) {
     const dropDownButton = document.getElementById('themeSelectionDropdown');
 
-    var themeImage = '<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-brightness-high" viewBox="0 0 16 16"><path d="M8 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6zm0 1a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM8 0a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 0zm0 13a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 13zm8-5a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2a.5.5 0 0 1 .5.5zM3 8a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2A.5.5 0 0 1 3 8zm10.657-5.657a.5.5 0 0 1 0 .707l-1.414 1.415a.5.5 0 1 1-.707-.708l1.414-1.414a.5.5 0 0 1 .707 0zm-9.193 9.193a.5.5 0 0 1 0 .707L3.05 13.657a.5.5 0 0 1-.707-.707l1.414-1.414a.5.5 0 0 1 .707 0zm9.193 2.121a.5.5 0 0 1-.707 0l-1.414-1.414a.5.5 0 0 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .707zM4.464 4.465a.5.5 0 0 1-.707 0L2.343 3.05a.5.5 0 1 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .708z"/></svg>'
+    var themeImage = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-brightness-high" viewBox="0 0 16 16"><path d="M8 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6zm0 1a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM8 0a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 0zm0 13a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 13zm8-5a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2a.5.5 0 0 1 .5.5zM3 8a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2A.5.5 0 0 1 3 8zm10.657-5.657a.5.5 0 0 1 0 .707l-1.414 1.415a.5.5 0 1 1-.707-.708l1.414-1.414a.5.5 0 0 1 .707 0zm-9.193 9.193a.5.5 0 0 1 0 .707L3.05 13.657a.5.5 0 0 1-.707-.707l1.414-1.414a.5.5 0 0 1 .707 0zm9.193 2.121a.5.5 0 0 1-.707 0l-1.414-1.414a.5.5 0 0 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .707zM4.464 4.465a.5.5 0 0 1-.707 0L2.343 3.05a.5.5 0 1 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .708z"/></svg>'
 
     if(theme == 'dark-mode') {
-        themeImage = '<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-moon" viewBox="0 0 16 16"><path d="M6 .278a.768.768 0 0 1 .08.858 7.208 7.208 0 0 0-.878 3.46c0 4.021 3.278 7.277 7.318 7.277.527 0 1.04-.055 1.533-.16a.787.787 0 0 1 .81.316.733.733 0 0 1-.031.893A8.349 8.349 0 0 1 8.344 16C3.734 16 0 12.286 0 7.71 0 4.266 2.114 1.312 5.124.06A.752.752 0 0 1 6 .278zM4.858 1.311A7.269 7.269 0 0 0 1.025 7.71c0 4.02 3.279 7.276 7.319 7.276a7.316 7.316 0 0 0 5.205-2.162c-.337.042-.68.063-1.029.063-4.61 0-8.343-3.714-8.343-8.29 0-1.167.242-2.278.681-3.286z"/></svg>'
+        themeImage = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-moon" viewBox="0 0 16 16"><path d="M6 .278a.768.768 0 0 1 .08.858 7.208 7.208 0 0 0-.878 3.46c0 4.021 3.278 7.277 7.318 7.277.527 0 1.04-.055 1.533-.16a.787.787 0 0 1 .81.316.733.733 0 0 1-.031.893A8.349 8.349 0 0 1 8.344 16C3.734 16 0 12.286 0 7.71 0 4.266 2.114 1.312 5.124.06A.752.752 0 0 1 6 .278zM4.858 1.311A7.269 7.269 0 0 0 1.025 7.71c0 4.02 3.279 7.276 7.319 7.276a7.316 7.316 0 0 0 5.205-2.162c-.337.042-.68.063-1.029.063-4.61 0-8.343-3.714-8.343-8.29 0-1.167.242-2.278.681-3.286z"/></svg>'
     }
 
     dropDownButton.innerHTML = themeImage;
@@ -1080,7 +1105,7 @@ async function loadWalletConnector(dropdown, button, theme) {
                     const lovelace = utxos.reduce((acc, utxo) => acc + utxo.assets.lovelace, 0n);
                     const adaBalance = lovelace / 1000000n;
                     walletListHtml += `<li><div class="dropdown-item ${theme} d-flex"><img src="${wallet.icon}" width="30" height="30"/><a class="dropdown-item ${theme}" href="#">${adaBalance} ADA</a><svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-check" viewBox="0 0 16 16"><path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.267.267 0 0 1 .02-.022z"/></svg></div></li>`
-                    button.innerHTML = `<img src="${wallet.icon}" width="30" height="30"/>&nbsp;<a class="connect-button${theme}" href="#">${adaBalance} ADA</a>`
+                    button.innerHTML = `<img src="${wallet.icon}" width="20" height="20"/>&nbsp;<a class="connect-button${theme}" href="#">${adaBalance} ADA</a>`
                     connectedWallet = wallet;
                 }
                 catch (err) {

@@ -13,7 +13,7 @@ html
    body(class=`${themeclass}`)
       div(id="topofpage")
       div(class="d-flex flex-row justify-content-around padding")
-         div(class="name-and-logo" class="justify-content-start show-hover-pointer" onclick="location.href='/'")
+         div(class="name-and-logo" class="justify-content-start show-hover-pointer" onclick="location.href='/random'")
             img(src=`images/random-logo${themeclass}.png` width="300px" style="float: right")
             br
             h1(style="float: right" class=`header${themeclass}`) Random Swap Pool
@@ -33,53 +33,92 @@ html
             
             div(class="btn-group")
                button(type="button" class=`btn themed-color${themeclass} get-nfts` id="specificSwapButton" onclick=`window.location="/"`)= `SPECIFIC SWAP POOLS`
-            
+      
       div(class="modal modal-dialog modal-lg fade" id="messageBox" tabindex="-1" aria-labelledby="messageBoxLabel" aria-hidden="true")
          div(class="modal-dialog")
             div(class="modal-content")
-               div(class="modal-header message-box-header")
-                  button(type="button" class=`btn-close button-color${themeclass}` data-bs-dismiss="modal" aria-label="Close")
-               div(class="modal-body message-box") 
-                  div(class="d-flex flex-row")
-                     h1(class="modal-title fs-5 padding" id="messageBoxLabel") Message Title
-                  div(class=`light flex-wrap message-box${themeclass}` id="message-box-content") Message text goes here ...
-                  button(type="button" class=`btn themed-color${themeclass}` data-bs-dismiss="modal") OK
+               div(class=`modal-header ${themeclass}`)
+                  button(type="button" class=`btn-close ${themeclass}` data-bs-dismiss="modal" aria-label="Close")
+               div(class=`modal-body ${themeclass}`)
+                  div(class="container text-center")
+                     img(src=`https://image-optimizer.jpgstoreapis.com/QmZDxJV55YMszqUDjzhrZZqS9LaYXCSnGMtWeDNaB1LjHh` loading="lazy" height="200" ) 
+                  div(class="container text-center padding")
+                     img(src=`images/box-separator-line-${themeclass}.png` width="400") 
+                  div(class="container text-center padding")
+                     h1(class="modal-title padding" id="messageBoxLabel") Message Title
+                  div(class=`light flex-wrap` id="message-box-content") Message text goes here ...
+                  div(class="container text-center padding")
+                     button(type="button" class=`btn themed-color${themeclass}` data-bs-dismiss="modal") OK
                div(class="message-box-footer")
    
-      //- div(class="light" style="margin-bottom: 10px; text-align: center;") Select the NFTs you want to receive
-      //- div(class="d-flex flex-row justify-content-around")
-      //-    div(id="num_selected") 0 SELECTED
-      //-    div(id="smart_contract_dropdown-menu" class="btn-group")
-      //-       button(type="button" id="swap_pool_selection_button" class=`btn connect-wallet ${themeclass} d-flex dropdown-toggle` data-bs-toggle="dropdown" aria-expanded="false") 
-      //-       ul(class=`dropdown-menu ${themeclass}` id="swap_pool_selection_dropdown")
-   
-      //-div(class="nft-list light d-flex mb-3 flex-row flex-wrap" id="pool_nfts")
+      div(class="container" id="pool_contents" style="display:none;")
+         div(class="light" style="margin-bottom: 10px; text-align: center; display:none;")= "Select the NFTs you want to receive"
+         div(class="d-flex flex-row justify-content-around" style="display:none;")
+            div(id="num_selected" style="display:none;") 0 SELECTED
+            div(id="smart_contract_dropdown-menu" class="btn-group" style="display:none;")
+               button(type="button" id="swap_pool_selection_button" class=`btn connect-wallet ${themeclass} d-flex dropdown-toggle` data-bs-toggle="dropdown" aria-expanded="false") 
+               ul(class=`dropdown-menu ${themeclass}` id="swap_pool_selection_dropdown")
+      
+         div(class="nft-list light d-flex mb-3 flex-row flex-wrap" id="pool_nfts")
 
-      //- div(class="d-flex justify-content-evenly" id="random-options")
-      div(id="connect-wallet-guide" style="display:none;")
-         div(class="container")
-            div(class="row justify-content-end")
-               div(class="col")
-               div(class="col")
-               div(class="col-3")
-                  img(src=`/images/arrow${themeclass}.png` height="300px")
-            div(class="row justify-content-end")
-               div(class="col")
-               div(class="col-3")
-                  div= "FIRST CONNECT YOUR WALLET"
-               div(class="col")
+         nav(aria-label="Pool asset navigation")
+            ul(class=`pagination ${themeclass} justify-content-end padding`)
+               li(class="page-item disabled")
+                  a(class="page-link" href="#" id="poolpagesetprevious" onclick="stepPageSetPrev('pool'); loadPoolPageContent(getActivePage('pool'));")= '<<'
+               li(class="page-item disabled")
+                  a(class="page-link" href="#" id="poolpageprevious" onclick="stepPagePrev('pool'); loadPoolPageContent(getActivePage('pool'));")= '<'
+               li(class="page-item" aria-current="page")
+                  a(class="page-link" href="#" id="poolpage1" onclick=`const pNum = parseInt(this.innerText); setActivePage(pNum, 'pool'); loadPoolPageContent(pNum);`) 1
+               li(class="page-item")
+                  a(class="page-link" href="#" id="poolpage2" onclick="const pNum = parseInt(this.innerText); setActivePage(pNum, 'pool'); loadPoolPageContent(pNum);") 2
+               li(class="page-item")
+                  a(class="page-link" href="#" id="poolpage3" onclick="const pNum = parseInt(this.innerText); setActivePage(pNum, 'pool'); loadPoolPageContent(pNum);") 3
+               li(class="page-item")
+                  a(class="page-link" href="#" id="poolpagenext" onclick="stepPageNext('pool'); loadPoolPageContent(getActivePage('pool'));")= '>' 
+               li(class="page-item")
+                  a(class="page-link" href="#" id="poolpagesetnext" onclick="stepPageSetNext('pool'); loadPoolPageContent(getActivePage('pool'));")= '>>'
+         
+         div(class="d-flex flex-row justify-content-end padding")
+            div(class="btn-group")
+               button(type="button" id="randomSwapButton" class=`btn themed-color${themeclass} random-actions` data-bs-toggle="modal" data-bs-target="#selectNFTsDialog" onclick=`setActivePage(1, 'wallet'); getRewardAddresses().then((addr) => { getAddressAssets(addr).then((assets) => { listNFTs(assets, document.getElementById('wallet_nfts'),'','${themeclass}', '${poolPolicyId[currentPoolIndex]}', '${poolNFTNames[currentPoolIndex]}', ${JSON.stringify(poolRules[currentPoolIndex])}, 0, ${nftPerPage}) } ) } ).catch((reason => console.log('error: '+ reason.message)));`)= `RANDOM SWAP NFT(s)`
+                  span(class="spinner-border" role="status" id="swapNFTsSpinner" style="display:none;")
+               
+         div(class="d-flex flex-row justify-content-end padding")
+            a(href=`#topofpage`)
+               svg(xmlns="http://www.w3.org/2000/svg" height="48" width="48" fill=`currentColor` class=`button-color${themeclass}`)
+                  path(d="M22.5 41.9V17.7l-5.9 5.9-2.1-2.1L24 12l9.5 9.5-2.1 2.1-5.9-5.9v24.2ZM8 9V6h32v3Z")
 
-      div(id="swap-pool-actions" style="display:none;")
+         //- dummy row with visibility hidden to make sure the row above this one is not covered by the navigator
+         div(class="d-flex flex-row justify-content-end padding" style="visibility: hidden;")
+            a(href=`#topofpage`)
+               svg(xmlns="http://www.w3.org/2000/svg" height="48" width="48" fill=`currentColor` class=`button-color${themeclass}`)
+                  path(d="M22.5 41.9V17.7l-5.9 5.9-2.1-2.1L24 12l9.5 9.5-2.1 2.1-5.9-5.9v24.2ZM8 9V6h32v3Z")
+
+
+      div(class="container" id="connect_wallet_guide" style="display:none;")
+         div(class="row justify-content-end")
+            div(class="col")
+            div(class="col")
+            div(class="col-3")
+               img(src=`/images/arrow${themeclass}.png` height="300px")
+         div(class="row justify-content-end")
+            div(class="col")
+            div(class="col-3")
+               div= "FIRST CONNECT YOUR WALLET"
+            div(class="col")
+
+      div(class="container" id="swap_pool_actions" style="display:none;")
          div(class="container text-center")
             div(class="row align-items-center")
                div(class="col")
                   div(class="btn-group")
-                     button(type="button" class=`btn themed-color${themeclass} random-actions` id="randomSwapButton" onclick=`window.location="/"`)= `INITIATE RANDOM SWAP`
+                     button(type="button" id="randomSwapButton" class=`btn themed-color${themeclass} random-actions` data-bs-toggle="modal" data-bs-target="#selectNFTsDialog" onclick=`setActivePage(1, 'wallet'); getRewardAddresses().then((addr) => { getAddressAssets(addr).then((assets) => { listNFTs(assets, document.getElementById('wallet_nfts'),'','${themeclass}', '${poolPolicyId[currentPoolIndex]}', '${poolNFTNames[currentPoolIndex]}', ${JSON.stringify(poolRules[currentPoolIndex])}, 0, ${nftPerPage}) } ) } ).catch((reason => console.log('error: '+ reason.message)));`)= `INITIATE RANDOM SWAP`
+                        span(class="spinner-border" role="status" id="swapNFTsSpinner" style="display:none;")
                div(class="col")
                   img(src=`/images/separator-line-${themeclass}.png` height="300px")
                div(class="col")
                   div(class="btn-group")
-                     button(type="button" class=`btn themed-color${themeclass} random-actions` id="specificSwapButton" onclick=`window.location="/"`)= `VIEW RANDOM POOL CONTENTS`
+                     button(type="button" class=`btn themed-color${themeclass} random-actions` id="viewRandomPoolButton" onclick=`setActivePage(1,'pool'); getAddressAssets('${poolAddress[currentPoolIndex]}').then((assets) => { hideElem('swap_pool_actions'); showElem('pool_contents'); listNFTs(assets, document.getElementById('pool_nfts'), 'pool', '${themeclass}', '${poolPolicyId[currentPoolIndex]}', '${poolNFTNames[currentPoolIndex]}', ${JSON.stringify(poolRules[currentPoolIndex])}, 0, ${nftPerPage},true); } ).catch((reason) => { console.log('error: '+ reason.message) } );`)= `VIEW RANDOM POOL CONTENTS`
          div(class="container text-center")
             div(class="row align-items-center")
                div(class="col") !{'&nbsp;'}
@@ -87,33 +126,10 @@ html
             div(class="row align-items-center")
                div(class="col")
                   div(class="btn-group")
-                     button(type="button" class=`btn themed-color${themeclass} random-actions` id="aboutRandomSwapButton" onclick=`window.location="/"`)= `HOW RANDOM SWAPS WORK`
+                     button(type="button" class=`btn themed-color${themeclass} random-actions` id="aboutRandomSwapButton") HOW RANDOM SWAPS WORK
                
 
-      //- nav(aria-label="Pool asset navigation")
-         ul(class=`pagination ${themeclass} justify-content-end padding`)
-            li(class="page-item disabled")
-               a(class="page-link" href="#" id="poolpagesetprevious" onclick="stepPageSetPrev('pool'); loadPoolPageContent(getActivePage('pool'));")= '<<'
-            li(class="page-item disabled")
-               a(class="page-link" href="#" id="poolpageprevious" onclick="stepPagePrev('pool'); loadPoolPageContent(getActivePage('pool'));")= '<'
-            li(class="page-item" aria-current="page")
-               a(class="page-link" href="#" id="poolpage1" onclick=`const pNum = parseInt(this.innerText); setActivePage(pNum, 'pool'); loadPoolPageContent(pNum);`) 1
-            li(class="page-item")
-               a(class="page-link" href="#" id="poolpage2" onclick="const pNum = parseInt(this.innerText); setActivePage(pNum, 'pool'); loadPoolPageContent(pNum);") 2
-            li(class="page-item")
-               a(class="page-link" href="#" id="poolpage3" onclick="const pNum = parseInt(this.innerText); setActivePage(pNum, 'pool'); loadPoolPageContent(pNum);") 3
-            li(class="page-item")
-               a(class="page-link" href="#" id="poolpagenext" onclick="stepPageNext('pool'); loadPoolPageContent(getActivePage('pool'));")= '>' 
-            li(class="page-item")
-               a(class="page-link" href="#" id="poolpagesetnext" onclick="stepPageSetNext('pool'); loadPoolPageContent(getActivePage('pool'));")= '>>'
-
-      //- div(class="d-flex flex-row justify-content-end padding")
-            a(href=`#topofpage`)
-               svg(xmlns="http://www.w3.org/2000/svg" height="48" width="48" fill=`currentColor` class=`button-color${themeclass}`)
-                  path(d="M22.5 41.9V17.7l-5.9 5.9-2.1-2.1L24 12l9.5 9.5-2.1 2.1-5.9-5.9v24.2ZM8 9V6h32v3Z")
-      //- div(class="d-flex flex-row justify-content-end padding")
-         button(type="button" id="selectPoolNFTButton" class=`btn themed-color${themeclass} disabled` data-bs-toggle="modal" data-bs-target="#selectNFTsDialog" onclick=`setActivePage(1, 'wallet'); getRewardAddresses().then((addr) => { getAddressAssets(addr).then((assets) => { listNFTs(assets, document.getElementById('wallet_nfts'),'','${themeclass}', '${poolPolicyId[currentPoolIndex]}', '${poolNFTNames[currentPoolIndex]}', ${JSON.stringify(poolRules[currentPoolIndex])}, 0, ${nftPerPage}) } ) } ).catch((reason => console.log('error: '+ reason.message)));`)= `SWAP NFT(s)`
-            span(class="spinner-border" role="status" id="swapNFTsSpinner" style="display:none;")
+      
       div(class=`link-row${themeclass} fixed-bottom d-flex justify-content-evenly`)
             a(href="/about-random" class=`link-row${themeclass} flex-fill padding`) ABOUT
             a(href=`${navWebpage}` class=`link-row${themeclass} flex-fill padding`) WEBPAGE
@@ -125,7 +141,7 @@ html
          div(class="modal-dialog")
             div(class="modal-content")
                div(class=`modal-header ${themeclass}`)
-                  button(type="button" class=`btn-close themed-color${themeclass}` data-bs-dismiss="modal" aria-label="Close" onclick="resetSelectedWalletNFTs();")
+                  button(type="button" class=`btn-close ${themeclass}` data-bs-dismiss="modal" aria-label="Close" onclick="resetSelectedWalletNFTs();")
                div(class=`modal-body ${themeclass} light`) 
                   
                   div(class="d-flex flex-row")
@@ -151,12 +167,12 @@ html
 
                div(class="modal-footer d-flex justify-content-between")
                   button(type="button" class=`btn themed-color${themeclass}` data-bs-dismiss="modal" onclick="resetSelectedWalletNFTs();") BACK
-                  button(type="button" class=`btn themed-color${themeclass}` data-bs-dismiss="modal" id="confirmSwapButton" onclick=`doSwap(${currentPoolIndex}).then(message => { resetSelectedWalletNFTs(); const mBoxTitle = document.getElementById('messageBoxLabel'); if(errorReturned(message)) { mBoxTitle.innerText='Something went wrong';} else { mBoxTitle.innerText='Swap successful'; } document.getElementById('message-box-content').innerHTML=removeTechnicalGibberish(message); const messageBox = new bootstrap.Modal('#messageBox', { keyboard: false }); messageBox.show();});`) CONFIRM   
-      -var onloadScript = `window.onload= function() { if(getCookie('connectedwallet') == '') { showElem('connect-wallet-guide'); } else { showElem('swap-pool-actions')} loadWalletConnector(document.getElementById('wallet_connector_dropdown'), document.getElementById('wallet_connector_button'),'${themeclass}'); const selectNFTDlg = document.getElementById('selectNFTsDialog'); selectNFTDlg.addEventListener('show.bs.modal', event => { /*loadWalletNFTs()*/ }); /*const searchField = document.getElementById('search_field_input'); const searchButton = document.getElementById('search_field_button'); addEnterKeyListener(searchField, searchButton); const filterCriterion = searchField.value;*/ /*setActivePage(1,'pool');*/ getAddressAssets('${poolAddress[currentPoolIndex]}').then((assets) => { listNFTs(assets, document.getElementById('pool_nfts'), 'pool', '${themeclass}', '${poolPolicyId[currentPoolIndex]}', '${poolNFTNames[currentPoolIndex]}', ${JSON.stringify(poolRules[currentPoolIndex])}, 0, ${nftPerPage}) } ).catch((reason) => { console.log('error: '+ reason.message) } );}`;
+                  button(type="button" class=`btn themed-color${themeclass} disabled` data-bs-dismiss="modal" id="confirmSwapButton" onclick=`doSwap(${currentPoolIndex}).then(message => { resetSelectedWalletNFTs(); document.getElementById('confirmSwapButton').classList.add("disabled"); const mBoxTitle = document.getElementById('messageBoxLabel'); if(errorReturned(message)) { mBoxTitle.innerText='Something went wrong';} else { mBoxTitle.innerText='Swap successful'; } document.getElementById('message-box-content').innerHTML=removeTechnicalGibberish(message); const messageBox = new bootstrap.Modal('#messageBox', { keyboard: false }); messageBox.show();});`) CONFIRM   
+      -var onloadScript = `window.onload= function() { if(getCookie('connectedwallet') == '') { showElem('connect_wallet_guide'); } else { showElem('swap_pool_actions')} loadWalletConnector(document.getElementById('wallet_connector_dropdown'), document.getElementById('wallet_connector_button'),'${themeclass}'); const selectNFTDlg = document.getElementById('selectNFTsDialog'); selectNFTDlg.addEventListener('show.bs.modal', event => { /*loadWalletNFTs()*/ }); /*const searchField = document.getElementById('search_field_input'); const searchButton = document.getElementById('search_field_button'); addEnterKeyListener(searchField, searchButton); const filterCriterion = searchField.value;*/ }`;
       script !{onloadScript}
       -var walletStakeAddrScript = `async function getRewardAddresses() { if(!connectedWallet) { alert("Wallet is not yet loaded"); return null; } else { console.log('connectedWallet',connectedWallet); var api = await connectedWallet.enable(); const addresses = await api.getRewardAddresses(); var bech32Addresses = []; for(var i = 0; i < addresses.length; i++) { bech32Addresses.push(typhonjs.utils.getAddressFromHex(addresses[i]).getBech32()); } return bech32Addresses; } }`
       script !{walletStakeAddrScript}
-      -var poolPagingScript = `function loadPoolPageContent(pageNum) { const pOffset = (pageNum - 1) * ${nftPerPage}; getAddressAssets('${poolAddress[currentPoolIndex]}').then((assets) => { listNFTs(assets, document.getElementById('pool_nfts'), 'pool', '${themeclass}', '${poolPolicyId[currentPoolIndex]}', '${poolNFTNames[currentPoolIndex]}', ${JSON.stringify(poolRules[currentPoolIndex])}, pOffset, ${nftPerPage}) } ).catch((reason) => { console.log('error: '+ reason.message) } );}`
+      -var poolPagingScript = `function loadPoolPageContent(pageNum) { const pOffset = (pageNum - 1) * ${nftPerPage}; getAddressAssets('${poolAddress[currentPoolIndex]}').then((assets) => { listNFTs(assets, document.getElementById('pool_nfts'), 'pool', '${themeclass}', '${poolPolicyId[currentPoolIndex]}', '${poolNFTNames[currentPoolIndex]}', ${JSON.stringify(poolRules[currentPoolIndex])}, pOffset, ${nftPerPage},true) } ).catch((reason) => { console.log('error: '+ reason.message) } );}`
       script !{poolPagingScript}
       -var walletPagingScript = `function loadWalletPageContent(pageNum) { const pOffset = (pageNum - 1) * ${nftPerPage}; getRewardAddresses().then((addr) => { getAddressAssets(addr).then((assets) => { listNFTs(assets, document.getElementById('wallet_nfts'),'','${themeclass}', '${poolPolicyId[currentPoolIndex]}', '${poolNFTNames[currentPoolIndex]}', ${JSON.stringify(poolRules[currentPoolIndex])}, pOffset, ${nftPerPage}) } ) } ).catch((reason => console.log('error: '+ reason.message)));}`
       script !{walletPagingScript}

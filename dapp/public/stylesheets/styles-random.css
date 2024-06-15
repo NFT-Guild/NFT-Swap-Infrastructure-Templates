@@ -27,14 +27,16 @@ body.dark-mode {
     color: #e69026;
 }
 
-body.no-background-images, .modal-body, .modal-header {
+/* body.no-background-images, .modal-body, .modal-header { */
+body.no-background-images {
     background: rgb(236,215,47);
     font-family: "Outfit", sans-serif;
     font-weight: 100;
     font-size: xx-small;
 }
 
-body.no-background-images.dark-mode, .modal-body.dark-mode, .modal-header.dark-mode {
+/* body.no-background-images.dark-mode, .modal-body.dark-mode, .modal-header.dark-mode { */
+body.no-background-images.dark-mode {
     background: rgb(55,64,74);
     font-family: "Outfit", sans-serif;
     font-weight: 100;
@@ -42,21 +44,31 @@ body.no-background-images.dark-mode, .modal-body.dark-mode, .modal-header.dark-m
 }
 
 .message-box {
-    background: rgb(55,64,74);
+    /* background: rgb(55,64,74); */
+    /* background: #dfd8c0;
+    background-image: url("../images/background-gradient.png");
+    background-position: left top;
+    background-repeat: no-repeat;
+    background-size: cover; */
     font-family: "Outfit", sans-serif;
     font-weight: 100;
     /*font-size: xx-small;*/
-    color: rgb(251,246,213);
+    /* color: rgb(251,246,213); */
     border-top-right-radius: var(--bs-modal-border-radius);
     border-top-left-radius: var(--bs-modal-border-radius);
     --bs-backdrop-opacity: 0;
 }
 
 .message-boxdark-mode {
-    background: inherit;
+    /* background: black;
+    background-image: url("../images/background-gradient-dark-mode.png");
+    background-position: left top;
+    background-repeat: no-repeat;
+    background-size: cover; */
     font-family: "Outfit", sans-serif;
     font-weight: 100;
-    color: rgb(75,174,167);
+    /* color: rgb(75,174,167); */
+    color: #e69026;
     border-top-right-radius: var(--bs-modal-border-radius);
     border-top-left-radius: var(--bs-modal-border-radius);
     --bs-backdrop-opacity: 0;
@@ -81,6 +93,43 @@ body.no-background-images.dark-mode, .modal-body.dark-mode, .modal-header.dark-m
 .modal {
     /* make sure the modal itself has transparent background */
     --bs-modal-bg: transparent;
+}
+
+.modal-body {
+    background-color: #dfd8c0;
+    background-image: url("../images/background-gradient.png");
+    background-position: left top;
+    background-repeat: no-repeat;
+    background-size: cover;
+    font-family: "Outfit", sans-serif;
+    font-weight: 100;
+    /*font-size: xx-small;*/
+    color: #495055;
+    border-top-right-radius: var(--bs-modal-border-radius);
+    border-top-left-radius: var(--bs-modal-border-radius);
+    --bs-backdrop-opacity: 0;
+}
+
+.modal-body.dark-mode {
+    background-color: black;
+    background-image: url("../images/background-gradient-dark-mode.png");
+    background-position: left top;
+    background-repeat: no-repeat;
+    background-size: cover;
+    font-family: "Outfit", sans-serif;
+    font-weight: 100;
+    color: #e69026;
+    border-top-right-radius: var(--bs-modal-border-radius);
+    border-top-left-radius: var(--bs-modal-border-radius);
+    --bs-backdrop-opacity: 0;
+}
+
+.modal-header {
+    color: #495055;
+}
+
+.modal-header.dark-mode {
+    color: #e69026;
 }
 
 .modal-content, .modal-body, .modal-header, .modal-footer {
@@ -181,6 +230,7 @@ div.nft-list {
     border: transparent inherit;
     border-left-style: none;
     border-top-style: none;
+    color: #495055;
     background-color: transparent;
     background: transparent;
     transition-delay:  100ms;
@@ -225,16 +275,24 @@ button.themed-colordark-mode {
 }
 
 .button-color {
-    color: rgb(250,125,35);
+    color: #eab426;
 }
 
 .button-colordark-mode {
-    color: rgb(75,174,167);
+    color: #e69026;
+}
+
+.btn-close {
+    background-color: #ffdb71 !important;
+}
+
+.btn-close.dark-mode {
+    background-color: #e69026 !important;
 }
 
 button.select-contract {
-    background-color: rgb(250,125,35);
-    color: rgb(255,240,134);
+    background-color: linear-gradient(to bottom right, #f0bf4c, #eac92c);;
+    color: #ffdb71;
     border-style: none;
     padding: 10px;
 }
@@ -392,37 +450,37 @@ button {
 }
 
 .pagination {
-    --bs-pagination-color: rgb(255,240,134);
-    --bs-pagination-bg: rgb(250,125,35);
+    --bs-pagination-color: #353f47;
+    --bs-pagination-bg: #f0bf4c;
     --bs-pagination-disabled-bg: transparent;
-    --bs-pagination-border-color: rgb(250,125,35);
-    --bs-pagination-hover-bg: rgb(255,240,134);
-    --bs-pagination-hover-color:rgb(250,125,35);
-    --bs-pagination-hover-border-color:rgb(255,240,134);
+    --bs-pagination-border-color: #f0bf4c;
+    --bs-pagination-hover-bg: #ffdb71;
+    --bs-pagination-hover-color: #353f47;
+    --bs-pagination-hover-border-color:#ffdb71;
     --bs-pagination-disabled-border-color: rgb(103,99,50);
     --bs-pagination-disabled-color:rgb(103,99,50);
-    --bs-pagination-active-color: rgb(250,125,35);
-    --bs-pagination-active-bg: rgb(255,240,134);
-    --bs-pagination-active-border-color:rgb(255,240,134);
-    --bs-pagination-focus-color: rgb(255,240,134);
-    --bs-pagination-focus-bg: rgb(250,125,35);
+    --bs-pagination-active-color: #353f47;
+    --bs-pagination-active-bg: #ffdb71;
+    --bs-pagination-active-border-color:#ffdb71;
+    --bs-pagination-focus-color: #353f47;
+    --bs-pagination-focus-bg: #ffdb71;
 }
 
 .pagination.dark-mode {
-    --bs-pagination-color: rgb(55,64,74);
-    --bs-pagination-bg: rgb(75,174,167);
+    --bs-pagination-color: #42403d;
+    --bs-pagination-bg: #e69026;
     --bs-pagination-disabled-bg: transparent;
-    --bs-pagination-border-color: rgb(75,174,167);
-    --bs-pagination-hover-bg: rgb(185,208,201);
-    --bs-pagination-hover-color:rgb(55,64,74);
-    --bs-pagination-hover-border-color:rgb(185,208,201);
-    --bs-pagination-disabled-border-color: rgb(68,135,135);
-    --bs-pagination-disabled-color:rgb(68,135,135);
-    --bs-pagination-active-color: rgb(55,64,74);
-    --bs-pagination-active-bg: rgb(185,208,201);
-    --bs-pagination-active-border-color:rgb(185,208,201);
-    --bs-pagination-focus-color: rgb(55,64,74);
-    --bs-pagination-focus-bg: rgb(75,174,167);
+    --bs-pagination-border-color: #e69026;
+    --bs-pagination-hover-bg: #f6cb91;
+    --bs-pagination-hover-color:#42403d;
+    --bs-pagination-hover-border-color:#f6cb91;
+    --bs-pagination-disabled-border-color: rgb(103,99,50);
+    --bs-pagination-disabled-color:rgb(103,99,50);
+    --bs-pagination-active-color: #42403d;
+    --bs-pagination-active-bg: #f6cb91;
+    --bs-pagination-active-border-color:#f6cb91;
+    --bs-pagination-focus-color: #42403d;
+    --bs-pagination-focus-bg: #e69026;
 }
 
 .nft-name-display {
