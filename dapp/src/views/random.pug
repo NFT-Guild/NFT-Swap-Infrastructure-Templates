@@ -53,12 +53,30 @@ html
    
       div(class="container" id="pool_contents" style="display:none;")
          div(class="light" style="margin-bottom: 10px; text-align: center; display:none;")= "Select the NFTs you want to receive"
-         div(class="d-flex flex-row justify-content-around" style="display:none;")
-            div(id="num_selected" style="display:none;") 0 SELECTED
-            div(id="smart_contract_dropdown-menu" class="btn-group" style="display:none;")
-               button(type="button" id="swap_pool_selection_button" class=`btn connect-wallet ${themeclass} d-flex dropdown-toggle` data-bs-toggle="dropdown" aria-expanded="false") 
-               ul(class=`dropdown-menu ${themeclass}` id="swap_pool_selection_dropdown")
-      
+         div(class="d-flex flex-row" style="display:none;")
+            div(id="view-dropdown-menu" class="dropdown")
+               button(type="button" id="view_selection_button" class=`btn connect-wallet ${themeclass} d-flex dropdown-toggle` data-bs-toggle="dropdown" aria-expanded="false") VIEW AS 
+               ul(class=`dropdown-menu ${themeclass}` id="view_selection_dropdown")
+                  each view in viewOptions
+                     li
+                        a(class="dropdown-item" href="#")= view   
+            div(id="sort-dropdown-menu" class="dropdown")
+               button(type="button" id="sort_selection_button" class=`btn connect-wallet ${themeclass} d-flex dropdown-toggle` data-bs-toggle="dropdown" aria-expanded="false") SORT BY
+               ul(class=`dropdown-menu ${themeclass}` id="sort_selection_dropdown")
+                  each sort in sortOptions
+                     li
+                        a(class="dropdown-item" href="#")= sort 
+            div(id="filter-dropdown-menu" class="dropdown")
+               button(type="button" id="filter_selection_button" class=`btn connect-wallet ${themeclass} d-flex dropdown-toggle` data-bs-toggle="dropdown" aria-expanded="false") FILTER
+               ul(class=`dropdown-menu ${themeclass}` id="filter_selection_dropdown")
+                  each filter in filterOptions
+                     li
+                        a(class="dropdown-item" href="#")= filter
+            div(class="ms-auto")
+               div(id="search_field" class="input-group")
+                  input(type="text" id="search_field_input" class=`form-control searchfield${themeclass}` placeholder="SEARCH" aria-label="SEARCH" aria-describedby="basic-addon2")
+                  span(class=`input-group-text${themeclass} padding material-symbols-outlined show-hover-pointer` onclick="alert('performing search');") search
+                  
          div(class="nft-list light d-flex mb-3 flex-row flex-wrap" id="pool_nfts")
 
          nav(aria-label="Pool asset navigation")
@@ -146,6 +164,32 @@ html
                   
                   div(class="container text-center")
                      h1(class="modal-title fs-5 padding" id="selectNFTsDialogLabel") Select NFTs to swap
+
+                  div(class="d-flex flex-row" style="display:none;")
+                     div(id="view-dropdown-menu_wallet" class="dropdown")
+                        button(type="button" id="view_selection_button_wallet" class=`btn connect-wallet ${themeclass} d-flex dropdown-toggle` data-bs-toggle="dropdown" aria-expanded="false") VIEW AS 
+                        ul(class=`dropdown-menu ${themeclass}` id="view_selection_dropdown_wallet")
+                           each view in viewOptions
+                              li
+                                 a(class="dropdown-item" href="#")= view   
+                     div(id="sort-dropdown-menu_wallet" class="dropdown")
+                        button(type="button" id="sort_selection_button_wallet" class=`btn connect-wallet ${themeclass} d-flex dropdown-toggle` data-bs-toggle="dropdown" aria-expanded="false") SORT BY
+                        ul(class=`dropdown-menu ${themeclass}` id="sort_selection_dropdown_wallet")
+                           each sort in sortOptions
+                              li
+                                 a(class="dropdown-item" href="#")= sort 
+                     div(id="filter-dropdown-menu_wallet" class="dropdown")
+                        button(type="button" id="filter_selection_button_wallet" class=`btn connect-wallet ${themeclass} d-flex dropdown-toggle` data-bs-toggle="dropdown" aria-expanded="false") FILTER
+                        ul(class=`dropdown-menu ${themeclass}` id="filter_selection_dropdown_wallet")
+                           each filter in filterOptions
+                              li
+                                 a(class="dropdown-item" href="#")= filter
+                     div(class="ms-auto")
+                        div(id="search_field_wallet" class="input-group")
+                           input(type="text" id="search_field_input_wallet" class=`form-control searchfield${themeclass}` placeholder="SEARCH" aria-label="SEARCH" aria-describedby="basic-addon2")
+                           span(class=`input-group-text${themeclass} padding material-symbols-outlined show-hover-pointer` onclick="alert('performing search');") search
+                  
+
                   div(class="nft-list light align-content-start d-flex mb-3 flex-row flex-wrap" id="wallet_nfts") Loading ...
 
                   nav(aria-label="Wallet asset navigation")

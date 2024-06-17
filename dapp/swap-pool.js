@@ -132,6 +132,39 @@ app.set('swap_pool_address',    [
 
 app.set('nft_per_page', 20);
 
+app.set('view_dropdown_options',  [
+    'TEXT LIST', 
+    'SMALL THUMBNAILS',
+    'LARGE THUMBNAILS'
+    ]);
+
+app.set('sort_dropdown_options',  [
+    'MINT DATE', 
+    'NAME',
+    'RARITY',
+    'TRAITS'
+    ]);
+
+app.set('filter_dropdown_options',  [
+    'COMMON', 
+    'UNCOMMON',
+    'RARE',
+    'SUPER RARE',
+    'ULTRA RARE',
+    'ANGRY', 
+    'CUTE',
+    'HAPPY',
+    'IGNORED',
+    'IGNORING',
+    'PROUD',
+    'NEUTRAL',
+    'PLAYFUL',
+    'SAD',
+    'SCARED',
+    'SLEEPY',
+    'WORRIED'
+    ]);
+
 //////////////////////////////////////////////
 app.set('nftProjectName', 'Trybbles'); // the NFT project name to be displayed on the "GET ..." button, example: Trybbles
 app.set('getNFTsMarketplaceURL', 'https://www.jpg.store/collection/trybbles?tab=items'); // link to marketplace where your NFTs can be bought. The target of the "GET ..." button, example: https://www.jpg.store/collection/trybbles?tab=items

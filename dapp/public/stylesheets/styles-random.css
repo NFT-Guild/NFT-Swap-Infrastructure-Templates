@@ -96,7 +96,7 @@ body.no-background-images.dark-mode {
 }
 
 .modal-body {
-    background-color: #dfd8c0;
+    background-color: #f6dd61;
     background-image: url("../images/background-gradient-wallet.webp");
     background-position: left top;
     background-repeat: no-repeat;
@@ -111,15 +111,17 @@ body.no-background-images.dark-mode {
 }
 
 .modal-body.message-body {
+    background-color: #f6dd61;
     background-image: url("../images/background-gradient-message.webp");
 }
 
 .modal-body.message-body.dark-mode {
+    background-color: #573e87;
     background-image: url("../images/background-gradient-message-dark-mode.webp");
 }
 
 .modal-body.dark-mode {
-    background-color: black;
+    background-color: #4f249f;
     background-image: url("../images/background-gradient-wallet-dark-mode.webp");
     background-position: left top;
     background-repeat: no-repeat;
@@ -190,37 +192,48 @@ input.textfield.dark-mode:focus {
 }
 
 .input-group-text {
-    background-color: rgb(240,231,163);
-    border-style: none;
+    background-color: #f0bf4c;
+    fill: #353f47;
+    border-color: #f0bf4c;
+    border-top-right-radius: var(--bs-border-radius) !important;
+    border-bottom-right-radius: var(--bs-border-radius) !important;
+    padding: 10px;
+    margin-top: 15px;
 }
 
 .input-group-textdark-mode {
-    background-color: rgb(185,208,201);
-    color: rgb(55,64,74);
-    border-style: none;
-    vertical-align: middle;
+    background-color: #f6cb91;
+    fill: #42403d;
+    border-color: #f6cb91;
+    border-top-right-radius: var(--bs-border-radius) !important;
+    border-bottom-right-radius: var(--bs-border-radius) !important;
+    padding: 10px;
+    margin-top: 15px;
 }
 
 input.searchfield {
-    background-color: rgb(240,231,163);
+    background-color: #f0bf4c;
+    color: #353f47;
     font-weight: 500;
-    border-style: none;
+    border-color: #f0bf4c;
+    margin-top: 15px;
 }
 
 input.searchfielddark-mode {
-    background-color: rgb(185,208,201);
-    color: rgb(55,64,74);
+    background-color: #f6cb91;
+    color: #42403d;
     font-weight: 500;
-    border-style: none;
+    border-color: #f6cb91;
+    margin-top: 15px;
 }
 
 input.searchfield:focus {
-    background-color: rgb(240,231,163);
+    background-color: #f0bf4c;
 }
 
 input.searchfielddark-mode:focus {
-    background-color: rgb(185,208,201);
-    color: rgb(55,64,74);
+    background-color: #f6cb91;
+    color: #42403d;
 }
 
 h1 {
@@ -534,4 +547,9 @@ a.connect-buttondark-mode {
 
 .material-symbols-outlined {
     font-size: 48px;
+}
+
+.material-symbols-outlined.input-group-text, .material-symbols-outlined.input-group-textdark-mode {
+    font-size: 24px;
+    font-weight: bold;
 }
