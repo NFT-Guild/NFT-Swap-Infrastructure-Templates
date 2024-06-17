@@ -39,7 +39,7 @@ html
             div(class="modal-content")
                div(class=`modal-header ${themeclass}`)
                   button(type="button" class=`btn-close ${themeclass}` data-bs-dismiss="modal" aria-label="Close")
-               div(class=`modal-body ${themeclass}`)
+               div(class=`modal-body message-body ${themeclass}`)
                   div(class="container text-center")
                      img(src=`https://image-optimizer.jpgstoreapis.com/QmZDxJV55YMszqUDjzhrZZqS9LaYXCSnGMtWeDNaB1LjHh` loading="lazy" height="200" ) 
                   div(class="container text-center padding")
@@ -144,7 +144,7 @@ html
                   button(type="button" class=`btn-close ${themeclass}` data-bs-dismiss="modal" aria-label="Close" onclick="resetSelectedWalletNFTs();")
                div(class=`modal-body ${themeclass} light`) 
                   
-                  div(class="d-flex flex-row")
+                  div(class="container text-center")
                      h1(class="modal-title fs-5 padding" id="selectNFTsDialogLabel") Select NFTs to swap
                   div(class="nft-list light align-content-start d-flex mb-3 flex-row flex-wrap" id="wallet_nfts") Loading ...
 

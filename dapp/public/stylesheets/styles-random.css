@@ -97,7 +97,7 @@ body.no-background-images.dark-mode {
 
 .modal-body {
     background-color: #dfd8c0;
-    background-image: url("../images/background-gradient.png");
+    background-image: url("../images/background-gradient-wallet.webp");
     background-position: left top;
     background-repeat: no-repeat;
     background-size: cover;
@@ -110,9 +110,17 @@ body.no-background-images.dark-mode {
     --bs-backdrop-opacity: 0;
 }
 
+.modal-body.message-body {
+    background-image: url("../images/background-gradient-message.webp");
+}
+
+.modal-body.message-body.dark-mode {
+    background-image: url("../images/background-gradient-message-dark-mode.webp");
+}
+
 .modal-body.dark-mode {
     background-color: black;
-    background-image: url("../images/background-gradient-dark-mode.png");
+    background-image: url("../images/background-gradient-wallet-dark-mode.webp");
     background-position: left top;
     background-repeat: no-repeat;
     background-size: cover;
@@ -230,7 +238,7 @@ div.nft-list {
     border: transparent inherit;
     border-left-style: none;
     border-top-style: none;
-    color: #495055;
+    color: #545446;
     background-color: transparent;
     background: transparent;
     transition-delay:  100ms;
@@ -240,28 +248,30 @@ div.nft-list {
     border: transparent inherit;
     border-left-style: none;
     border-top-style: none;
+    color: #b9bdc8;
     background-color: transparent;
     background: transparent;
     transition-delay:  100ms;
 }
 
 .selected {
-    border: transparent rgb(250,125,35);
+    border: transparent #d1b654;
     border-left-style: none;
     border-top-style: none;
-    background-color: linear-gradient(to bottom right, rgb(236,215,47), rgb(250,125,35));
-    background: linear-gradient(to bottom right, rgb(236,215,47), rgb(250,125,35));
+    background-color: linear-gradient(#fae892, #d1b654);
+    background: linear-gradient(#fae892, #d1b654);
     transition-delay:  100ms;
+    color: #4a4b44;
 }
 
 .selecteddark-mode {
-    border: transparent rgb(52,58,65);
+    border: transparent #6c4131;
     border-left-style: none;
     border-top-style: none;
-    background-color: linear-gradient(to bottom right, rgb(52,58,65), rgb(185,208,201));
-    background: linear-gradient(to bottom right, rgb(52,58,65), rgb(185,208,201));
+    background-color: linear-gradient(#835554, #6c4131);
+    background: linear-gradient(#835554, #6c4131);
     transition-delay:  100ms;
-    color: rgb(52,58,65);
+    color: #caccd4;
 }
 
 button.themed-color {
