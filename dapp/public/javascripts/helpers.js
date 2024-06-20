@@ -355,7 +355,6 @@ function hideElem(elemid) {
 }
 
 function togglePoolFilterSelection(nftimage, nftnamehex, theme) {
-    var createScriptButton = document.getElementById('generateFilteredPoolButton');
     var nameDiv = document.getElementById(nftimage.id + "_namediv");
 
     if (selectedPoolNFTs.indexOf(nftimage.id) > -1) {
@@ -374,14 +373,6 @@ function togglePoolFilterSelection(nftimage, nftnamehex, theme) {
         nameDiv.classList.remove("not-selected" + theme);
         numSelectedPoolNFTs = selectedPoolNFTs.push(nftimage.id);
         selectedFilterNFTNameMap.set(nftimage.id, nftnamehex);
-    }
-
-
-    if (numSelectedPoolNFTs > 0) {
-        createScriptButton.classList.remove("disabled");
-    }
-    else {
-        createScriptButton.classList.add("disabled");
     }
 
     var numSelectedFromPoolLabelTop = document.getElementById('num_selected');
