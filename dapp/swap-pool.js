@@ -17,6 +17,8 @@ var apiPolicyAssetRouter = require('./src/routes/api_policy_asset_info');
 var apiAssetInfoRouter = require('./src/routes/api_asset_info');
 var apiAddressAssetsRouter = require('./src/routes/api_address_assets');
 var apiTxStatusRouter = require('./src/routes/api_tx_status');
+var apiAddressTxsRouter = require('./src/routes/api_address_txs');
+var apiLatestSTEAKBlockRouter = require('./src/routes/api_get_latest_steak_block');
 
 var randomRouter = require('./src/routes/random');
 
@@ -37,6 +39,8 @@ app.use('/api_policy_asset_info', apiPolicyAssetRouter);
 app.use('/api_asset_info', apiAssetInfoRouter);
 app.use('/api_address_assets', apiAddressAssetsRouter);
 app.use('/api_tx_status', apiTxStatusRouter);
+app.use('/api_address_txs', apiAddressTxsRouter);
+app.use('/api_get_latest_steak_block', apiLatestSTEAKBlockRouter);
 
 app.use('/random', randomRouter);
 
@@ -65,7 +69,7 @@ app.set('swap_pool_theme', 'light-mode')
 
 ////////////////////////////////////////////
 // SWAP POOL SETTINGS
-/*
+
 app.set('swap_pool_names', ['COLLECTION NAME 1', 'COLLECTION NAME 2', 'COLLECTION NAME 3']);
 
 app.set('swap_pool_policy_id', ['COLLECTION POLICY ID 1','COLLECTION POLICY ID 2', 'COLLECTION POLICY ID 3']);
@@ -77,7 +81,8 @@ app.set('swap_pool_rules',  [{},{}, {'OBJECT WITH': 'CONTRACT RULES'}]);
 app.set('swap_pool_address', ['COLLECTION 1 SMART CONTRACT ADDRESS', 'COLLECTION 2 SMART CONTRACT ADDRESS', 'COLLECTION 3 SMART CONTRACT ADDRESS']);
 
 app.set('nft_per_page', 50);
-*/
+
+/*
 // example format and values for swap pool settings
 
 app.set('swap_pool_names',  [
@@ -87,7 +92,8 @@ app.set('swap_pool_names',  [
                             '050 - 059',
                             '070 - 075',
                             '039 - 075',
-                            '030 - 100'
+                            '030 - 100',
+                            'Random'
                             ]);
 
 app.set('swap_pool_policy_id',  [
@@ -97,12 +103,14 @@ app.set('swap_pool_policy_id',  [
                                 '141efecf55e4e6c91399e1d4561f9845481369a6f200209d4085ae9e',
                                 '141efecf55e4e6c91399e1d4561f9845481369a6f200209d4085ae9e',
                                 '141efecf55e4e6c91399e1d4561f9845481369a6f200209d4085ae9e',
+                                '141efecf55e4e6c91399e1d4561f9845481369a6f200209d4085ae9e',
                                 '141efecf55e4e6c91399e1d4561f9845481369a6f200209d4085ae9e'
                                 ]);
 
 app.set('swap_pool_nft_names',  [
                                 [],
                                 ["54727962626c65735365726965734f6e65456d6f6b6f3139323130","54727962626c65735365726965734f6e65456d6f6b6f3139333130","54727962626c65735365726965734f6e65456d6f6b6f3139343039","54727962626c65735365726965734f6e65456d6f6b6f3139353130","54727962626c65735365726965734f6e65456d6f6b6f3139363130","54727962626c65735365726965734f6e65456d6f6b6f3139373130","54727962626c65735365726965734f6e65456d6f6b6f3139383039","54727962626c65735365726965734f6e65456d6f6b6f3139393130","54727962626c65735365726965734f6e65456d6f6b6f3230303130","54727962626c65735365726965734f6e65456d6f6b6f3230313130","54727962626c65735365726965734f6e65456d6f6b6f3230323035","54727962626c65735365726965734f6e65456d6f6b6f3230333035","54727962626c65735365726965734f6e65456d6f6b6f3230343130","54727962626c65735365726965734f6e65456d6f6b6f3230353130","54727962626c65735365726965734f6e65456d6f6b6f3230363035","54727962626c65735365726965734f6e65456d6f6b6f3230373031","54727962626c65735365726965734f6e65456d6f6b6f3230383032","54727962626c65735365726965734f6e65456d6f6b6f3230393031","54727962626c65735365726965734f6e65456d6f6b6f3231303035","54727962626c65735365726965734f6e65456d6f6b6f3231313031","54727962626c65735365726965734f6e65456d6f6b6f3231323031","54727962626c65735365726965734f6e65456d6f6b6f3231333031","54727962626c65735365726965734f6e65456d6f6b6f3231343031","54727962626c65735365726965734f6e65456d6f6b6f3231353130","54727962626c65735365726965734f6e65456d6f6b6f3231363130","54727962626c65735365726965734f6e65456d6f6b6f3231393033","54727962626c65735365726965734f6e65456d6f6b6f3232333039"], 
+                                [],
                                 [],
                                 [],
                                 [],
@@ -117,7 +125,8 @@ app.set('swap_pool_rules',  [
                             {"nftNamePrefix":"TrybblesSeriesOneEmoko","digitIndexStart":22,"digitLength":3,"digitRangeFirst":50,"digitRangeLast":59},
                             {"nftNamePrefix":"TrybblesSeriesOneEmoko","digitIndexStart":22,"digitLength":3,"digitRangeFirst":70,"digitRangeLast":75},
                             {"nftNamePrefix":"TrybblesSeriesOneEmoko","digitIndexStart":22,"digitLength":3,"digitRangeFirst":39,"digitRangeLast":75},
-                            {"nftNamePrefix":"TrybblesSeriesOneEmoko","digitIndexStart":22,"digitLength":3,"digitRangeFirst":30,"digitRangeLast":100}
+                            {"nftNamePrefix":"TrybblesSeriesOneEmoko","digitIndexStart":22,"digitLength":3,"digitRangeFirst":30,"digitRangeLast":100},
+                            {}
                             ]);
 
 app.set('swap_pool_address',    [
@@ -127,9 +136,10 @@ app.set('swap_pool_address',    [
                                 'addr_test1wz4uptd902qvhj9ngsam5sxtyhtmcgj9d2qw7schs2dm8lcrpjzhx',
                                 'addr_test1wp5a47skywwhwj6l3fc6suljkfr60kz49wpfktduezyud6q6sw8vw',
                                 'addr_test1wpr66ej7jgladhpp7dhy25ys49zc2602m0jddksktg3xm0gujpf6r',
-                                'addr_test1wz5c460rfg3290ff2jsfj7w4uqlhfw3d489navg0ta9h85c7nw7vc'
+                                'addr_test1wz5c460rfg3290ff2jsfj7w4uqlhfw3d489navg0ta9h85c7nw7vc',
+                                'addr_test1wzh6uc8zy5vkft644l0dxmg3eg2646qs26zke4ta7pyfajqjnwgxs'
                                 ]);
-
+*/
 app.set('nft_per_page', 20);
 
 app.set('view_dropdown_options',  [
@@ -175,10 +185,10 @@ app.set('navDiscord', '#'); // change to the full address of your Discord server
 app.set('navSupport', '#'); // change to the full address of your Support system, for example Discord server, https://discord.gg/serverid
 
 ////////////////////////////////////////////
-// KOIOS MAINNET / PREPROD SETTING - CHANGE TO YOUR DESIRED ENVIRONMENT
-//const koios_api_url = 'https://api.koios.rest/api/v1'; // mainnet
+// KOIOS NETWORK ENVIRONMENT SETTING - CHANGE TO YOUR DESIRED ENVIRONMENT
+// const koios_api_url = 'https://api.koios.rest/api/v1'; // mainnet
 const koios_api_url = 'https://preprod.koios.rest/api/v1'; // preproduction
+// const koios_api_url = 'https://preview.koios.rest/api/v1'; // preview
 app.set('koios_api_url', koios_api_url);
-
 
 module.exports = app;

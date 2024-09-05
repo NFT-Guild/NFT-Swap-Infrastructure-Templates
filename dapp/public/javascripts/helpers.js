@@ -49,7 +49,7 @@ function removeTechnicalGibberish(message) {
 }
 
 function toProperCase(msg) {
-    const words = msg.split(" ");
+    const words = msg.trim().replace(/\s+/g, ' ').split(' ');
 
     for (let i = 0; i < words.length; i++) {
         words[i] = words[i][0].toUpperCase() + words[i].substr(1);
@@ -378,6 +378,35 @@ function togglePoolFilterSelection(nftimage, nftnamehex, theme) {
     var numSelectedFromPoolLabelTop = document.getElementById('num_selected');
     numSelectedFromPoolLabelTop.innerText = `${numSelectedPoolNFTs} SELECTED`;
 
+}
+
+
+async function getAddressTxs(address) {
+    
+    // console.log('getAddressTxs');
+    var xhr = new XMLHttpRequest();
+    var koiosparams = '';
+
+    const apiquery = '/api_address_txs';
+
+    if(typeof address === 'string' || address instanceof String) {
+        koiosparams = `{"_addresses":["${address}"]}`;
+    }
+    else {
+        return {};
+    }
+
+    // console.log('koiosparams', koiosparams);
+    xhr.open('POST', apiquery, false);
+    xhr.setRequestHeader('accept', 'application/json');
+    xhr.setRequestHeader('content-type', 'application/json');
+    xhr.send(koiosparams);
+
+    if (xhr.status === 200) {
+        addressAssetsJSON = JSON.parse(xhr.response);
+        return addressAssetsJSON; 
+    }
+    return {};
 }
 
 

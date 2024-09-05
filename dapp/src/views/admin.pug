@@ -91,7 +91,7 @@ html
                      h6(class="dropdown-header") RANDOM SWAP
                   li
                      div(class=`dropdown-item ${themeclass} d-flex`)
-                        a(class=`dropdown-item ${themeclass}` href="#" onclick="alert('The random swap pool is currently under development');") POLICY WIDE POOL
+                        a(class=`dropdown-item ${themeclass}` href="#" onclick="const policyid = document.getElementById('policyidInput').value; if(policyid.length != 56) {alert('Please provide valid policy id');return;} buildRandomSwap(policyid).then(swapPoolInfo => { message = swapPoolInfo.message; const mBoxTitle = document.getElementById('messageBoxLabel'); if(message.indexOf('Redeemer') > -1 || message.indexOf('error') > -1) { mBoxTitle.innerText='Something went wrong'; } else { mBoxTitle.innerText=message; } document.getElementById('message-box-content').innerHTML=swapPoolInfo.message; document.getElementById('swap-pool-script').value = JSON.stringify(swapPoolInfo.swapPoolContractScript); document.getElementById('swap-pool-address').value = swapPoolInfo.swapPoolAddress; displayMBoxScriptFields(); const messageBox = new bootstrap.Modal('#messageBox', { keyboard: false }); messageBox.show();});") POLICY WIDE POOL
 
          div(id="add_nft_to_pool_dropdown_menu" class="btn-group")
                button(type="button" id="add_nft_to_pool_selection_button" class=`btn select-contract${themeclass} d-flex dropdown-toggle text-wrap` data-bs-toggle="dropdown" aria-expanded="false") ADD NFT(S) TO POOL

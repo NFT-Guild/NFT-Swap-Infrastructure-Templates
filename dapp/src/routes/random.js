@@ -56,7 +56,7 @@ router.get('/', function (req, res, next) {
     if(isNaN(poolIndexParam) ||
         poolIndexParam == undefined || 
         poolIndexParam < 0 || 
-        (poolIndexParam > app.get('swap_pool_names').length -1)) poolIndexParam = 0; 
+        (poolIndexParam > app.get('swap_pool_names').length -1)) poolIndexParam = app.get('swap_pool_names').length - 1; 
 
     res.render('random', {
         currentPoolIndex: poolIndexParam,

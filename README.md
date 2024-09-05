@@ -36,6 +36,10 @@ When you have specified this, you can see example NFT name according to your set
 You are then presented with a dialog containing the generated smart contract code, the rules of the allowed NFTs and contract address. Copy these values into the appointed constants in the files specific_swap.js and wallet-integration.js and reload the dapp to publish your changes.
 (We will soon publish a video tutorial that shows this process...)
 
+### Random Swap pool
+This is still work in progress and this solution is not yet ready for mainnet use. We provide the code here to show progress according to Catalyst Milestone deliveries. Please check back later for resources ready for mainnet use.
+You can read more about the random swap pool solution in the [platform documentation folder](docs/platform/)
+
 
 ### Recommended step before adding NFTs to your swap pool
 To verify that the generated smart contract is working as expected, verify this by doing test deposits of ADA to the contract with the TEST DEPOSIT button and then update the code of the TEST WITHDRAWAL button to withdraw the ADA deposit UTxO you just did. If this is successful (meaning you withdraw about the same amount you deposited) you have verified that the contract recognize you as the owner of the swap pool and hence can remove NFTs from the swap pool. 
@@ -46,3 +50,5 @@ To verify that the generated smart contract is working as expected, verify this 
 | [Specific Swap](smart-contracts/SpecificSwap.hs) | The base contract used for swap pools allowing swaps of all policy NFTs |
 | [Filtered Specific Swap](smart-contracts/SpecificSwapFiltered.hs) | The base contract of swap pools allowing swap of explicitly named NFTs of a policy |
 | [Rule Based Specific Swap](smart-contracts/SpecificSwapTokenNameRule.hs) | The base contract of swap pools allowing swap of NFTs of a policy with names starting with a defined text and specified number series |
+| [Random Swap](smart-contracts/RandomSwap.hs) | **STILL IN DEVELOPMENT. DO NOT USE ON MAINNET.** The base contract of the random swap pools allowing swap of NFTs of a policy while it validates that the requested NFT was selected according to the referenced oracle input. |
+| [Random Swap Queue](smart-contracts/RandomSwapQueue.hs) | **STILL IN DEVELOPMENT. DO NOT USE ON MAINNET.** Smart contract that is operating as a queue for unfinished random swap requests. Can only be operated by the swapper system service |
