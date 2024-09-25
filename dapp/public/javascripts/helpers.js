@@ -49,6 +49,9 @@ function removeTechnicalGibberish(message) {
 }
 
 function toProperCase(msg) {
+
+    if(msg.trim() == '') return '';
+
     const words = msg.trim().replace(/\s+/g, ' ').split(' ');
 
     for (let i = 0; i < words.length; i++) {

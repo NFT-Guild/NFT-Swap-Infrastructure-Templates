@@ -8,17 +8,17 @@
 
 module RandomSwap where
 
-import Plutus.V2.Ledger.Api      (BuiltinData, PubKeyHash, ScriptContext (scriptContextTxInfo),TokenName (unTokenName),
-                                  Validator, mkValidatorScript, CurrencySymbol, Value, adaSymbol, adaToken, singleton, OutputDatum (..), BuiltinByteString, TxInInfo (..), TxOut (..), Datum )
-import Plutus.V2.Ledger.Contexts (scriptOutputsAt, ownHash, txSignedBy, TxInInfo (txInInfoResolved), TxInfo (..))
+import Plutus.V2.Ledger.Api      (BuiltinData, PubKeyHash (..), ScriptContext (scriptContextTxInfo),TokenName (unTokenName, TokenName),
+                                  Validator, mkValidatorScript, CurrencySymbol, Value, adaSymbol, adaToken, singleton, OutputDatum (..), BuiltinByteString, TxInInfo (..), TxOut (..), Datum, unionWith, Credential (..), ValidatorHash)
+import Plutus.V2.Ledger.Contexts (scriptOutputsAt, txSignedBy, TxInInfo (txInInfoResolved), TxInfo (..), ownHash)
 import PlutusTx                  (applyCode, compile, liftCode, UnsafeFromData (unsafeFromBuiltinData), CompiledCode, ToData (toBuiltinData), unstableMakeIsData, fromBuiltinData, makeLift, makeIsDataIndexed)
-import PlutusTx.Prelude          (Bool (True, False), ($), traceIfFalse, traceError, otherwise, Integer, length, elem, (+), filter, mapMaybe, Maybe (..), lengthOfByteString, indexByteString, appendByteString, sha2_256, sliceByteString, (&&), emptyByteString, consByteString, (==), null, head, error, (-), foldr)
-import Prelude                   (IO, (<>), Show (show), toInteger)
+import PlutusTx.Prelude          (Bool (True, False), ($), traceIfFalse, traceError, otherwise, Integer, length, elem, (+), filter, mapMaybe, Maybe (..), lengthOfByteString, indexByteString, appendByteString, sliceByteString, (&&), emptyByteString, consByteString, (==), null, head, error, (/=), Monoid, foldr, mempty, mappend, (.), zero, foldl, any, (-), (*))
+import Prelude                   (IO, (<>), Show (show), not)
 import Utilities                 (writeCodeToFile, writeValidatorToFile)
-import Plutus.V1.Ledger.Value    (flattenValue, symbols)
-import Plutus.V1.Ledger.Address  (scriptHashAddress)
+import Plutus.V1.Ledger.Value    (flattenValue, symbols, valueOf)
+import Plutus.V1.Ledger.Address  (scriptHashAddress, Address(..))
 import Text.Printf               (printf)
-import PlutusTx.Builtins         (equalsInteger, greaterThanInteger, modInteger, divideInteger, subtractInteger, lessThanEqualsInteger, lessThanInteger, equalsByteString, multiplyInteger, addInteger, greaterThanEqualsInteger)
+import PlutusTx.Builtins         (equalsInteger, greaterThanInteger, modInteger, divideInteger, subtractInteger, lessThanEqualsInteger, equalsByteString, multiplyInteger, addInteger, sha2_256, greaterThanEqualsInteger)
 
 {-# OPTIONS_GHC -fno-warn-unused-imports #-}
 
@@ -76,53 +76,147 @@ mkNFTSwapValidator scriptParams _ redeemer ctx
                                                                                                                                 receivedOracle
     | action redeemer `equalsInteger` 1 =
             traceIfFalse "CLEANUP FAILED: Operation can only be performed by contract owner " performedByContractOwner
-    | action redeemer `equalsInteger` 3 =
-        let maybeDatum = findDatum ctx
-            maybeNFTName = getNFTNameFromInput
-        in if isJustCustom maybeDatum && isJustCustom maybeNFTName
-            then
-                let datumValue = fromJustCustom maybeDatum
-                    nftNameValue = fromJustCustom maybeNFTName
-                in traceIfFalse "Hash validation failed" $ calculateAndVerifyHash
-                        nftNameValue
-                        datumValue
-                        (randomString redeemer)
-                        (randomIntegerHex redeemer)
-                        (targetValue redeemer)
-                        (slot redeemer)
-                        (selectionValue redeemer)
-            else traceError "Reference input or NFT name not found"
+    | action redeemer == 10 =
+        let maybeNFTName = getNFTNameFromInput ctx
+            nftName = if isNothing maybeNFTName then error () else fromJust maybeNFTName
+            rString = randomString redeemer
+            rIntHex = randomIntegerHex redeemer
+            tValue = targetValue redeemer
+            sValue = selectionValue redeemer
+            datumValue = fromJust (findDatum ctx)
+            (_, datumBlockHash, _) = blockData datumValue
+            calculatedHash = validateAndHashSlot (slot redeemer) datumBlockHash
+        in traceIfFalse "Hash validation failed" (equalsByteString calculatedHash rString) &&
+        traceIfFalse "Target value mismatch" (equalsInteger (calculateTargetValue rIntHex) tValue) &&
+        traceIfFalse "Selection value mismatch" (equalsInteger (calculateSelectedValue nftName rIntHex) sValue)
     | otherwise = traceError "UNSUPPORTED ACTION"
 
     where
         info :: TxInfo
         info = scriptContextTxInfo ctx
 
-        {-# INLINABLE bytesToHex #-}
+        validateAndHashSlot :: Integer -> BuiltinByteString -> BuiltinByteString
+        validateAndHashSlot slt blockHash = 
+            let slotHex = integerToHex slt
+                paddedSlot = padToLength 4 slotHex
+            in sha2_256 (appendByteString paddedSlot blockHash)
+
+        hexToInt :: BuiltinByteString -> Integer
+        hexToInt bs =
+            let hexValue c
+                    | c `greaterThanEqualsInteger` 48 && c `lessThanEqualsInteger` 57 = subtractInteger c 48  -- '0' to '9'
+                    | c `greaterThanEqualsInteger` 65 && c `lessThanEqualsInteger` 70 = subtractInteger c 55  -- 'A' to 'F'
+                    | c `greaterThanEqualsInteger` 97 && c `lessThanEqualsInteger` 102 = subtractInteger c 87 -- 'a' to 'f'
+                    | otherwise = 0  -- Invalid hex character
+                go n acc
+                    | n == lengthOfByteString bs = acc
+                    | otherwise =
+                        let hexDigit = hexValue (indexByteString bs n)
+                        in go (addInteger n 1) (addInteger (multiplyInteger acc 16) hexDigit)
+            in go 0 0
+
+        -- Helper function to convert 4 bytes to Integer
+        fourBytesToInteger :: BuiltinByteString -> Integer
+        fourBytesToInteger bs =
+            let b0 = indexByteString bs 0
+                b1 = indexByteString bs 1
+                b2 = indexByteString bs 2
+                b3 = indexByteString bs 3
+            in b0 * 16777216 + b1 * 65536 + b2 * 256 + b3
+
+        padToLength :: Integer -> BuiltinByteString -> BuiltinByteString
+        padToLength len bs =
+            let currentLength = lengthOfByteString bs
+                padLength = subtractInteger len currentLength
+            in if lessThanEqualsInteger padLength 0
+            then bs
+            else appendByteString (repeatByteString padLength 0) bs
+
+        repeatByteString :: Integer -> Integer -> BuiltinByteString
+        repeatByteString n byte
+            | lessThanEqualsInteger n 0 = emptyByteString
+            | otherwise = consByteString byte (repeatByteString (subtractInteger n 1) byte)
+
+        calculateTargetValue :: BuiltinByteString -> Integer
+        calculateTargetValue rIntHex =
+            let randomInteger = fourBytesToInteger rIntHex
+            in modInteger randomInteger 65536
+
         bytesToHex :: BuiltinByteString -> BuiltinByteString
         bytesToHex bs =
-            let go n acc
-                    | equalsInteger n 0 = acc
+            let hexChars = "0123456789ABCDEF"
+                go n acc
+                    | n == lengthOfByteString bs = acc
                     | otherwise =
-                        let byte = indexByteString bs (subtractInteger n 1)
-                            highNibble = divideInteger byte 16
-                            lowNibble = modInteger byte 16
-                            hexChars = appendByteString (integerToHex highNibble) (integerToHex lowNibble)
-                        in go (subtractInteger n 1) (appendByteString hexChars acc)
-            in go (lengthOfByteString bs) emptyByteString
+                        let byte = indexByteString bs n
+                            hi = divideInteger byte 16
+                            lo = modInteger byte 16
+                            hexPair = appendByteString 
+                                (sliceByteString hi 1 hexChars) 
+                                (sliceByteString lo 1 hexChars)
+                        in go (addInteger n 1) (appendByteString acc hexPair)
+            in go 0 emptyByteString
+
+        
+        getSpentTokens :: ScriptContext -> Value
+        getSpentTokens context =
+            let ownScriptHash = ownHash context
+                txInfo = scriptContextTxInfo context
+                isOwnInput txIn = case txOutAddress (txInInfoResolved txIn) of
+                                    Address (ScriptCredential vh) _ -> vh == ownScriptHash
+                                    _ -> False
+                ownInputs = filter isOwnInput (txInfoInputs txInfo)
+                inputValue = foldl (\acc txIn -> unionWith (+) acc (txOutValue (txInInfoResolved txIn))) zero ownInputs
+                outputValue = foldl (\acc txOut -> unionWith (+) acc (txOutValue txOut)) zero (filter (\txOut -> txOutAddress txOut == Address (ScriptCredential ownScriptHash) Nothing) (txInfoOutputs txInfo))
+                spentValue = subtractValue inputValue outputValue
+            in filterValue (\cs tn -> not (isValueSentToContract cs tn txInfo ownScriptHash)) spentValue
+
+        getNFTNameFromInput :: ScriptContext -> Maybe TokenName
+        getNFTNameFromInput context =
+            let spentTokens = getSpentTokens context
+                nonAdaTokens = filterValue (\cs _ -> cs /= adaSymbol) spentTokens
+            in case flattenValue nonAdaTokens of
+                [] -> Nothing
+                ((cs, tn, amt):_) -> if amt `greaterThanInteger` 0 && isNFTFromContract cs tn context then Just tn else Nothing
+
+        isNFTFromContract :: CurrencySymbol -> TokenName -> ScriptContext -> Bool
+        isNFTFromContract cs tn context =
+            let ownScriptHash = ownHash context
+                txInfo = scriptContextTxInfo context
+                isOwnInput txIn = case txOutAddress (txInInfoResolved txIn) of
+                                    Address (ScriptCredential vh) _ -> vh == ownScriptHash
+                                    _ -> False
+                ownInputs = filter isOwnInput (txInfoInputs txInfo)
+            in any (\txIn -> valueOf (txOutValue (txInInfoResolved txIn)) cs tn `greaterThanInteger` 0) ownInputs
+
+        isValueSentToContract :: CurrencySymbol -> TokenName -> TxInfo -> ValidatorHash -> Bool
+        isValueSentToContract cs tn txInfo ownScriptHash =
+            let nonScriptInputs = filter (\txIn -> case txOutAddress (txInInfoResolved txIn) of
+                                                    Address (ScriptCredential vh) _ -> vh /= ownScriptHash
+                                                    _ -> True) (txInfoInputs txInfo)
+            in any (\txIn -> valueOf (txOutValue (txInInfoResolved txIn)) cs tn `greaterThanInteger` 0) nonScriptInputs
+
+        -- Helper function to subtract Values
+        subtractValue :: Value -> Value -> Value
+        subtractValue v1 v2 = unionWith (-) v1 v2
+
+        -- Helper function to filter Value
+        filterValue :: (CurrencySymbol -> TokenName -> Bool) -> Value -> Value
+        filterValue f v = 
+            foldMap (\(cs, tn, amt) -> if f cs tn then singleton cs tn amt else zero) (flattenValue v)
+
+        -- Helper function for foldMap if not available
+        foldMap :: (Monoid m) => (a -> m) -> [a] -> m
+        foldMap f = foldr (mappend . f) mempty
 
         isNothing :: Maybe a -> Bool
         isNothing Nothing = True
         isNothing _ = False
 
-        isJustCustom :: Maybe a -> Bool
-        isJustCustom (Just _) = True
-        isJustCustom Nothing = False
-
-        fromJustCustom :: Maybe a -> a
-        fromJustCustom (Just x) = x
-        fromJustCustom Nothing = error ()
-
+        fromJust :: Maybe a -> a
+        fromJust (Just x) = x
+        fromJust Nothing = traceError "fromJust: Nothing"
+    
         findDatum :: ScriptContext -> Maybe RandomnessOracleDatum
         findDatum context =
             let referenceInputs = txInfoReferenceInputs $ scriptContextTxInfo context
@@ -145,114 +239,24 @@ mkNFTSwapValidator scriptParams _ redeemer ctx
             getOutputDatum (OutputDatum d) = d
             getOutputDatum _ = error ()
 
-        getFirstTokenName :: Value -> Maybe TokenName
-        getFirstTokenName value =
-            let flattened = flattenValue value
-            in if null flattened
-                then Nothing
-                else Just $ (\(_, tokenName, _) -> tokenName) (head flattened)
-
-        getNFTNameFromInput :: Maybe TokenName
-        getNFTNameFromInput = getFirstTokenName tokensRequested
-
-        {-# INLINABLE calculateAndVerifyHash #-}
-        calculateAndVerifyHash :: TokenName -> RandomnessOracleDatum -> BuiltinByteString -> BuiltinByteString -> Integer -> Integer -> Integer -> Bool
-        calculateAndVerifyHash nftName dat rString rIntHex tValue slt sValue =
-            let (_, datumBlockHash, _) = blockData dat
-                paddedSlot = padToLength 8 (integerToHex slt)
-                combinedHex = appendByteString paddedSlot datumBlockHash
-                combinedBytes = hexStringToBuiltinByteString combinedHex
-                calculatedHash = sha2_256 combinedBytes
-                randomInteger = byteStringToInteger (sliceByteString 0 8 calculatedHash)
-                calculatedTargetValue = (randomInteger `divideInteger` 65536) `modInteger` 65536
-                calculatedSelectedValue = calculateSelectedValue (unTokenName nftName) randomInteger
-            in  calculatedHash `equalsByteString` rString &&
-                sliceByteString 0 8 calculatedHash `equalsByteString` rIntHex &&
-                tValue `equalsInteger` calculatedTargetValue &&
-                sValue `equalsInteger` calculatedSelectedValue
-
-        {-# INLINABLE calculateSelectedValue #-}
-        calculateSelectedValue :: BuiltinByteString -> Integer -> Integer
-        calculateSelectedValue nftName randomInteger =
-            let nameLength = lengthOfByteString nftName
-                position1 = subtractInteger (subtractInteger nameLength 1) (modInteger randomInteger 8)
-                position2 = subtractInteger (subtractInteger nameLength 1) (modInteger (divideInteger randomInteger 256) 8)
-                byte1 = indexByteString nftName position1
-                byte2 = indexByteString nftName position2
+        calculateSelectedValue :: TokenName -> BuiltinByteString -> Integer
+        calculateSelectedValue nftName rIntHex =
+            let hexName = bytesToHex (unTokenName nftName)
+                hexLength = lengthOfByteString hexName
+                randomInteger = fourBytesToInteger (sliceByteString 0 4 rIntHex)
+                position1 = subtractInteger (subtractInteger hexLength 1) (modInteger randomInteger 8)
+                position2 = subtractInteger (subtractInteger hexLength 1) (modInteger (divideInteger randomInteger 256) 8)
+                byte1 = hexToInt (sliceByteString position1 2 hexName)
+                byte2 = hexToInt (sliceByteString position2 2 hexName)
             in addInteger (multiplyInteger byte1 256) byte2
 
         {-# INLINABLE integerToHex #-}
         integerToHex :: Integer -> BuiltinByteString
-        integerToHex n = 
+        integerToHex n =
             let go m acc
-                    | m == 0 = acc
-                    | otherwise = go (m `divideInteger` 256) (consByteString (m `modInteger` 256) acc)
+                    | equalsInteger m 0 = acc
+                    | otherwise = go (divideInteger m 256) (consByteString (modInteger m 256) acc)
             in go n emptyByteString
-
-        {-# INLINABLE intToHexChar #-}
-        intToHexChar :: Integer -> Integer
-        intToHexChar n
-            | lessThanInteger n 10 = addInteger n 48  -- '0' to '9'
-            | otherwise = addInteger n 87  -- 'a' to 'f'
-
-        byteStringToInteger :: BuiltinByteString -> Integer
-        byteStringToInteger bs =
-            let go n acc
-                    | equalsInteger n 0 = acc
-                    | otherwise = go (subtractInteger n 1) (addInteger (multiplyInteger acc 256) (indexByteString bs (subtractInteger n 1)))
-            in go (lengthOfByteString bs) 0
-
-        {-# INLINABLE padToLength #-}
-        padToLength :: Integer -> BuiltinByteString -> BuiltinByteString
-        padToLength len bs =
-            let currentLength = lengthOfByteString bs
-                padLength = subtractInteger len currentLength
-            in if lessThanEqualsInteger padLength 0
-            then bs
-            else appendByteString (repeatByteString padLength 48) bs  -- '0' is 48 in ASCII
-
-        {-# INLINABLE hexStringToBuiltinByteString #-}
-        hexStringToBuiltinByteString :: BuiltinByteString -> BuiltinByteString
-        hexStringToBuiltinByteString hexStr =
-            let len = lengthOfByteString hexStr
-                isOdd = modInteger len 2 == 1
-                paddedHexStr = if isOdd then appendByteString hexStr "0" else hexStr
-                go n acc
-                    | equalsInteger n 0 = acc
-                    | otherwise = 
-                        let index1 = subtractInteger (multiplyInteger n 2) 2
-                            index2 = subtractInteger (multiplyInteger n 2) 1
-                            char1 = indexByteString paddedHexStr index1
-                            char2 = indexByteString paddedHexStr index2
-                            byte = hexPairToInteger char1 char2
-                            newAcc = consByteString byte acc
-                        in go (subtractInteger n 1) newAcc
-            in go (divideInteger (lengthOfByteString paddedHexStr) 2) emptyByteString
-
-        {-# INLINABLE andBool #-}
-        andBool :: Bool -> BuiltinByteString -> BuiltinByteString
-        andBool b bs = if b then bs else bs
-
-        {-# INLINABLE hexPairToInteger #-}
-        hexPairToInteger :: Integer -> Integer -> Integer
-        hexPairToInteger a b = 
-            let valueA = hexCharToInteger a
-                valueB = hexCharToInteger b
-            in addInteger (multiplyInteger valueA 16) valueB
-
-        {-# INLINABLE hexCharToInteger #-}
-        hexCharToInteger :: Integer -> Integer
-        hexCharToInteger c
-            | greaterThanEqualsInteger c 48 && lessThanEqualsInteger c 57  = subtractInteger c 48       -- '0' to '9'
-            | greaterThanEqualsInteger c 97 && lessThanEqualsInteger c 102 = addInteger (subtractInteger c 97) 10  -- 'a' to 'f'
-            | greaterThanEqualsInteger c 65 && lessThanEqualsInteger c 70  = addInteger (subtractInteger c 65) 10  -- 'A' to 'F'
-            | otherwise           = 0            -- Default to 0 for invalid characters
-
-        {-# INLINABLE repeatByteString #-}
-        repeatByteString :: Integer -> Integer -> BuiltinByteString
-        repeatByteString n byte
-            | lessThanEqualsInteger n 0 = emptyByteString
-            | otherwise = consByteString byte (repeatByteString (subtractInteger n 1) byte)
 
         -- check if the transaction has reference inputs
         hasReferenceInputs :: Bool
@@ -312,6 +316,7 @@ mkNFTSwapValidator scriptParams _ redeemer ctx
         removeCurrencySymbolsFromList csToRemove (c : cs) = if c `elem` csToRemove
                                                             then removeCurrencySymbolsFromList csToRemove cs
                                                             else c : removeCurrencySymbolsFromList csToRemove cs
+
 
 {-# INLINABLE mkWrappedNFTSwapValidator #-}
 mkWrappedNFTSwapValidator :: BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> ()

@@ -69,7 +69,6 @@ app.set('swap_pool_theme', 'light-mode')
 
 ////////////////////////////////////////////
 // SWAP POOL SETTINGS
-
 app.set('swap_pool_names', ['COLLECTION NAME 1', 'COLLECTION NAME 2', 'COLLECTION NAME 3']);
 
 app.set('swap_pool_policy_id', ['COLLECTION POLICY ID 1','COLLECTION POLICY ID 2', 'COLLECTION POLICY ID 3']);
@@ -137,7 +136,7 @@ app.set('swap_pool_address',    [
                                 'addr_test1wp5a47skywwhwj6l3fc6suljkfr60kz49wpfktduezyud6q6sw8vw',
                                 'addr_test1wpr66ej7jgladhpp7dhy25ys49zc2602m0jddksktg3xm0gujpf6r',
                                 'addr_test1wz5c460rfg3290ff2jsfj7w4uqlhfw3d489navg0ta9h85c7nw7vc',
-                                'addr_test1wzh6uc8zy5vkft644l0dxmg3eg2646qs26zke4ta7pyfajqjnwgxs'
+                                'addr_test1wr0m6zfqvqgrcvh8lfhqdnukzn0x7y6udmu4vprg0flzyvg2rzzfl'
                                 ]);
 */
 app.set('nft_per_page', 20);

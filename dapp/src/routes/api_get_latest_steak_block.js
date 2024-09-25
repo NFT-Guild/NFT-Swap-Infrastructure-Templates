@@ -12,6 +12,7 @@ router.post('/', function (req, res, next) {
     const koiosquery = `${koios_api_url}/address_txs`;
     const koiosparams = `{"_addresses":${JSON.stringify(addresses)}}`;
     
+    // ask koios for all transactions performed by the randomness orcle address
     var xhrTxs = new XMLHttpRequest();
     xhrTxs.onload = function () {
 
@@ -20,21 +21,22 @@ router.post('/', function (req, res, next) {
             const txs = JSON.parse(xhrTxs.responseText);
 
             const tx_hashes = [];
-            // extract tx hashes
-            console.log('number of transactions in STEAK contract', txs.length);
+            
+            // extract the hashes of the last 10 transactions
             for(var i = 0; i < txs.length && i < 10; i++) {
-            // for(var i = txs.length - 100; i > 0 && i > txs.length - 200; i--) {
                 tx_hashes.push(txs[i].tx_hash);
             }
-            console.log('tx_hashes', tx_hashes);
+            
             const koiosquery = `${koios_api_url}/tx_info`;
             const koiosparams = `{"_tx_hashes":${JSON.stringify(tx_hashes)}, "_metadata":true, "_scripts":true,"_inputs":true}`;
             
+            // ask koios for extended information about the 10 latest transactions of the randomness oracle address
             var xhrTxInfo = new XMLHttpRequest();
             xhrTxInfo.onload = function () {
 
                 if (xhrTxInfo.status === 200) {
 
+                    // loop through transactions until the first (latest) randomness block is found
                     const txInfos = JSON.parse(xhrTxInfo.responseText);
                     for(var i = txInfos.length - 1; i >= 0; i--) {
                         if(txInfos[i].metadata == null) continue;
@@ -43,6 +45,7 @@ router.post('/', function (req, res, next) {
                         if(txInfos[i].metadata[674].msg[0] == null) continue;
                         if(txInfos[i].metadata[674].msg[0] != 'Mine Block') continue;
                         
+                        // break out of loop and return the randomness block
                         res.json(txInfos[i]);
                         break;
                     }
