@@ -8,9 +8,9 @@
 
 module RandomSwap where
 
-import Plutus.V2.Ledger.Api      (BuiltinData, PubKeyHash (..), ScriptContext (scriptContextTxInfo),TokenName (unTokenName, TokenName),
+import Plutus.V2.Ledger.Api      (BuiltinData, PubKeyHash (..), ScriptContext (scriptContextTxInfo), TokenName,
                                   Validator, mkValidatorScript, CurrencySymbol, Value, adaSymbol, adaToken, singleton, OutputDatum (..), BuiltinByteString, TxInInfo (..), TxOut (..), Datum, unionWith, Credential (..), ValidatorHash)
-import Plutus.V2.Ledger.Contexts (scriptOutputsAt, txSignedBy, TxInInfo (txInInfoResolved), TxInfo (..), ownHash)
+import Plutus.V2.Ledger.Contexts (scriptOutputsAt, txSignedBy, TxInfo (..), ownHash)
 import PlutusTx                  (applyCode, compile, liftCode, UnsafeFromData (unsafeFromBuiltinData), CompiledCode, ToData (toBuiltinData), unstableMakeIsData, fromBuiltinData, makeLift, makeIsDataIndexed)
 import PlutusTx.Prelude          (Bool (True, False), ($), traceIfFalse, traceError, otherwise, Integer, length, elem, (+), filter, mapMaybe, Maybe (..), lengthOfByteString, indexByteString, appendByteString, sliceByteString, (&&), emptyByteString, consByteString, (==), null, head, error, (/=), Monoid, foldr, mempty, mappend, (.), zero, foldl, any, (-), (*))
 import Prelude                   (IO, (<>), Show (show), not)
@@ -18,25 +18,33 @@ import Utilities                 (writeCodeToFile, writeValidatorToFile)
 import Plutus.V1.Ledger.Value    (flattenValue, symbols, valueOf)
 import Plutus.V1.Ledger.Address  (scriptHashAddress, Address(..))
 import Text.Printf               (printf)
-import PlutusTx.Builtins         (equalsInteger, greaterThanInteger, modInteger, divideInteger, subtractInteger, lessThanEqualsInteger, equalsByteString, multiplyInteger, addInteger, sha2_256, greaterThanEqualsInteger)
+import PlutusTx.Builtins         (equalsInteger, greaterThanInteger, modInteger, divideInteger, subtractInteger, lessThanEqualsInteger, equalsByteString, addInteger, sha2_256)
+
 
 {-# OPTIONS_GHC -fno-warn-unused-imports #-}
 
----------------------------------------------------------------------------------------------------
------------------------------------ ON-CHAIN / VALIDATOR ------------------------------------------
+{- Main Contract Types 
+   This contract implements a random NFT swap mechanism with external randomness source.
+   It supports NFT exchanges based on randomized selection and cleanup operations.
+-}
 
--- Contract parameter object to save state about the contract owner and desired policy
+-- ContractParam: Configuration parameters for the swap contract
+-- Contains the contract owner's public key hash, the policy ID for acceptable NFTs,
+-- and an authorized transaction signer for additional security
 data ContractParam = ContractParam
-    { contractOwner   :: !PubKeyHash
-    , desiredPolicyID :: !CurrencySymbol
-    , authorizedTxSigner :: !PubKeyHash
+    { contractOwner   :: !Plutus.V2.Ledger.Api.PubKeyHash
+    , desiredPolicyID :: !Plutus.V2.Ledger.Api.CurrencySymbol
+    , authorizedTxSigner :: !Plutus.V2.Ledger.Api.PubKeyHash
     }
 PlutusTx.makeLift ''ContractParam
 PlutusTx.unstableMakeIsData ''ContractParam
 
+-- RandomnessRedeemer: Parameters used for validating random NFT selection
+-- Contains random source verification data, target values for selection,
+-- position calculations for byte selection from NFT names, and action identifier
 data RandomnessRedeemer = RandomnessRedeemer
-    { randomString :: !BuiltinByteString
-    , randomIntegerHex :: !BuiltinByteString
+    { randomString :: !Plutus.V2.Ledger.Api.BuiltinByteString
+    , randomIntegerHex :: !Plutus.V2.Ledger.Api.BuiltinByteString
     , targetValue :: !Integer
     , slot :: !Integer
     , pos1 :: !Integer
@@ -45,78 +53,87 @@ data RandomnessRedeemer = RandomnessRedeemer
     , diff :: !Integer
     , action :: !Integer
     }
+PlutusTx.makeIsDataIndexed ''RandomnessRedeemer [('RandomnessRedeemer, 0)]
 PlutusTx.makeLift ''RandomnessRedeemer
-PlutusTx.unstableMakeIsData ''RandomnessRedeemer
 
+-- RandomnessOracleDatum: Structure for external randomness source data
+-- Contains block-related data used for randomness verification
 data RandomnessOracleDatum = RandomnessOracleDatum
-    { field1 :: BuiltinData
-    , field2 :: BuiltinData
-    , blockData ::  (Integer, BuiltinByteString, Integer)
-    , field4 :: BuiltinData
-    , field5 :: BuiltinData
-    , field6 :: BuiltinData
+    { field1 :: Plutus.V2.Ledger.Api.BuiltinData
+    , field2 :: Plutus.V2.Ledger.Api.BuiltinData
+    , blockData ::  (Integer, Plutus.V2.Ledger.Api.BuiltinByteString, Integer)
+    , field4 :: Plutus.V2.Ledger.Api.BuiltinData
+    , field5 :: Plutus.V2.Ledger.Api.BuiltinData
+    , field6 :: Plutus.V2.Ledger.Api.BuiltinData
     }
 PlutusTx.makeLift ''RandomnessOracleDatum
 PlutusTx.makeIsDataIndexed ''RandomnessOracleDatum [('RandomnessOracleDatum, 0)]
 
+{- Main Validator Logic 
+   The validator supports two actions:
+   Action 0: Random NFT swap - validates both NFT exchange and randomness
+   Action 1: Cleanup operation - restricted to contract owner
+-}
 {-# INLINABLE mkNFTSwapValidator #-}
 --                    Parameter to script      Datum     Redeemer                ScriptContext    Result
-mkNFTSwapValidator :: ContractParam         -> ()     -> RandomnessRedeemer   -> ScriptContext -> Bool
+mkNFTSwapValidator :: ContractParam         -> ()     -> RandomnessRedeemer   -> Plutus.V2.Ledger.Api.ScriptContext -> Bool
 mkNFTSwapValidator scriptParams _ redeemer ctx 
-    | action redeemer `equalsInteger` 0   =
-            let numRequested              = numDesiredTokensRequested
-                numReceived               = numDesiredTokensReceived
-                receivedOracle            = traceIfFalse "Did not receive oracle" hasReferenceInputs
-                requestedAndReceivedEqual = traceIfFalse "Number of tokens requested not equal to number of tokens received" $ numRequested `equalsInteger` numReceived
-                atLeastOneTokenSwapped    = traceIfFalse "At least one token is required for swap operation to be performed" $ numReceived `greaterThanInteger` 0
-                noUnlistedTokensWithdrawn = traceIfFalse "Unlisted tokens can only be withdrawn by the contract owner"       $ numUnlistedTokensRequested `equalsInteger` 0
-            in                              traceIfFalse "SWAP FAILED"                                                       $ requestedAndReceivedEqual &&
-                                                                                                                                atLeastOneTokenSwapped &&
-                                                                                                                                noUnlistedTokensWithdrawn &&
-                                                                                                                                receivedOracle
-    | action redeemer `equalsInteger` 1 =
-            traceIfFalse "CLEANUP FAILED: Operation can only be performed by contract owner " performedByContractOwner
-    | action redeemer == 10 =
-        let maybeNFTName = getNFTNameFromInput ctx
-            nftName = if isNothing maybeNFTName then error () else fromJust maybeNFTName
-            rString = randomString redeemer
-            rIntHex = randomIntegerHex redeemer
-            tValue = targetValue redeemer
-            sValue = selectionValue redeemer
-            datumValue = fromJust (findDatum ctx)
+    | action redeemer == 0 =
+        let datumValue = fromJust (findDatum ctx)
             (_, datumBlockHash, _) = blockData datumValue
             calculatedHash = validateAndHashSlot (slot redeemer) datumBlockHash
-        in traceIfFalse "Hash validation failed" (equalsByteString calculatedHash rString) &&
-        traceIfFalse "Target value mismatch" (equalsInteger (calculateTargetValue rIntHex) tValue) &&
-        traceIfFalse "Selection value mismatch" (equalsInteger (calculateSelectedValue nftName rIntHex) sValue)
+            _ = case getNFTNameFromInput ctx of
+                Nothing -> error ()
+                Just name -> name
+            actualDiff = if greaterThanInteger (selectionValue redeemer) (targetValue redeemer)
+                        then subtractInteger (selectionValue redeemer) (targetValue redeemer)
+                        else subtractInteger (targetValue redeemer) (selectionValue redeemer)
+            expectedTarget = modInteger (fourBytesToInteger (randomIntegerHex redeemer)) 65536
+            -- NFT exchange validations
+            numRequested = numDesiredTokensRequested
+            numReceived = numDesiredTokensReceived
+        in  
+            -- First validate NFT exchange
+            traceIfFalse "Number of tokens requested not equal to number of tokens received" 
+                (equalsInteger numRequested numReceived) &&
+            traceIfFalse "Exactly one token must be swapped" 
+                (equalsInteger numReceived 1) &&
+            traceIfFalse "Unlisted tokens can only be withdrawn by the contract owner" 
+                (equalsInteger numUnlistedTokensRequested 0) &&
+            -- Then validate randomness selection
+            traceIfFalse "Hash validation failed" 
+                (equalsByteString calculatedHash (randomString redeemer)) &&
+            traceIfFalse "Random integer hex doesn't match random string" 
+                (equalsByteString 
+                    (sliceByteString 0 4 (randomString redeemer)) 
+                    (randomIntegerHex redeemer)
+                ) &&
+            traceIfFalse "Target value not correctly derived from random hex"
+                (equalsInteger expectedTarget (targetValue redeemer)) &&
+            traceIfFalse "Difference calculation incorrect" 
+                (equalsInteger actualDiff (diff redeemer))
+    | action redeemer `equalsInteger` 1 =
+            traceIfFalse "CLEANUP FAILED: Operation can only be performed by contract owner " performedByContractOwner
     | otherwise = traceError "UNSUPPORTED ACTION"
 
     where
         info :: TxInfo
-        info = scriptContextTxInfo ctx
+        info = Plutus.V2.Ledger.Api.scriptContextTxInfo ctx
 
-        validateAndHashSlot :: Integer -> BuiltinByteString -> BuiltinByteString
+        -- validateAndHashSlot: Creates a hash from slot number and block hash
+        -- Used to verify the randomness source validity
+        validateAndHashSlot :: Integer -> Plutus.V2.Ledger.Api.BuiltinByteString -> Plutus.V2.Ledger.Api.BuiltinByteString
         validateAndHashSlot slt blockHash = 
             let slotHex = integerToHex slt
-                paddedSlot = padToLength 4 slotHex
+                padLen = subtractInteger 4 (lengthOfByteString slotHex)
+                paddedSlot = if lessThanEqualsInteger padLen 0
+                    then slotHex
+                    else appendByteString (repeatByteString padLen 0) slotHex
             in sha2_256 (appendByteString paddedSlot blockHash)
 
-        hexToInt :: BuiltinByteString -> Integer
-        hexToInt bs =
-            let hexValue c
-                    | c `greaterThanEqualsInteger` 48 && c `lessThanEqualsInteger` 57 = subtractInteger c 48  -- '0' to '9'
-                    | c `greaterThanEqualsInteger` 65 && c `lessThanEqualsInteger` 70 = subtractInteger c 55  -- 'A' to 'F'
-                    | c `greaterThanEqualsInteger` 97 && c `lessThanEqualsInteger` 102 = subtractInteger c 87 -- 'a' to 'f'
-                    | otherwise = 0  -- Invalid hex character
-                go n acc
-                    | n == lengthOfByteString bs = acc
-                    | otherwise =
-                        let hexDigit = hexValue (indexByteString bs n)
-                        in go (addInteger n 1) (addInteger (multiplyInteger acc 16) hexDigit)
-            in go 0 0
-
-        -- Helper function to convert 4 bytes to Integer
-        fourBytesToInteger :: BuiltinByteString -> Integer
+        -- fourBytesToInteger: Converts 4 bytes into a single integer value
+        -- Used in random number generation and verification
+        fourBytesToInteger :: Plutus.V2.Ledger.Api.BuiltinByteString -> Integer
         fourBytesToInteger bs =
             let b0 = indexByteString bs 0
                 b1 = indexByteString bs 1
@@ -124,221 +141,234 @@ mkNFTSwapValidator scriptParams _ redeemer ctx
                 b3 = indexByteString bs 3
             in b0 * 16777216 + b1 * 65536 + b2 * 256 + b3
 
-        padToLength :: Integer -> BuiltinByteString -> BuiltinByteString
-        padToLength len bs =
-            let currentLength = lengthOfByteString bs
-                padLength = subtractInteger len currentLength
-            in if lessThanEqualsInteger padLength 0
-            then bs
-            else appendByteString (repeatByteString padLength 0) bs
-
-        repeatByteString :: Integer -> Integer -> BuiltinByteString
+        repeatByteString :: Integer -> Integer -> Plutus.V2.Ledger.Api.BuiltinByteString
         repeatByteString n byte
             | lessThanEqualsInteger n 0 = emptyByteString
             | otherwise = consByteString byte (repeatByteString (subtractInteger n 1) byte)
 
-        calculateTargetValue :: BuiltinByteString -> Integer
-        calculateTargetValue rIntHex =
-            let randomInteger = fourBytesToInteger rIntHex
-            in modInteger randomInteger 65536
-
-        bytesToHex :: BuiltinByteString -> BuiltinByteString
-        bytesToHex bs =
-            let hexChars = "0123456789ABCDEF"
-                go n acc
-                    | n == lengthOfByteString bs = acc
-                    | otherwise =
-                        let byte = indexByteString bs n
-                            hi = divideInteger byte 16
-                            lo = modInteger byte 16
-                            hexPair = appendByteString 
-                                (sliceByteString hi 1 hexChars) 
-                                (sliceByteString lo 1 hexChars)
-                        in go (addInteger n 1) (appendByteString acc hexPair)
-            in go 0 emptyByteString
-
-        
-        getSpentTokens :: ScriptContext -> Value
+        -- getSpentTokens: Tracks tokens being spent from the script
+        -- Filters for relevant token movements from script UTXOs
+        getSpentTokens :: Plutus.V2.Ledger.Api.ScriptContext -> Plutus.V2.Ledger.Api.Value
         getSpentTokens context =
             let ownScriptHash = ownHash context
-                txInfo = scriptContextTxInfo context
-                isOwnInput txIn = case txOutAddress (txInInfoResolved txIn) of
-                                    Address (ScriptCredential vh) _ -> vh == ownScriptHash
+                txInfo = Plutus.V2.Ledger.Api.scriptContextTxInfo context
+                isOwnInput txIn = case Plutus.V2.Ledger.Api.txOutAddress (Plutus.V2.Ledger.Api.txInInfoResolved txIn) of
+                                    Address (Plutus.V2.Ledger.Api.ScriptCredential vh) _ -> vh == ownScriptHash
                                     _ -> False
                 ownInputs = filter isOwnInput (txInfoInputs txInfo)
-                inputValue = foldl (\acc txIn -> unionWith (+) acc (txOutValue (txInInfoResolved txIn))) zero ownInputs
-                outputValue = foldl (\acc txOut -> unionWith (+) acc (txOutValue txOut)) zero (filter (\txOut -> txOutAddress txOut == Address (ScriptCredential ownScriptHash) Nothing) (txInfoOutputs txInfo))
+                inputValue = foldl (\acc txIn -> Plutus.V2.Ledger.Api.unionWith (+) acc (Plutus.V2.Ledger.Api.txOutValue (Plutus.V2.Ledger.Api.txInInfoResolved txIn))) zero ownInputs
+                outputValue = foldl (\acc txOut -> Plutus.V2.Ledger.Api.unionWith (+) acc (Plutus.V2.Ledger.Api.txOutValue txOut)) zero (filter (\txOut -> Plutus.V2.Ledger.Api.txOutAddress txOut == Address (Plutus.V2.Ledger.Api.ScriptCredential ownScriptHash) Nothing) (txInfoOutputs txInfo))
                 spentValue = subtractValue inputValue outputValue
             in filterValue (\cs tn -> not (isValueSentToContract cs tn txInfo ownScriptHash)) spentValue
 
-        getNFTNameFromInput :: ScriptContext -> Maybe TokenName
+        getNFTNameFromInput :: Plutus.V2.Ledger.Api.ScriptContext -> Maybe Plutus.V2.Ledger.Api.TokenName
         getNFTNameFromInput context =
             let spentTokens = getSpentTokens context
-                nonAdaTokens = filterValue (\cs _ -> cs /= adaSymbol) spentTokens
+                nonAdaTokens = filterValue (\cs _ -> cs /= Plutus.V2.Ledger.Api.adaSymbol) spentTokens
             in case flattenValue nonAdaTokens of
                 [] -> Nothing
                 ((cs, tn, amt):_) -> if amt `greaterThanInteger` 0 && isNFTFromContract cs tn context then Just tn else Nothing
 
-        isNFTFromContract :: CurrencySymbol -> TokenName -> ScriptContext -> Bool
+        -- isNFTFromContract: Verifies NFT ownership by the contract
+        -- Ensures only valid NFTs can be swapped
+        isNFTFromContract :: Plutus.V2.Ledger.Api.CurrencySymbol -> Plutus.V2.Ledger.Api.TokenName -> Plutus.V2.Ledger.Api.ScriptContext -> Bool
         isNFTFromContract cs tn context =
             let ownScriptHash = ownHash context
-                txInfo = scriptContextTxInfo context
-                isOwnInput txIn = case txOutAddress (txInInfoResolved txIn) of
-                                    Address (ScriptCredential vh) _ -> vh == ownScriptHash
+                txInfo = Plutus.V2.Ledger.Api.scriptContextTxInfo context
+                isOwnInput txIn = case Plutus.V2.Ledger.Api.txOutAddress (Plutus.V2.Ledger.Api.txInInfoResolved txIn) of
+                                    Address (Plutus.V2.Ledger.Api.ScriptCredential vh) _ -> vh == ownScriptHash
                                     _ -> False
                 ownInputs = filter isOwnInput (txInfoInputs txInfo)
-            in any (\txIn -> valueOf (txOutValue (txInInfoResolved txIn)) cs tn `greaterThanInteger` 0) ownInputs
+            in any (\txIn -> valueOf (Plutus.V2.Ledger.Api.txOutValue (Plutus.V2.Ledger.Api.txInInfoResolved txIn)) cs tn `greaterThanInteger` 0) ownInputs
 
-        isValueSentToContract :: CurrencySymbol -> TokenName -> TxInfo -> ValidatorHash -> Bool
+        -- isValueSentToContract: Tracks token movements to the contract
+        -- Part of the token movement validation system
+        isValueSentToContract :: Plutus.V2.Ledger.Api.CurrencySymbol -> Plutus.V2.Ledger.Api.TokenName -> TxInfo -> Plutus.V2.Ledger.Api.ValidatorHash -> Bool
         isValueSentToContract cs tn txInfo ownScriptHash =
-            let nonScriptInputs = filter (\txIn -> case txOutAddress (txInInfoResolved txIn) of
-                                                    Address (ScriptCredential vh) _ -> vh /= ownScriptHash
+            let nonScriptInputs = filter (\txIn -> case Plutus.V2.Ledger.Api.txOutAddress (Plutus.V2.Ledger.Api.txInInfoResolved txIn) of
+                                                    Address (Plutus.V2.Ledger.Api.ScriptCredential vh) _ -> vh /= ownScriptHash
                                                     _ -> True) (txInfoInputs txInfo)
-            in any (\txIn -> valueOf (txOutValue (txInInfoResolved txIn)) cs tn `greaterThanInteger` 0) nonScriptInputs
+            in any (\txIn -> valueOf (Plutus.V2.Ledger.Api.txOutValue (Plutus.V2.Ledger.Api.txInInfoResolved txIn)) cs tn `greaterThanInteger` 0) nonScriptInputs
 
         -- Helper function to subtract Values
-        subtractValue :: Value -> Value -> Value
-        subtractValue v1 v2 = unionWith (-) v1 v2
+        subtractValue :: Plutus.V2.Ledger.Api.Value -> Plutus.V2.Ledger.Api.Value -> Plutus.V2.Ledger.Api.Value
+        subtractValue v1 v2 = Plutus.V2.Ledger.Api.unionWith (-) v1 v2
 
         -- Helper function to filter Value
-        filterValue :: (CurrencySymbol -> TokenName -> Bool) -> Value -> Value
+        filterValue :: (Plutus.V2.Ledger.Api.CurrencySymbol -> Plutus.V2.Ledger.Api.TokenName -> Bool) -> Plutus.V2.Ledger.Api.Value -> Plutus.V2.Ledger.Api.Value
         filterValue f v = 
-            foldMap (\(cs, tn, amt) -> if f cs tn then singleton cs tn amt else zero) (flattenValue v)
+            foldMap (\(cs, tn, amt) -> if f cs tn then Plutus.V2.Ledger.Api.singleton cs tn amt else zero) (flattenValue v)
 
         -- Helper function for foldMap if not available
         foldMap :: (Monoid m) => (a -> m) -> [a] -> m
         foldMap f = foldr (mappend . f) mempty
 
-        isNothing :: Maybe a -> Bool
-        isNothing Nothing = True
-        isNothing _ = False
-
         fromJust :: Maybe a -> a
         fromJust (Just x) = x
         fromJust Nothing = traceError "fromJust: Nothing"
     
-        findDatum :: ScriptContext -> Maybe RandomnessOracleDatum
+        -- findDatum: Extracts and deserializes the reference input datum
+        -- Used to access randomness oracle data for validation
+        findDatum :: Plutus.V2.Ledger.Api.ScriptContext -> Maybe RandomnessOracleDatum
         findDatum context =
-            let referenceInputs = txInfoReferenceInputs $ scriptContextTxInfo context
+            let referenceInputs = txInfoReferenceInputs $ Plutus.V2.Ledger.Api.scriptContextTxInfo context
                 datums = mapMaybe getTxOutDatum referenceInputs
             in if null datums
                 then Nothing
                 else PlutusTx.fromBuiltinData (PlutusTx.toBuiltinData (head datums))
          where
-            getTxOutDatum :: TxInInfo -> Maybe Datum
-            getTxOutDatum (TxInInfo _ txOut) =
-                if isOutputDatum (txOutDatum txOut)
-                then Just (getOutputDatum (txOutDatum txOut))
+            -- getTxOutDatum: Extracts datum from transaction output
+            -- Helper function for datum extraction
+            getTxOutDatum :: Plutus.V2.Ledger.Api.TxInInfo -> Maybe Plutus.V2.Ledger.Api.Datum
+            getTxOutDatum (Plutus.V2.Ledger.Api.TxInInfo _ txOut) =
+                if isOutputDatum (Plutus.V2.Ledger.Api.txOutDatum txOut)
+                then Just (getOutputDatum (Plutus.V2.Ledger.Api.txOutDatum txOut))
                 else Nothing
 
-            isOutputDatum :: OutputDatum -> Bool
-            isOutputDatum (OutputDatum _) = True
+            -- isOutputDatum: Checks if a datum is an OutputDatum
+            -- Helper function for datum validation
+            isOutputDatum :: Plutus.V2.Ledger.Api.OutputDatum -> Bool
+            isOutputDatum (Plutus.V2.Ledger.Api.OutputDatum _) = True
             isOutputDatum _ = False
 
-            getOutputDatum :: OutputDatum -> Datum
-            getOutputDatum (OutputDatum d) = d
+            -- getOutputDatum: Extracts datum from OutputDatum
+            -- Helper function for datum extraction
+            getOutputDatum :: Plutus.V2.Ledger.Api.OutputDatum -> Plutus.V2.Ledger.Api.Datum
+            getOutputDatum (Plutus.V2.Ledger.Api.OutputDatum d) = d
             getOutputDatum _ = error ()
 
-        calculateSelectedValue :: TokenName -> BuiltinByteString -> Integer
-        calculateSelectedValue nftName rIntHex =
-            let hexName = bytesToHex (unTokenName nftName)
-                hexLength = lengthOfByteString hexName
-                randomInteger = fourBytesToInteger (sliceByteString 0 4 rIntHex)
-                position1 = subtractInteger (subtractInteger hexLength 1) (modInteger randomInteger 8)
-                position2 = subtractInteger (subtractInteger hexLength 1) (modInteger (divideInteger randomInteger 256) 8)
-                byte1 = hexToInt (sliceByteString position1 2 hexName)
-                byte2 = hexToInt (sliceByteString position2 2 hexName)
-            in addInteger (multiplyInteger byte1 256) byte2
-
-        {-# INLINABLE integerToHex #-}
-        integerToHex :: Integer -> BuiltinByteString
+        --{-# INLINABLE integerToHex #-}
+        integerToHex :: Integer -> Plutus.V2.Ledger.Api.BuiltinByteString
         integerToHex n =
             let go m acc
                     | equalsInteger m 0 = acc
                     | otherwise = go (divideInteger m 256) (consByteString (modInteger m 256) acc)
             in go n emptyByteString
 
-        -- check if the transaction has reference inputs
-        hasReferenceInputs :: Bool
-        hasReferenceInputs = length (txInfoReferenceInputs info) `greaterThanInteger` 0
-
-        -- check if the transaction was signed by the contract owner
+        -- performedByContractOwner: Verifies transaction signer
+        -- Ensures only contract owner can perform certain operations
         performedByContractOwner :: Bool
         performedByContractOwner = txSignedBy info $ contractOwner scriptParams
 
-        -- return the number of desired tokens requested from the smart contract
+        -- numDesiredTokensRequested: Calculates net movement of tokens out of contract
+        -- Ensures correct counting of NFTs being withdrawn even with multiple tokens per UTxO
         numDesiredTokensRequested :: Integer
-        numDesiredTokensRequested = let desiredCS        = desiredPolicyID scriptParams
-                                        valueSpentFromSc = tokensRequested
-                                    in  numOfTokensFromPolicy (flattenValue valueSpentFromSc) desiredCS
+        numDesiredTokensRequested = 
+            let desiredCS = desiredPolicyID scriptParams
+                inputValues = getTxInValueOnly utxosSpentFromSc
+                -- Find corresponding output back to same script address
+                scriptOutputs = scriptOutputsAt (ownHash ctx) info
+                outputValues = getTxOutValueOnly scriptOutputs
+                -- For each token in input, check if it's in output
+                inputTokens = flattenValue inputValues
+                outputTokens = flattenValue outputValues
+                -- Count tokens that were in input but not in output (or less in output)
+                countMovedTokens = foldl (\acc (cs, tn, inputAmt) -> 
+                    if cs == desiredCS
+                    then 
+                        -- Find corresponding output amount
+                        let outputAmt = findAmount cs tn outputTokens
+                            diffi = subtractInteger inputAmt outputAmt
+                        in if diffi `greaterThanInteger` 0 
+                        then addInteger acc diffi
+                        else acc
+                    else acc
+                    ) 0 inputTokens
+            in countMovedTokens
 
-        tokensRequested :: Value
+        -- Helper function to find amount of a specific token in a flattened value list
+        findAmount :: Plutus.V2.Ledger.Api.CurrencySymbol -> Plutus.V2.Ledger.Api.TokenName -> [(Plutus.V2.Ledger.Api.CurrencySymbol, Plutus.V2.Ledger.Api.TokenName, Integer)] -> Integer
+        findAmount cs tn tokens = 
+            case filter (\(c, t, _) -> c == cs && t == tn) tokens of
+                [] -> 0
+                (_, _, amt):_ -> amt
+
+        -- tokensRequested: Gets Value of tokens being spent from script
+        -- Helper function for token movement tracking
+        tokensRequested :: Plutus.V2.Ledger.Api.Value
         tokensRequested = getTxInValueOnly utxosSpentFromSc
 
-        -- return the Value contained in the tx inputs list
-        getTxInValueOnly :: [TxInInfo] -> Value
-        getTxInValueOnly []             = singleton adaSymbol adaToken 0
-        getTxInValueOnly (i : is)       = txOutValue (Plutus.V2.Ledger.Contexts.txInInfoResolved i) <> (getTxInValueOnly is)
+        -- getTxInValueOnly: Extracts Value from transaction inputs
+        -- Helper function for input validation
+        getTxInValueOnly :: [Plutus.V2.Ledger.Api.TxInInfo] -> Plutus.V2.Ledger.Api.Value
+        getTxInValueOnly []             = Plutus.V2.Ledger.Api.singleton Plutus.V2.Ledger.Api.adaSymbol Plutus.V2.Ledger.Api.adaToken 0
+        getTxInValueOnly (i : is)       = Plutus.V2.Ledger.Api.txOutValue (Plutus.V2.Ledger.Api.txInInfoResolved i) <> (getTxInValueOnly is)
 
-        -- create Value from TxOut
-        getTxOutValueOnly :: [(OutputDatum, Value)] -> Value
-        getTxOutValueOnly []             = singleton adaSymbol adaToken 0
+        -- getTxOutValueOnly: Extracts Value from transaction outputs
+        -- Helper function for output validation
+        getTxOutValueOnly :: [(Plutus.V2.Ledger.Api.OutputDatum, Plutus.V2.Ledger.Api.Value)] -> Plutus.V2.Ledger.Api.Value
+        getTxOutValueOnly []             = Plutus.V2.Ledger.Api.singleton Plutus.V2.Ledger.Api.adaSymbol Plutus.V2.Ledger.Api.adaToken 0
         getTxOutValueOnly ((_, v) : tos) = v <> (getTxOutValueOnly tos)
 
-        -- return the inputs that originate from the script
-        utxosSpentFromSc :: [TxInInfo]
-        utxosSpentFromSc = filter (\u -> (txOutAddress (txInInfoResolved u)) PlutusTx.Prelude.== scriptHashAddress (ownHash ctx)) $ txInfoInputs info
+        -- utxosSpentFromSc: Gets inputs originating from the script
+        -- Identifies which UTXOs are being spent from the contract
+        utxosSpentFromSc :: [Plutus.V2.Ledger.Api.TxInInfo]
+        utxosSpentFromSc = filter (\u -> (Plutus.V2.Ledger.Api.txOutAddress (Plutus.V2.Ledger.Api.txInInfoResolved u)) PlutusTx.Prelude.== scriptHashAddress (ownHash ctx)) $ txInfoInputs info
 
-        -- count number of tokens in flatten value that have a specific CurrencySymbol
-        numOfTokensFromPolicy :: [(CurrencySymbol, TokenName, Integer)] -> CurrencySymbol -> Integer
-        numOfTokensFromPolicy [] _ = 0
-        numOfTokensFromPolicy ((vc, _, vi) : vs) cs = if vc PlutusTx.Prelude.== cs
-                                                    then vi PlutusTx.Prelude.+ (numOfTokensFromPolicy vs cs)
-                                                    else 0  PlutusTx.Prelude.+ (numOfTokensFromPolicy vs cs)
-
-        -- return the number of desired tokens sent to the smart contract
+        -- numDesiredTokensReceived: Calculates net movement of tokens into contract
+        -- Validates that the correct number of NFTs are being deposited
         numDesiredTokensReceived :: Integer
-        numDesiredTokensReceived =  let desiredCS    = desiredPolicyID scriptParams
-                                        scriptTxOuts = scriptOutputsAt (ownHash ctx) info
-                                        txOutValues  = getTxOutValueOnly scriptTxOuts
-                                    in  numOfTokensFromPolicy (flattenValue txOutValues) desiredCS
-
-        -- number of tokens requested that are not from the desired policy id(s)
+        numDesiredTokensReceived = 
+            let desiredCS = desiredPolicyID scriptParams
+                scriptTxOuts = scriptOutputsAt (ownHash ctx) info
+                outputValues = getTxOutValueOnly scriptTxOuts
+                inputValues = getTxInValueOnly utxosSpentFromSc
+                -- Count tokens that are in output but not in input (or more in output)
+                outputTokens = flattenValue outputValues
+                inputTokens = flattenValue inputValues
+                countMovedTokens = foldl (\acc (cs, tn, outputAmt) ->
+                    if cs == desiredCS
+                    then
+                        let inputAmt = findAmount cs tn inputTokens
+                            diffi = subtractInteger outputAmt inputAmt
+                        in if diffi `greaterThanInteger` 0
+                        then addInteger acc diffi
+                        else acc
+                    else acc
+                    ) 0 outputTokens
+            in countMovedTokens
+        
+        -- numUnlistedTokensRequested: Checks for unauthorized token types
+        -- Prevents withdrawal of tokens not matching the desired policy ID
         numUnlistedTokensRequested :: Integer
-        numUnlistedTokensRequested = let valuedCSs = [(desiredPolicyID scriptParams), adaSymbol]
+        numUnlistedTokensRequested = let valuedCSs = [(desiredPolicyID scriptParams), Plutus.V2.Ledger.Api.adaSymbol]
                                          producedCSs = symbols tokensRequested
                                      in  length (removeCurrencySymbolsFromList valuedCSs producedCSs)
 
-        -- remove all CurrencySymbols of list 1 from list 2
-        removeCurrencySymbolsFromList :: [CurrencySymbol] -> [CurrencySymbol] -> [CurrencySymbol]
+        -- removeCurrencySymbolsFromList: Filters currency symbols
+        -- Helper function for token policy validation
+        removeCurrencySymbolsFromList :: [Plutus.V2.Ledger.Api.CurrencySymbol] -> [Plutus.V2.Ledger.Api.CurrencySymbol] -> [Plutus.V2.Ledger.Api.CurrencySymbol]
         removeCurrencySymbolsFromList [] cs = cs
         removeCurrencySymbolsFromList _  [] = []
         removeCurrencySymbolsFromList csToRemove (c : cs) = if c `elem` csToRemove
                                                             then removeCurrencySymbolsFromList csToRemove cs
                                                             else c : removeCurrencySymbolsFromList csToRemove cs
 
+{- Contract Compilation and Deployment Functions -}
 
 {-# INLINABLE mkWrappedNFTSwapValidator #-}
-mkWrappedNFTSwapValidator :: BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> ()
+mkWrappedNFTSwapValidator :: Plutus.V2.Ledger.Api.BuiltinData -> Plutus.V2.Ledger.Api.BuiltinData -> Plutus.V2.Ledger.Api.BuiltinData -> Plutus.V2.Ledger.Api.BuiltinData -> ()
 mkWrappedNFTSwapValidator scriptParams _ redeemer ctx =
     let unwrappedScriptParams = PlutusTx.unsafeFromBuiltinData scriptParams :: ContractParam
         unwrappedRedeemer = PlutusTx.unsafeFromBuiltinData redeemer :: RandomnessRedeemer
-        unwrappedCtx = PlutusTx.unsafeFromBuiltinData ctx :: ScriptContext
+        unwrappedCtx = PlutusTx.unsafeFromBuiltinData ctx :: Plutus.V2.Ledger.Api.ScriptContext
     in if mkNFTSwapValidator unwrappedScriptParams () unwrappedRedeemer unwrappedCtx
        then ()
        else PlutusTx.Prelude.error ()
 
-validatorWOParameters :: PlutusTx.CompiledCode (BuiltinData -> BuiltinData -> BuiltinData -> BuiltinData -> ())
+validatorWOParameters :: PlutusTx.CompiledCode (Plutus.V2.Ledger.Api.BuiltinData -> Plutus.V2.Ledger.Api.BuiltinData -> Plutus.V2.Ledger.Api.BuiltinData -> Plutus.V2.Ledger.Api.BuiltinData -> ())
 validatorWOParameters = $$(PlutusTx.compile [|| mkWrappedNFTSwapValidator ||])
 
-validatorWParameters :: ContractParam -> Validator
-validatorWParameters scriptParams = mkValidatorScript $ validatorWOParameters `PlutusTx.applyCode` PlutusTx.liftCode (PlutusTx.toBuiltinData scriptParams)
+validatorWParameters :: ContractParam -> Plutus.V2.Ledger.Api.Validator
+validatorWParameters scriptParams = Plutus.V2.Ledger.Api.mkValidatorScript $ validatorWOParameters `PlutusTx.applyCode` PlutusTx.liftCode (PlutusTx.toBuiltinData scriptParams)
 
----------------------------------------------------------------------------------------------------
-------------------------------------- HELPER FUNCTIONS --------------------------------------------
+{- Helper functions for Contract Deployment -}
 
+-- saveValidatorWOParameters: Saves unparameterized validator to file
 saveValidatorWOParameters :: IO()
 saveValidatorWOParameters = writeCodeToFile "assets/random_swap_uninitialized.plutus" validatorWOParameters
 
+-- saveValidatorWParameters: Saves parameterized validator to file
+-- Creates unique filename based on contract owner
 saveValidatorWParameters :: ContractParam -> IO ()
 saveValidatorWParameters scriptParams = writeValidatorToFile (printf "assets/random-swap-%s.plutus" $ show (contractOwner scriptParams)) $ validatorWParameters scriptParams

@@ -37,7 +37,9 @@ You are then presented with a dialog containing the generated smart contract cod
 (We will soon publish a video tutorial that shows this process...)
 
 ### Random Swap pool
-This is still work in progress and this solution is not yet ready for mainnet use. We provide the code here to show progress according to Catalyst Milestone deliveries. Please check back later for resources ready for mainnet use.
+Random swap pools are set up to work with one particular policy id. The solution consists of two smart contracts working together. To get started, insert the policy id of the desired NFT collection into the policy id field and click "CREATE SWAP POOL > RANDOM SWAP > POLICY WIDE POOL" and copy paste the two resulting contracts into the dApp configuration.
+The main contract is the RandomSwap contract that validates that two NFTs of the correct types are swapped in addtion to checking that the name of the randomly selected NFT is in accordance with the randomness oracle reference input. The randomness oracle is provided by the decentralized randomness platform, STEAK, which is publishing randomness oracles to the blockchain. The dApp is using the latest oracle from STEAK and also adds the current blockchain slot of Cardano Blockchain so that the random selection is different in two consecutive swaps even if they use the same randomness oracle. 
+The second contract is a supporting swap queue contract that is holding the NFTs to be swapped. The contract has two actions; Swap and Cancel. The "Swap" action can be used by the Swapper server job, running on the dApp server. The "Cancel" action can be used by each user that has initiated a swap by queueing an NFT. If the swapper job has not yet processed the request, the initiator is free to cancel the swap before it is performed. The NFT is the returned to the wallet address it was first initiated from.
 You can read more about the random swap pool solution in the [platform documentation folder](docs/platform/)
 
 
@@ -50,5 +52,5 @@ To verify that the generated smart contract is working as expected, verify this 
 | [Specific Swap](smart-contracts/SpecificSwap.hs) | The base contract used for swap pools allowing swaps of all policy NFTs |
 | [Filtered Specific Swap](smart-contracts/SpecificSwapFiltered.hs) | The base contract of swap pools allowing swap of explicitly named NFTs of a policy |
 | [Rule Based Specific Swap](smart-contracts/SpecificSwapTokenNameRule.hs) | The base contract of swap pools allowing swap of NFTs of a policy with names starting with a defined text and specified number series |
-| [Random Swap](smart-contracts/RandomSwap.hs) | **STILL IN DEVELOPMENT. DO NOT USE ON MAINNET.** The base contract of the random swap pools allowing swap of NFTs of a policy while it validates that the requested NFT was selected according to the referenced oracle input. |
-| [Random Swap Queue](smart-contracts/RandomSwapQueue.hs) | **STILL IN DEVELOPMENT. DO NOT USE ON MAINNET.** Smart contract that is operating as a queue for unfinished random swap requests. Can only be operated by the swapper system service |
+| [Random Swap](smart-contracts/RandomSwap.hs) | The base contract of the random swap pools allowing swap of NFTs of a policy while it validates that the requested NFT was selected according to the referenced oracle input. |
+| [Random Swap Queue](smart-contracts/RandomSwapQueue.hs) | Smart contract that is operating as a queue for random swap requests to be processed. Can only be operated by the swapper system service |

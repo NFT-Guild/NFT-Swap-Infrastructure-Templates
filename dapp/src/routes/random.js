@@ -33,7 +33,7 @@ function getCookie(cookieString, cookiename) {
 
 router.get('/', function (req, res, next) {
     const app = req.app;
-    
+
     // cookie start
     const themeCookie = getCookie(req.headers.cookie, 'swap_pool_theme');
     var theme;
@@ -56,7 +56,7 @@ router.get('/', function (req, res, next) {
     if(isNaN(poolIndexParam) ||
         poolIndexParam == undefined || 
         poolIndexParam < 0 || 
-        (poolIndexParam > app.get('swap_pool_names').length -1)) poolIndexParam = app.get('swap_pool_names').length - 1; 
+        (poolIndexParam > app.get('swap_pool_names').length - 2)) poolIndexParam = app.get('swap_pool_names').length - 2; 
 
     res.render('random', {
         currentPoolIndex: poolIndexParam,
@@ -72,6 +72,8 @@ router.get('/', function (req, res, next) {
         viewOptions: app.get('view_dropdown_options'),
         sortOptions: app.get('sort_dropdown_options'),
         filterOptions: app.get('filter_dropdown_options'),
+        rarityOptions: app.get('rarity_dropdown_options'),
+        traitOptions: app.get('trait_dropdown_options'),
         navWebpage: app.get('navWebpage'),
         navTwitter: app.get('navTwitter'),
         navDiscord: app.get('navDiscord'),

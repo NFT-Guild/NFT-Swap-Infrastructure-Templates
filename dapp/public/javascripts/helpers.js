@@ -9,6 +9,209 @@ var numSelectedWalletNFTs = 0;
 var selectedFilterNFTNameMap = new Map();
 
 var currentPolicyId, currentNFTNames, currentSwapPoolIndex, currentRules;
+var LOADED_NFT_LIST = [];
+var LOADED_POOL_NFTS = [];
+var LOADED_WALLET_NFTS = [];
+
+var VIEW_OPTIONS;
+
+const listTypes = [
+    'TEXT LIST', 
+    'SMALL THUMBNAILS',
+    'LARGE THUMBNAILS'
+];
+
+// object with settings determining how the NFT lists look and what NFTs they contain
+const VIEW_OPTIONS_POOL = {
+    disableSelection: false,
+    viewAs: listTypes[2],
+    viewRarity: [],
+    viewTrait: [],
+    searchCriterion: ''
+};
+
+const VIEW_OPTIONS_WALLET = {
+    disableSelection: false,
+    viewAs: listTypes[2],
+    viewRarity: [],
+    viewTrait: [],
+    searchCriterion: ''
+};
+
+function setDefaultViewOptions(type) {
+    if(type == 'pool') {
+        VIEW_OPTIONS = VIEW_OPTIONS_POOL;
+    }
+    else if(type == 'wallet') {
+        VIEW_OPTIONS = VIEW_OPTIONS_WALLET;
+    }
+
+    VIEW_OPTIONS.disableSelection = false;
+    VIEW_OPTIONS.viewAs = listTypes[2];
+    VIEW_OPTIONS.viewRarity = [];
+    VIEW_OPTIONS.viewTrait = [];
+    VIEW_OPTIONS.searchCriterion = '';
+
+    document.getElementById('search_field_input_'+type).value = '';
+}
+
+function toggleViewOptionsViewAs(view, addrType) {
+    const viewIndex = listTypes.indexOf(view);
+    
+    if(addrType == 'pool') {
+        VIEW_OPTIONS = VIEW_OPTIONS_POOL;
+    }
+    else if(addrType == 'wallet') {
+        VIEW_OPTIONS = VIEW_OPTIONS_WALLET;
+    }
+
+    if(viewIndex > -1) {
+        // view is valid...set as current view as
+        VIEW_OPTIONS.viewAs = listTypes[viewIndex];
+    }
+    else {
+        // view invalid...reset to default
+        VIEW_OPTIONS.viewAs = listTypes[2];
+    }
+}
+
+function toggleViewOptionsRarity(rarity, addrType) {
+
+    if(addrType == 'pool') {
+        VIEW_OPTIONS = VIEW_OPTIONS_POOL;
+    }
+    else if(addrType == 'wallet') {
+        VIEW_OPTIONS = VIEW_OPTIONS_WALLET;
+    }
+
+    const rarityIndex = VIEW_OPTIONS.viewRarity.indexOf(rarity);
+    if(rarityIndex > -1) {
+        // rarity exists...remove rarity from view options
+        VIEW_OPTIONS.viewRarity = VIEW_OPTIONS.viewRarity.filter(r => r != rarity);
+    }
+    else {
+        // rarity doesn't exist...add to view options
+        VIEW_OPTIONS.viewRarity.push(rarity);
+    }
+}
+
+function toggleViewOptionsTrait(trait, addrType) {
+
+    if(addrType == 'pool') {
+        VIEW_OPTIONS = VIEW_OPTIONS_POOL;
+    }
+    else if(addrType == 'wallet') {
+        VIEW_OPTIONS = VIEW_OPTIONS_WALLET;
+    }
+
+    const traitIndex = VIEW_OPTIONS.viewTrait.indexOf(trait);
+    if(traitIndex > -1) {
+        // trait exists...remove trait from view options
+        VIEW_OPTIONS.viewTrait = VIEW_OPTIONS.viewTrait.filter(t => t != trait);
+    }
+    else {
+        // trait doesn't exist...add to view options
+        VIEW_OPTIONS.viewTrait.push(trait);
+    }
+}
+
+function updateDropdownSelection(prefix, type) {
+
+    var addrType = '';
+    if(prefix.indexOf('_pool') > -1) {
+        addrType = 'pool';
+    }
+    else {
+        addrType = 'wallet';
+    }
+    
+    var optionElement, checkElement;
+    const options = document.querySelectorAll(`[id^=${prefix}_${type}]`);
+    
+    for(var j = 0; j < options.length; j++) {
+        optionElement = options[j];
+        
+        optionName = optionElement.id.split("_");
+
+        partOfFilter = isSelected(optionName[4], type, addrType);
+        
+        if(partOfFilter) {
+            // rarity is part of filter
+            checkElement = getCheckIfExists(optionName[4], type, addrType);
+
+            // rarity is selected. Add check if not present
+            if(checkElement == null) {
+                optionElement.innerHTML = optionElement.innerHTML + `<svg id="check_${addrType}_${type}_${optionName[4]}_" xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-check" viewBox="0 0 16 16"><path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.267.267 0 0 1 .02-.022z" /></svg>`;
+            }
+        }
+        else {
+            // rarity is not part of filter
+            checkElement = getCheckIfExists(optionName[4], type, addrType);
+
+            if(checkElement != null) {
+                optionElement.removeChild(checkElement);
+            }
+        }
+    }
+}
+
+function isSelected(name, type, addrType) {
+    if(type == 'rarity') {
+        return isSelectedRarity(name, addrType);
+    }
+    else if(type == 'trait') {
+        return isSelectedTrait(name, addrType);
+    }
+    else if(type == 'view') {
+        return isSelectedViewAs(name, addrType);
+    }
+    console.error('unsupported dropdown type '+ type);
+    return false;
+}
+
+function getCheckIfExists(name, type, addrType) {
+    const checkElements = document.querySelectorAll(`[id^='check_${addrType}_${type}_']`);
+    var checkElement = null;
+
+    if(checkElements.length > 0) {
+        for(var c = 0; c < checkElements.length; c++) {
+            if(checkElements[c].id == `check_${addrType}_${type}_${name}_`) {
+                checkElement = checkElements[c];
+            }
+        }
+    }
+    return checkElement;
+}
+
+function isSelectedViewAs(view, addrType) {
+    if(addrType == 'pool') {
+        VIEW_OPTIONS = VIEW_OPTIONS_POOL;
+    }
+    else if(addrType == 'wallet') {
+        VIEW_OPTIONS = VIEW_OPTIONS_WALLET;
+    }
+    return VIEW_OPTIONS.viewAs == view
+}
+
+function isSelectedRarity(rarity, addrType) {
+    if(addrType == 'pool') {
+        VIEW_OPTIONS = VIEW_OPTIONS_POOL;
+    }
+    else if(addrType == 'wallet') {
+        VIEW_OPTIONS = VIEW_OPTIONS_WALLET;
+    }
+    return VIEW_OPTIONS.viewRarity.indexOf(rarity) > -1
+}
+
+function isSelectedTrait(trait, addrType) {
+    if(addrType == 'pool') {
+        VIEW_OPTIONS = VIEW_OPTIONS_POOL;
+    }
+    else if(addrType == 'wallet') {
+        VIEW_OPTIONS = VIEW_OPTIONS_WALLET;
+    }
+    return VIEW_OPTIONS.viewTrait.indexOf(trait) > -1
+}
 
 function removeTechnicalGibberish(message) {
     if(message == null || message == undefined) { return ''; }
@@ -386,7 +589,6 @@ function togglePoolFilterSelection(nftimage, nftnamehex, theme) {
 
 async function getAddressTxs(address) {
     
-    // console.log('getAddressTxs');
     var xhr = new XMLHttpRequest();
     var koiosparams = '';
 
@@ -399,7 +601,6 @@ async function getAddressTxs(address) {
         return {};
     }
 
-    // console.log('koiosparams', koiosparams);
     xhr.open('POST', apiquery, false);
     xhr.setRequestHeader('accept', 'application/json');
     xhr.setRequestHeader('content-type', 'application/json');
@@ -481,7 +682,9 @@ async function loadPolicyAssets(assetpolicy, list_html_element, filter, theme, p
                         var ipfsIndex = image.indexOf('Qm');
                         if (ipfsIndex > -1) {
                             ipfsID = image.substring(image.indexOf('Qm'));
-                            imageURL = `https://image-optimizer.jpgstoreapis.com/${ipfsID}`;
+                            // We are making use of a free IPFS image provider. Feel free to change it to
+                            // your favorite image provider
+                            imageURL = `https://ipfs.blockfrost.dev/ipfs/${ipfsID}`;
                         }
                     }
                     catch (error) { console.log(error); }
@@ -491,11 +694,7 @@ async function loadPolicyAssets(assetpolicy, list_html_element, filter, theme, p
                     htmlList += `<div class="not-selected${theme} padding" id="pool_filter_nft_list_${asset.fingerprint}"><img id="pool_filter_nft_list_${asset.fingerprint}_img" loading="lazy" height="200" onclick="togglePoolFilterSelection(pool_filter_nft_list_${asset.fingerprint}, '${asset.asset_name}', '${theme}');" class="show-hover-pointer padding" src="${imageURL}"></img><div id="pool_filter_nft_list_${asset.fingerprint}_namediv" class="nft-name-display not-selected${theme} align-bottom">${metadata['name']}</div></div>`;
                 }
                 else if (asset.token_registry_metadata) {
-
-                    //TODO: IMPLEMENT 
-
-                    //console.log("koios onchain image");
-                    //document.getElementById(elem_prefix + assetinfo).innerHTML = `<img id="${elem_prefix + assetinfo}_img" loading="lazy" height="200" onclick="togglePoolNFTSelection(${elem_prefix + assetinfo});" class="show-hover-pointer padding" src='data:image/jpeg;base64,${assetJson.metadata.logo}'><div id="${elem_prefix + assetinfo}_namediv" class="not-selected align-bottom">${assetJson.metadata.name}</div>`;
+                    //NOT IMPLEMENTED. MAIN USE CASE IS NFTs AT THIS POINT 
                 }
             }
 
@@ -518,7 +717,6 @@ async function loadPolicyAssets(assetpolicy, list_html_element, filter, theme, p
         toggleSelectedNFTs(`${theme}`)
 
     };
-
 
     if(pOffset == undefined) pOffset = 0;   // set default if undefined
     if(pLimit == undefined) pLimit = 50;    // set default if undefined
@@ -695,55 +893,145 @@ function hex_to_ascii(str1) {
     return str;
 }
 
-function loadNFTInfoKoios(elem_prefix, assetinfo, theme, disableNFTSelection = false) {
+function addExtendedInfo(elem_prefix, assetinfo, theme, nftIndex) {
+
     const assetpolicy = assetinfo.substring(0, 56)
     const assetname = assetinfo.substring(56);
 
     const assetNameAscii = hex_to_ascii(assetname);
+    const nft_html_elem = document.getElementById(elem_prefix + assetinfo);
 
-    var xhr = new XMLHttpRequest();
-    xhr.onload = function () {
+    if(elem_prefix.indexOf('pool_') == 0) {
+        LOADED_NFT_LIST = LOADED_POOL_NFTS;
+        VIEW_OPTIONS = VIEW_OPTIONS_POOL;
+    }
+    else {
+        LOADED_NFT_LIST = LOADED_WALLET_NFTS;
+        VIEW_OPTIONS = VIEW_OPTIONS_WALLET;
+    }
+       
+    const extendedInfo = LOADED_NFT_LIST[nftIndex].extended; 
 
-        if (xhr.status === 200) {
-            var assetJson = JSON.parse(xhr.responseText);
+    if (extendedInfo.minting_tx_metadata) {
+        const koios_policy = extendedInfo.minting_tx_metadata['721'][assetpolicy];
+
+        const asset = koios_policy[assetNameAscii];
+
+        const image = asset['image'];
+        const ipfsID = image.substring(image.indexOf('Qm'));
+        // We are making use of a free IPFS image provider. Feel free to change it to
+        // your favorite image provider
+        const imageURL = `https://ipfs.blockfrost.dev/ipfs/${ipfsID}`;
+
+        var imgSize = 100;
+        if(VIEW_OPTIONS.viewAs == listTypes[2]) {
+            // display large images
+            imgSize = 200;
+        }
+
+        if(VIEW_OPTIONS.viewAs != listTypes[0]) {
+            if(!VIEW_OPTIONS.disableSelection) {
+                nft_html_elem.innerHTML = `<img id="${elem_prefix + assetinfo}_img" loading="lazy" height="${imgSize}" onclick="togglePoolNFTSelection(${elem_prefix + assetinfo}, '${theme}');" class="show-hover-pointer padding" src='${imageURL}'><div id="${elem_prefix + assetinfo}_namediv" class="nft-name-display not-selected${theme} align-bottom">${asset['name']}</div>`;
+            }
+            else {
+                nft_html_elem.innerHTML = `<img id="${elem_prefix + assetinfo}_img" loading="lazy" height="${imgSize}" class="padding" src='${imageURL}'><div id="${elem_prefix + assetinfo}_namediv" class="nft-name-display not-selected${theme} align-bottom">${asset['name']}</div>`;
+            }
+        }
+        else {
+            // Displaying nfts as a text list. Adding some more properties
+            if(!VIEW_OPTIONS.disableSelection) {
+                nft_html_elem.innerHTML = `
+                <img id="${elem_prefix + assetinfo}_img" loading="lazy" height="${imgSize}" onclick="togglePoolNFTSelection(${elem_prefix + assetinfo}, '${theme}');" class="show-hover-pointer padding" src='${imageURL}'>
+                <div id="${elem_prefix + assetinfo}_namediv" class="nft-name-display not-selected${theme} align-bottom">${asset['name']}</div>
+                <div id="${elem_prefix + assetinfo}_descriptiondiv" class="nft-name-display not-selected${theme} align-bottom">${asset['description']}</div>
+                <div id="${elem_prefix + assetinfo}_raritydiv" class="nft-name-display not-selected${theme} align-bottom">${asset['rarity']}</div>
+                `;
+            }
+            else {
+                nft_html_elem.innerHTML = `
+                <img id="${elem_prefix + assetinfo}_img" loading="lazy" height="${imgSize}" class="padding" src='${imageURL}'>
+                <div id="${elem_prefix + assetinfo}_namediv" class="nft-name-display not-selected${theme} align-bottom">${asset['name']}</div>
+                <div id="${elem_prefix + assetinfo}_descriptiondiv" class="nft-name-display not-selected${theme} align-bottom">${asset['description']}</div>
+                <div id="${elem_prefix + assetinfo}_raritydiv" class="nft-name-display not-selected${theme} align-bottom">${asset['rarity']}</div>
+                `;
+            }
+        }
+    }
+    else {
+        console.log("koios no metadata for nft")
+    }
+}
+
+async function getAssetMetadata(assetpolicy, assetname) {
+    return new Promise((resolve, reject) => {
+        var xhr = new XMLHttpRequest();
+        xhr.onload = function () {
+            if (xhr.status === 200) {
+                resolve(xhr.responseText);
+            } else {
+                resolve('Unable to fetch metadata for asset');
+            }
+        };
+        xhr.onerror = function() {
+            resolve('Unable to fetch metadata for asset');
+        };
+
+        const apiquery = `/api_asset_info?policy_id=${assetpolicy}&asset_name=${assetname}`;
+        xhr.open('GET', apiquery, true);
+        xhr.setRequestHeader('accept', 'application/json');
+        xhr.send();
+    });
+}
+
+async function loadNFTInfoKoios(elem_prefix, assetinfo, theme, nftIndex) {
+    const assetpolicy = assetinfo.substring(0, 56);
+    const assetname = assetinfo.substring(56);
+    const assetNameAscii = hex_to_ascii(assetname);
+
+    if(elem_prefix.indexOf('pool_') == 0) {
+        LOADED_NFT_LIST = LOADED_POOL_NFTS;
+        VIEW_OPTIONS = VIEW_OPTIONS_POOL;
+    }
+    else {
+        LOADED_NFT_LIST = LOADED_WALLET_NFTS;
+        VIEW_OPTIONS = VIEW_OPTIONS_WALLET;
+    }
+
+    const nft_html_elem = document.getElementById(elem_prefix + assetinfo);
+    
+    try {
+        const response = await getAssetMetadata(assetpolicy, assetname);
+        
+        if (response !== 'Unable to fetch metadata for asset') {
+            var assetJson = JSON.parse(response);
+            LOADED_NFT_LIST[nftIndex].extended = assetJson[0];
 
             if (assetJson[0].minting_tx_metadata) {
                 const koios_policy = assetJson[0].minting_tx_metadata['721'][assetpolicy];
-
                 const asset = koios_policy[assetNameAscii];
 
                 const image = asset['image'];
                 const ipfsID = image.substring(image.indexOf('Qm'));
-                const imageURL = `https://image-optimizer.jpgstoreapis.com/${ipfsID}`
+                const imageURL = `https://ipfs.blockfrost.dev/ipfs/${ipfsID}`;
 
-                if(!disableNFTSelection) {
-                    document.getElementById(elem_prefix + assetinfo).innerHTML = `<img id="${elem_prefix + assetinfo}_img" loading="lazy" height="200" onclick="togglePoolNFTSelection(${elem_prefix + assetinfo}, '${theme}');" class="show-hover-pointer padding" src='${imageURL}'><div id="${elem_prefix + assetinfo}_namediv" class="nft-name-display not-selected${theme} align-bottom">${asset['name']}</div>`;
+                if(!VIEW_OPTIONS.disableSelection) {
+                    nft_html_elem.innerHTML = `<img id="${elem_prefix + assetinfo}_img" loading="lazy" height="200" onclick="togglePoolNFTSelection(${elem_prefix + assetinfo}, '${theme}');" class="show-hover-pointer padding" src='${imageURL}'><div id="${elem_prefix + assetinfo}_namediv" class="nft-name-display not-selected${theme} align-bottom">${asset['name']}</div>`;
                 }
                 else {
-                    document.getElementById(elem_prefix + assetinfo).innerHTML = `<img id="${elem_prefix + assetinfo}_img" loading="lazy" height="200" class="padding" src='${imageURL}'><div id="${elem_prefix + assetinfo}_namediv" class="nft-name-display not-selected${theme} align-bottom">${asset['name']}</div>`;
-                }
-            }
-            else if (assetJson[0].token_registry_metadata) {
-                if(!disableNFTSelection) {
-                    document.getElementById(elem_prefix + assetinfo).innerHTML = `<img id="${elem_prefix + assetinfo}_img" loading="lazy" height="200" onclick="togglePoolNFTSelection(${elem_prefix + assetinfo}, '${theme}');" class="show-hover-pointer padding" src='data:image/jpeg;base64,${assetJson.metadata.logo}'><div id="${elem_prefix + assetinfo}_namediv" class="nft-name-display not-selected${theme} align-bottom">${assetJson.metadata.name}</div>`;
-                }
-                else {
-                    document.getElementById(elem_prefix + assetinfo).innerHTML = `<img id="${elem_prefix + assetinfo}_img" loading="lazy" height="200" class="padding" src='data:image/jpeg;base64,${assetJson.metadata.logo}'><div id="${elem_prefix + assetinfo}_namediv" class="nft-name-display not-selected${theme} align-bottom">${assetJson.metadata.name}</div>`;
+                    nft_html_elem.innerHTML = `<img id="${elem_prefix + assetinfo}_img" loading="lazy" height="200" class="padding" src='${imageURL}'><div id="${elem_prefix + assetinfo}_namediv" class="nft-name-display not-selected${theme} align-bottom">${asset['name']}</div>`;
                 }
             }
             else {
-                console.log("koios no metadata for nft")
+                console.log("koios no metadata for nft");
             }
         }
         else {
-            document.getElementById(elem_prefix + assetinfo).innerHTML = xhr.responseText;
+            nft_html_elem.innerHTML = response;
         }
-    };
-
-    const apiquery = `/api_asset_info?policy_id=${assetpolicy}&asset_name=${assetname}`;
-    xhr.open('GET', apiquery, true);
-    xhr.setRequestHeader('accept', 'application/json');
-    xhr.send();
+    } catch (error) {
+        console.error('Error loading NFT info:', error);
+        nft_html_elem.innerHTML = 'Error loading NFT info';
+    }
 }
 
 function nftSatisfiesRules(nft, poolRules) {
@@ -761,10 +1049,307 @@ function nftSatisfiesRules(nft, poolRules) {
     return true;
 }
 
-function listNFTs(nftList, nftListHTMLElement, htmlprefix, theme, pool_policy_id, pool_nft_names, poolRules, pOffset, pLimit, disableNFTSelection = false) {
+async function applyViewOptionsOnNFTList(nftListHTMLElement, htmlprefix, theme, pool_policy_id, pool_nft_names, poolRules, pOffset, pLimit) {
+    
+    const searchPropertyNames = ['name', 'description', 'rarity'];
+
     var html = '';
     if (htmlprefix == '')
         htmlprefix = 'wallet';
+
+    if(htmlprefix == 'pool') {
+        LOADED_NFT_LIST = LOADED_POOL_NFTS;
+        VIEW_OPTIONS = VIEW_OPTIONS_POOL;
+    }
+    else {
+        LOADED_NFT_LIST = LOADED_WALLET_NFTS;
+        VIEW_OPTIONS = VIEW_OPTIONS_WALLET;
+    }
+
+    var doFiltering = false;
+    if (pool_policy_id != undefined && pool_policy_id != '') {
+        doFiltering = true;
+    }
+
+    if(typeof poolRules === 'string') {
+        // poolRules is of type string. Decode and parse as object
+        poolRules = decodeURIComponent(poolRules)
+        poolRules = JSON.parse(poolRules);
+    }
+
+    // apply correct list layout
+    if(VIEW_OPTIONS.viewAs != listTypes[0]) {
+        // display nfts as cards
+        nftListHTMLElement.classList.add('d-flex');
+        nftListHTMLElement.classList.add('mb-3');
+        nftListHTMLElement.classList.add('flex-row');
+        nftListHTMLElement.classList.add('flex-wrap');
+    }
+    else {
+        // display nfts as text list
+        nftListHTMLElement.classList.remove('d-flex');
+        nftListHTMLElement.classList.remove('mb-3');
+        nftListHTMLElement.classList.remove('flex-row');
+        nftListHTMLElement.classList.remove('flex-wrap');
+    }
+
+    var numberOfResults = 0;
+    var nftsOnThePage = 0;
+
+    if(LOADED_NFT_LIST.length == 0) return;
+
+    for (var i = 0; i < LOADED_NFT_LIST.length; i++) {
+        // filter nft out if it doesn't belong to the pool policy id
+        if (doFiltering && LOADED_NFT_LIST[i].policy_id != pool_policy_id) { continue; }
+        
+        // FOR FILTERED SWAP POOLS: filter nft out if the name is not in the list of desired nft names
+        if (doFiltering && pool_nft_names != '' && pool_nft_names.indexOf(LOADED_NFT_LIST[i].asset_name) == -1) { continue; }
+
+        // FOR RULE BASED SWAP POOLS: filter nft out if the name doesn't satisfy the rules of desired nft names
+        if (doFiltering && Object.hasOwn(poolRules, 'nftNamePrefix')) { if(!nftSatisfiesRules(LOADED_NFT_LIST[i], poolRules)) { console.log('not satisfying rules'); continue; } }
+
+        if(LOADED_NFT_LIST[i].extended == null) {
+            try {
+                const response = await getAssetMetadata(LOADED_NFT_LIST[i].policy_id, LOADED_NFT_LIST[i].asset_name);
+                if (response !== 'Unable to fetch metadata for asset') {
+                    var assetJson = JSON.parse(response);
+                    LOADED_NFT_LIST[i].extended = assetJson[0];
+                }
+            } catch (error) {
+                console.error('Error fetching metadata:', error);
+            }
+        }
+        
+        // examine minting metadata
+        if (LOADED_NFT_LIST[i].extended.minting_tx_metadata) {
+            const meta_policy = LOADED_NFT_LIST[i].extended.minting_tx_metadata['721'][pool_policy_id];
+            const meta_asset = meta_policy[LOADED_NFT_LIST[i].extended.asset_name_ascii];
+
+            // check if the user has selected to view a particular trait
+            if(VIEW_OPTIONS.viewTrait.length > 0) {
+                const traitKeys = Object.keys(meta_asset.traits);
+                var traitFound = false;
+                var wantedTrait = '';
+                for(var ti = 0; ti < VIEW_OPTIONS.viewTrait.length; ti++) {
+                    wantedTrait = VIEW_OPTIONS.viewTrait[ti].toLowerCase();
+                    for(var ki = 0; ki < traitKeys.length; ki++) {
+                        if(meta_asset.traits[traitKeys[ki]].toLowerCase() == wantedTrait) {
+                            traitFound = true;
+                            break;
+                        }
+                    }
+                }
+                if(!traitFound) {
+                    // wanted trait not found. Filter out this asset
+                    continue;
+                }
+            }
+
+            // check if the user has selected to view a particular rarity
+            if(VIEW_OPTIONS.viewRarity.length > 0) {
+                var rarityFound = false;
+                var wantedRarity = '';
+                for (var si = 0; si < VIEW_OPTIONS.viewRarity.length; si++) {
+                    wantedRarity = VIEW_OPTIONS.viewRarity[si].toLowerCase();
+                    for (var ri = 0; ri < VIEW_OPTIONS.viewRarity.length; ri++) {
+                        if (meta_asset.rarity.toLowerCase() == wantedRarity) {
+                            rarityFound = true;
+                            break;
+                        }
+                    }
+                }
+                if(!rarityFound) {
+                    // wanted rarity not found. Filter out this asset
+                    continue;
+                }
+            }
+
+            var value;
+            
+            if(VIEW_OPTIONS.searchCriterion != '') {
+                // a search criterion has been provided. Filter according to search criterion
+                console.log('search criterion', VIEW_OPTIONS.searchCriterion);
+                console.log('meta asset', meta_asset);
+                criteriaFound = false;
+                for(var p = 0; p < searchPropertyNames.length; p++) {
+                    if(Object.hasOwn(meta_asset, searchPropertyNames[p])) {
+                        value = meta_asset[searchPropertyNames[p]]
+                        console.log(searchPropertyNames[p] + ' = '+ value.toLowerCase());
+                        if(value.toLowerCase().indexOf(VIEW_OPTIONS.searchCriterion) > -1) {
+                            criteriaFound = true;
+                        }
+                    }
+                } 
+
+                const traitKeys = Object.keys(meta_asset.traits);
+                var traitFound = false;
+                
+                for(var ki = 0; ki < traitKeys.length; ki++) {
+                    if(meta_asset.traits[traitKeys[ki]].toLowerCase().indexOf(VIEW_OPTIONS.searchCriterion) > -1) {
+                        traitFound = true;
+                    }
+                }
+                
+                if(!criteriaFound && !traitFound) { continue; }
+            }
+
+        }
+
+        numberOfResults++;
+        if(numberOfResults <= pOffset) { continue; } // result item is before the start of range. Continue to next result
+        else if(numberOfResults > (pOffset + pLimit)) { break; } // end of range has been reached. Break for-loop
+        nftsOnThePage++;
+        const textListClasses = "d-flex mb-3 flex-row justify-content-between"
+        var classes = '';
+        if(VIEW_OPTIONS.viewAs == listTypes[0]) {
+            classes = textListClasses;
+        }
+        
+        html += `<div id='${htmlprefix}_nft_list_${LOADED_NFT_LIST[i].policy_id}${LOADED_NFT_LIST[i].asset_name}' class='not-selected${theme} padding ${classes}'></div>`
+    }
+    
+
+    nftListHTMLElement.innerHTML = html;
+
+    numberOfResults = 0;
+
+    
+    for (var i = 0; i < LOADED_NFT_LIST.length; i++) {
+
+        // filter nft out if it doesn't belong to the pool policy id
+        if (doFiltering && LOADED_NFT_LIST[i].policy_id != pool_policy_id) { continue; }
+        
+        // FOR FILTERED SWAP POOLS: filter nft out if the name is not in the list of desired nft names
+        if (doFiltering && pool_nft_names != '' && pool_nft_names.indexOf(LOADED_NFT_LIST[i].asset_name) == -1) { continue; }
+
+        // FOR RULE BASED SWAP POOLS: filter nft out if the name doesn't satisfy the rules of desired nft names
+        if (doFiltering && Object.hasOwn(poolRules, 'nftNamePrefix')) { if(!nftSatisfiesRules(LOADED_NFT_LIST[i], poolRules)) { console.log('not satisfying rules'); continue; } }
+
+        // if(LOADED_NFT_LIST[i].extended == null) {
+        //     console.log('no extended info found', i);
+        //     continue;
+        // }
+        // else if(LOADED_NFT_LIST[i].extended.minting_tx_metadata == null) {
+        //     console.log('no metadata found', i);
+        //     continue;
+        // }
+
+        // fetch minting metadata
+        if (LOADED_NFT_LIST[i].extended.minting_tx_metadata) {
+            const meta_policy = LOADED_NFT_LIST[i].extended.minting_tx_metadata['721'][pool_policy_id];
+            
+            const meta_asset = meta_policy[LOADED_NFT_LIST[i].extended.asset_name_ascii];
+
+            // check if the user has selected to view a particular trait
+            if(VIEW_OPTIONS.viewTrait.length > 0) {
+                const traitKeys = Object.keys(meta_asset.traits);
+                var traitFound = false;
+                var wantedTrait = '';
+                for(var ti = 0; ti < VIEW_OPTIONS.viewTrait.length; ti++) {
+                    wantedTrait = VIEW_OPTIONS.viewTrait[ti].toLowerCase();
+                    for(var ki = 0; ki < traitKeys.length; ki++) {
+                        if(meta_asset.traits[traitKeys[ki]].toLowerCase() == wantedTrait) {
+                            traitFound = true;
+                            break;
+                        }
+                    }
+                }
+                if(!traitFound) {
+                    // wanted trait not found. Filter out this asset
+                    continue;
+                }
+            }
+
+            // check if the user has selected to view a particular rarity
+            if(VIEW_OPTIONS.viewRarity.length > 0) {
+                var rarityFound = false;
+                var wantedRarity = '';
+                for (var si = 0; si < VIEW_OPTIONS.viewRarity.length; si++) {
+                    wantedRarity = VIEW_OPTIONS.viewRarity[si].toLowerCase();
+                    for (var ri = 0; ri < VIEW_OPTIONS.viewRarity.length; ri++) {
+                        if (meta_asset.rarity.toLowerCase() == wantedRarity) {
+                            rarityFound = true;
+                            break;
+                        }
+                    }
+                }
+                if(!rarityFound) {
+                    // wanted rarity not found. Filter out this asset
+                    continue;
+                }
+            }
+
+            var value;
+            
+            if(VIEW_OPTIONS.searchCriterion != '') {
+                // a search criterion has been provided. Filter according to search criterion
+                console.log('search criterion', VIEW_OPTIONS.searchCriterion);
+                console.log('meta asset', meta_asset);
+                criteriaFound = false;
+                for(var p = 0; p < searchPropertyNames.length; p++) {
+                    if(Object.hasOwn(meta_asset, searchPropertyNames[p])) {
+                        value = meta_asset[searchPropertyNames[p]]
+                        console.log(searchPropertyNames[p] + ' = '+ value.toLowerCase());
+                        if(value.toLowerCase().indexOf(VIEW_OPTIONS.searchCriterion) > -1) {
+                            criteriaFound = true;
+                        }
+                    }
+                } 
+
+                const traitKeys = Object.keys(meta_asset.traits);
+                var traitFound = false;
+                
+                for(var ki = 0; ki < traitKeys.length; ki++) {
+                    if(meta_asset.traits[traitKeys[ki]].toLowerCase().indexOf(VIEW_OPTIONS.searchCriterion) > -1) {
+                        traitFound = true;
+                    }
+                }
+                
+                if(!criteriaFound && !traitFound) { continue; }
+            }
+
+        }
+
+        numberOfResults++;
+        if(numberOfResults <= pOffset) { continue; } // result item is before the start of range. Continue to next result
+        else if(numberOfResults > (pOffset + pLimit)) { break; } // end of range has been reached. Break for-loop
+
+        //loadNFTInfoKoios(`${htmlprefix}_nft_list_`, `${LOADED_NFT_LIST[i].policy_id}${LOADED_NFT_LIST[i].asset_name}`, theme);
+        addExtendedInfo(`${htmlprefix}_nft_list_`, `${LOADED_NFT_LIST[i].policy_id}${LOADED_NFT_LIST[i].asset_name}`, theme, i)
+    }
+    
+
+    if(htmlprefix == 'wallet') {
+        updateWalletSelectionLabel();
+    }
+
+    if(nftsOnThePage < pLimit) {
+        // we are now displaying fewer results than the pLimit. There are no more results to display. Disable paging
+        disableHigherNavPages(htmlprefix);
+    }
+    else {
+        enableHigherNavPages(htmlprefix);
+    }
+
+    if(!VIEW_OPTIONS.disableSelection) {
+        toggleSelectedNFTs(`${theme}`)
+    }
+}
+
+function listNFTs(nftList, nftListHTMLElement, htmlprefix, theme, pool_policy_id, pool_nft_names, poolRules, pOffset, pLimit) {
+
+    var html = '';
+    if (htmlprefix == '')
+        htmlprefix = 'wallet';
+
+    if(htmlprefix == 'pool') {
+        LOADED_POOL_NFTS = nftList;
+        VIEW_OPTIONS = VIEW_OPTIONS_POOL;
+    }
+    else {
+        LOADED_WALLET_NFTS = nftList;
+        VIEW_OPTIONS = VIEW_OPTIONS_WALLET;
+    }
 
     var doFiltering = false;
     if (pool_policy_id != undefined && pool_policy_id != '') {
@@ -790,6 +1375,17 @@ function listNFTs(nftList, nftListHTMLElement, htmlprefix, theme, pool_policy_id
 
             // FOR RULE BASED SWAP POOLS: filter nft out if the name doesn't satisfy the rules of desired nft names
             if (doFiltering && Object.hasOwn(poolRules, 'nftNamePrefix')) { if(!nftSatisfiesRules(nftList[i], poolRules)) { console.log('not satisfying rules'); continue; } }
+
+            // check if the user has selected to view a particular trait
+            if(VIEW_OPTIONS.viewTrait != '') {
+                console.log('filter trait '+ VIEW_OPTIONS.viewTrait);
+                console.log(nftList[i]);
+            }
+
+            // check if the user has selected to view a particular rarity
+            if(VIEW_OPTIONS.viewRarity != '') {
+                console.log('filter rarity '+ VIEW_OPTIONS.viewRarity);
+            }
 
             numberOfResults++;
             if(numberOfResults <= pOffset) { continue; } // result item is before the start of range. Continue to next result
@@ -819,7 +1415,7 @@ function listNFTs(nftList, nftListHTMLElement, htmlprefix, theme, pool_policy_id
             if(numberOfResults <= pOffset) { continue; } // result item is before the start of range. Continue to next result
             else if(numberOfResults > (pOffset + pLimit)) { break; } // end of range has been reached. Break for-loop
 
-            loadNFTInfoKoios(`${htmlprefix}_nft_list_`, `${nftList[i].policy_id}${nftList[i].asset_name}`, theme, disableNFTSelection);
+            loadNFTInfoKoios(`${htmlprefix}_nft_list_`, `${nftList[i].policy_id}${nftList[i].asset_name}`, theme, i);
 
         }
     }
@@ -836,7 +1432,7 @@ function listNFTs(nftList, nftListHTMLElement, htmlprefix, theme, pool_policy_id
         enableHigherNavPages(htmlprefix);
     }
 
-    if(!disableNFTSelection) {
+    if(!VIEW_OPTIONS.disableSelection) {
         toggleSelectedNFTs(`${theme}`)
     }
 }
@@ -846,8 +1442,17 @@ function displayMBoxScriptFields() {
     hideElem('message-box-content');
     showElem('message-box-pool-script-row');
     hideElem('message-box-filter-row');
+    hideElem('message-box-rules-row');
     showElem('message-box-pool-addr-row');
     showElem('message-box-plutus-button');
+    hideElem('message-box-queue-script-row');
+    hideElem('message-box-queue-addr-row');
+}
+
+function displayMBoxRandomScriptFields() {
+    displayMBoxScriptFields();
+    showElem('message-box-queue-script-row');
+    showElem('message-box-queue-addr-row');
 }
 
 function displayMBoxFilteredScriptFields() {
@@ -901,7 +1506,7 @@ function loadAddNFTDropdown(dropdown, theme, swapPoolNames, poolPolicyIds, poolN
     for(var i = 0; i < swapPoolNames.length; i++) {
 
         if(swapPoolNames[i].trim() != '') {
-            swapPoolListHtml += `<li><div class="dropdown-item ${theme} d-flex" data-bs-toggle="modal" data-bs-target="#selectNFTsDialog"><a class="dropdown-item ${theme}" href="#" onclick="setActivePage(1, 'wallet'); showElem('addAssetNavigation'); hideElem('removeAssetNavigation'); const confButton = document.getElementById('confirmAddNFTsButton'); resetOnClick(confButton); confButton.setAttribute('onclick', 'addNFTsToPool(${i})'+ confButton.getAttribute('onclick')); setInnerText('selectNFTsDialogLabel', 'Select NFTs to add to swap pool'); showElem('confirmAddNFTsButton'); hideElem('confirmRemoveNFTsButton'); getRewardAddresses().then((addr) => { getAddressAssets(addr).then((assets) => { currentPolicyId = '${poolPolicyIds[i]}'; currentNFTNames = '${poolNFTNames[i]}'; currentRules = '${encodeURIComponent(JSON.stringify(poolRules[i]))}'; listNFTs(assets, document.getElementById('selectable_nfts'), 'wallet', '${theme}', currentPolicyId, currentNFTNames, currentRules, 0, ${nftPerPage}) } ) } ).catch((reason => console.log('error: '+ reason.message)));">${swapPoolNames[i].trim()}</a></div></li>`;
+            swapPoolListHtml += `<li><div class="dropdown-item ${theme} d-flex" data-bs-toggle="modal" data-bs-target="#selectNFTsDialog"><a class="dropdown-item ${theme}" href="#" onclick="setActivePage(1, 'wallet'); showElem('addAssetNavigation'); hideElem('removeAssetNavigation'); const confButton = document.getElementById('confirmAddNFTsButton'); resetOnClick(confButton); confButton.setAttribute('onclick', 'addNFTsToPool(${i})'+ confButton.getAttribute('onclick')); setInnerText('selectNFTsDialogLabel', 'Select NFTs to add to swap pool'); showElem('confirmAddNFTsButton'); hideElem('confirmRemoveNFTsButton'); getRewardAddresses().then((addr) => { getAddressAssets(addr).then((assets) => { currentPolicyId = '${poolPolicyIds[i]}'; currentNFTNames = '${poolNFTNames[i]}'; currentRules = '${encodeURIComponent(JSON.stringify(poolRules[i]))}'; VIEW_OPTIONS_WALLET.disableSelection = false; listNFTs(assets, document.getElementById('selectable_nfts'), 'wallet', '${theme}', currentPolicyId, currentNFTNames, currentRules, 0, ${nftPerPage}) } ) } ).catch((reason => console.log('error: '+ reason.message)));">${swapPoolNames[i].trim()}</a></div></li>`;
         } 
     }
     
@@ -916,7 +1521,7 @@ function loadRemoveNFTDropdown(dropdown, theme, swapPoolNames, nftPerPage) {
     for(var i = 0; i < swapPoolNames.length; i++) {
 
         if(swapPoolNames[i].trim() != '') {
-            swapPoolListHtml += `<li><div class="dropdown-item ${theme} d-flex" data-bs-toggle="modal" data-bs-target="#selectNFTsDialog"><a class="dropdown-item ${theme}" href="#" onclick="setActivePage(1, 'pool'); showElem('removeAssetNavigation'); hideElem('addAssetNavigation'); const confButton = document.getElementById('confirmRemoveNFTsButton'); resetOnClick(confButton); confButton.setAttribute('onclick', 'removeNFTsFromPool(${i})'+ confButton.getAttribute('onclick')); setInnerText('selectNFTsDialogLabel', 'Select NFTs to remove from swap pool'); showElem('confirmRemoveNFTsButton'); hideElem('confirmAddNFTsButton'); currentSwapPoolIndex = ${i}; getSwapPoolAddress(${i}).then((addr) => { getAddressAssets(addr).then((assets) => { currentPolicyId = null; currentNFTNames = null; currentRules = null; listNFTs(assets, document.getElementById('selectable_nfts'), 'pool', '${theme}', currentPolicyId, currentNFTNames, currentRules, 0, ${nftPerPage}) } ) } ).catch((reason => console.log('error: '+ reason.message)));">${swapPoolNames[i].trim()}</a></div></li>`;
+            swapPoolListHtml += `<li><div class="dropdown-item ${theme} d-flex" data-bs-toggle="modal" data-bs-target="#selectNFTsDialog"><a class="dropdown-item ${theme}" href="#" onclick="setActivePage(1, 'pool'); showElem('removeAssetNavigation'); hideElem('addAssetNavigation'); const confButton = document.getElementById('confirmRemoveNFTsButton'); resetOnClick(confButton); confButton.setAttribute('onclick', 'removeNFTsFromPool(${i})'+ confButton.getAttribute('onclick')); setInnerText('selectNFTsDialogLabel', 'Select NFTs to remove from swap pool'); showElem('confirmRemoveNFTsButton'); hideElem('confirmAddNFTsButton'); currentSwapPoolIndex = ${i}; getSwapPoolAddress(${i}).then((addr) => { getAddressAssets(addr).then((assets) => { currentPolicyId = null; currentNFTNames = null; currentRules = null; VIEW_OPTIONS_POOL.disableSelection = false; listNFTs(assets, document.getElementById('selectable_nfts'), 'pool', '${theme}', currentPolicyId, currentNFTNames, currentRules, 0, ${nftPerPage}) } ) } ).catch((reason => console.log('error: '+ reason.message)));">${swapPoolNames[i].trim()}</a></div></li>`;
         }
     }
     
@@ -930,7 +1535,7 @@ function loadWithdrawalDropdown(dropdown, theme, swapPoolNames) {
     for(var i = 0; i < swapPoolNames.length; i++) {
 
         if(swapPoolNames[i].trim() != '') {
-            swapPoolListHtml += `<li><div class="dropdown-item ${theme} d-flex"><a class="dropdown-item ${theme}" href="#" onclick="getSwapPoolUTxO(${i}).then(utxo => {withdrawFromPool(utxo[0].txHash,utxo[0].outputIndex, ${i})});">${swapPoolNames[i].trim()}</a></div></li>`;
+            swapPoolListHtml += `<li><div class="dropdown-item ${theme} d-flex"><a class="dropdown-item ${theme}" href="#" onclick="getSwapPoolUTxO(${i}).then(utxo => {withdrawFromPool(utxo[utxo.length - 1].txHash,utxo[utxo.length - 1].outputIndex, ${i})});">${swapPoolNames[i].trim()}</a></div></li>`;
         }
     }
     

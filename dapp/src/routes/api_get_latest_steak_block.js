@@ -5,7 +5,8 @@ var XMLHttpRequest = require('xhr2');
 router.post('/', function (req, res, next) {
     
     const app = req.app;
-    const koios_api_url = app.get('koios_api_url');
+    //const koios_api_url = app.get('koios_api_url');
+    const koios_api_url = 'https://api.koios.rest/api/v1'; // mainnet
 
     const addresses = req.body._addresses;
     

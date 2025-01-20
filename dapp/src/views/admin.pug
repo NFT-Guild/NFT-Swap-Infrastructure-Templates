@@ -91,7 +91,7 @@ html
                      h6(class="dropdown-header") RANDOM SWAP
                   li
                      div(class=`dropdown-item ${themeclass} d-flex`)
-                        a(class=`dropdown-item ${themeclass}` href="#" onclick="const policyid = document.getElementById('policyidInput').value; if(policyid.length != 56) {alert('Please provide valid policy id');return;} buildRandomSwap(policyid).then(swapPoolInfo => { message = swapPoolInfo.message; const mBoxTitle = document.getElementById('messageBoxLabel'); if(message.indexOf('Redeemer') > -1 || message.indexOf('error') > -1) { mBoxTitle.innerText='Something went wrong'; } else { mBoxTitle.innerText=message; } document.getElementById('message-box-content').innerHTML=swapPoolInfo.message; document.getElementById('swap-pool-script').value = JSON.stringify(swapPoolInfo.swapPoolContractScript); document.getElementById('swap-pool-address').value = swapPoolInfo.swapPoolAddress; displayMBoxScriptFields(); const messageBox = new bootstrap.Modal('#messageBox', { keyboard: false }); messageBox.show();});") POLICY WIDE POOL
+                        a(class=`dropdown-item ${themeclass}` href="#" onclick="const policyid = document.getElementById('policyidInput').value; if(policyid.length != 56) {alert('Please provide valid policy id');return;} buildRandomSwap(policyid).then(swapPoolInfo => { message = swapPoolInfo.message; const mBoxTitle = document.getElementById('messageBoxLabel'); if(message.indexOf('Redeemer') > -1 || message.indexOf('error') > -1) { mBoxTitle.innerText='Something went wrong'; } else { mBoxTitle.innerText=message; } document.getElementById('message-box-content').innerHTML=swapPoolInfo.message; document.getElementById('swap-pool-script').value = JSON.stringify(swapPoolInfo.swapPoolContractScript); document.getElementById('swap-pool-address').value = swapPoolInfo.swapPoolAddress;}).then(() => { buildRandomQueue().then(queueInfo => { document.getElementById('random-queue-script').value = JSON.stringify(queueInfo.randomQueueContractScript); document.getElementById('random-queue-address').value = queueInfo.randomQueueAddress;})}).then(() => { displayMBoxRandomScriptFields(); const messageBox = new bootstrap.Modal('#messageBox', { keyboard: false }); messageBox.show();});") POLICY WIDE POOL
 
          div(id="add_nft_to_pool_dropdown_menu" class="btn-group")
                button(type="button" id="add_nft_to_pool_selection_button" class=`btn select-contract${themeclass} d-flex dropdown-toggle text-wrap` data-bs-toggle="dropdown" aria-expanded="false") ADD NFT(S) TO POOL
@@ -155,6 +155,25 @@ html
                         svg(xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class=`bi bi-clipboard button-color${themeclass} show-hover-pointer` viewBox="0 0 16 16" onclick="copyToClipboard(document.getElementById('swap-pool-address').value);")
                            path(d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z")
                            path(d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z")
+                  
+                  div(class=`d-flex flex-row mb-3` )
+                     div(class=`input-group` id="message-box-queue-script-row" style="display: none;")
+                        span(class=`input-group-text${themeclass}`) Random queue script
+                        textarea(class=`form-control textfield ${themeclass}` aria-label="Random queue script" id="random-queue-script")
+                        
+                        svg(xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class=`bi bi-clipboard button-color${themeclass} show-hover-pointer` viewBox="0 0 16 16" onclick="copyToClipboard(document.getElementById('random-queue-script').value);")
+                           path(d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z")
+                           path(d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z")
+                  
+                  div(class=`d-flex flex-row mb-3`)
+                     div(class=`input-group` id="message-box-queue-addr-row" style="display: none;")
+                        span(class=`input-group-text${themeclass}`) Random queue address
+                        input(type="text" class=`form-control textfield ${themeclass}` aria-label="Random queue address" aria-describedby="random-queue-address" id="random-queue-address")
+                        
+                        svg(xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class=`bi bi-clipboard button-color${themeclass} show-hover-pointer` viewBox="0 0 16 16" onclick="copyToClipboard(document.getElementById('random-queue-address').value);")
+                           path(d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z")
+                           path(d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z")
+                  
                   div(class="d-flex flex-row justify-content-between")
                      button(type="button" class=`btn themed-color${themeclass}` data-bs-dismiss="modal") OK
                      button(type="button" id="message-box-plutus-button" style="display: none;" class=`btn themed-color${themeclass}` onclick=`var blob = new Blob(['{"type": "PlutusScriptV2","description": "","cborHex": "'+ JSON.parse(document.getElementById("swap-pool-script").value).script +'"}'], {type: "text/plain;charset=utf-8" }); saveAs(blob, "swap-pool-script.plutus");`) DOWNLOAD PLUTUS SCRIPT
@@ -259,9 +278,9 @@ html
       script !{walletStakeAddrScript}
       -var policyPagingScript = `function loadPolicyPageContent(pageNum) { const pOffset = (pageNum - 1) * ${nftPerPage}; const policyid = document.getElementById('policyidInput').value; const filterCriterion = document.getElementById('search_field_input').value; loadPolicyAssets(policyid, 'policy-nft-list',filterCriterion, '${themeclass}', pOffset, ${nftPerPage});}`
       script !{policyPagingScript}
-      -var addPagingScript = `function loadAddPageContent(pageNum) { const pOffset = (pageNum - 1) * ${nftPerPage}; getRewardAddresses().then((addr) => { getAddressAssets(addr).then((assets) => { listNFTs(assets, document.getElementById('selectable_nfts'), 'wallet', '${themeclass}', currentPolicyId, currentNFTNames, currentRules, pOffset, ${nftPerPage}) } ) } ).catch((reason => console.log('error: '+ reason.message)));}`
+      -var addPagingScript = `function loadAddPageContent(pageNum) { const pOffset = (pageNum - 1) * ${nftPerPage}; getRewardAddresses().then((addr) => { getAddressAssets(addr).then((assets) => { VIEW_OPTIONS_WALLET.disableSelection = false; listNFTs(assets, document.getElementById('selectable_nfts'), 'wallet', '${themeclass}', currentPolicyId, currentNFTNames, currentRules, pOffset, ${nftPerPage}) } ) } ).catch((reason => console.log('error: '+ reason.message)));}`
       script !{addPagingScript}
-      -var removePagingScript = `function loadRemovePageContent(pageNum) { const pOffset = (pageNum - 1) * ${nftPerPage}; getSwapPoolAddress(currentSwapPoolIndex).then((addr) => { getAddressAssets(addr).then((assets) => { currentPolicyId = null; currentNFTNames = null; currentRules = null; listNFTs(assets, document.getElementById('selectable_nfts'), 'pool', '${themeclass}', currentPolicyId, currentNFTNames, currentRules, pOffset, ${nftPerPage}) } ) } ).catch((reason => console.log('error: '+ reason.message)));}`
+      -var removePagingScript = `function loadRemovePageContent(pageNum) { const pOffset = (pageNum - 1) * ${nftPerPage}; getSwapPoolAddress(currentSwapPoolIndex).then((addr) => { getAddressAssets(addr).then((assets) => { currentPolicyId = null; currentNFTNames = null; currentRules = null; VIEW_OPTIONS_POOL.disableSelection = false; listNFTs(assets, document.getElementById('selectable_nfts'), 'pool', '${themeclass}', currentPolicyId, currentNFTNames, currentRules, pOffset, ${nftPerPage}) } ) } ).catch((reason => console.log('error: '+ reason.message)));}`
       script !{removePagingScript}
 
       script(src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous")

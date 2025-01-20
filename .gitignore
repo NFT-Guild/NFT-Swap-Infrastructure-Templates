@@ -1,8 +1,14 @@
 smart-contracts/dist-newstyle
 smart-contracts/plutus-scripts
 smart-contracts/repl-testing
+smart-contracts/debugging
 node_modules
 *.key
 *.pem
 *.code-workspace
 design
+*.vkey
+*.skey
+*.pkh
+*.addr
+nolongerused
